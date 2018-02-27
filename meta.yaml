@@ -1,0 +1,42 @@
+# Jinja variables help maintain the recipe as you'll update the version only here.
+{% set name = "pylsl" %}
+{% set version = "1.10.4" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: .
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record record.txt
+
+requirements:
+  build:
+    - setuptools
+    - liblsl
+        #- python
+        #- setuptools
+        #- {{ compiler("c") }}
+        #- cffi
+  run:
+    - python
+    - liblsl
+      #- cffi
+
+test:
+  imports:
+    - {{ name }}
+
+about:
+  home: https://github.com/sccn/labstreaminglayer
+  # Remember to specify the license variants for BSD, Apache, GPL, and LGLP.
+  license: MIT
+  # The license_family, i.e. "BSD" if license is "BSD-3-Clause". (optional)
+  license_family: MIT
+  license_file: LICENSE
+  summary: 'Multi-modal time-synched data transmission over local network'
+  dev_url: https://github.com/sccn/labstreaminglayer
+
