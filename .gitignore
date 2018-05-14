@@ -1,0 +1,9 @@
+/dist/
+/.idea/
+/pylsl.egg-info/
+/build/
+*.so
+*.dll
+*.dylib
+*.cprof
+*.png

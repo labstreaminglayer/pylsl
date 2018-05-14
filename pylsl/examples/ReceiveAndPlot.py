@@ -13,6 +13,7 @@ streams = resolve_stream('type', 'EEG')
 
 # create a new inlet to read from the stream
 inlet = StreamInlet(streams[0])
+markers = StreamInlet(resolve_stream('type', 'Markers')[0])
 
 # Create the pyqtgraph window
 win = pg.GraphicsWindow()
@@ -47,6 +48,12 @@ def update():
             this_x -= t0[ch_ix]
             b_keep = this_x >= 0
             curves[ch_ix].setData(this_x[b_keep], this_y[b_keep])
+    strings, timestamps = markers.pull_chunk(0)
+    if timestamps:
+        print(strings, timestamps)
+        for string, ts in zip(strings, timestamps):
+            plt.addItem(pg.InfiniteLine(ts-t0[0], angle=90, movable=False, label=string[0]))
+
 
 
 timer = QtCore.QTimer()
