@@ -1,13 +1,19 @@
 """Python setup script for the pylsl distribution package."""
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Distribution
 from codecs import open
 from os import path
+
+
+class BinaryDistribution(Distribution):
+    def has_ext_modules(foo):
+        return True
+
 
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
-with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -22,7 +28,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/chkothe/pylsl',
+    url='https://github.com/labstreaminglayer/liblsl-Python',
 
     # Author details
     author='Christian Kothe',
@@ -55,14 +61,8 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2.5',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
     ],
 
     # What does your project relate to?
@@ -87,8 +87,11 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
+    # Here we specify all the shared libs for the different platforms, but
+    # setup will probably only find the one library downloaded by the build
+    # script or placed here manually.
     package_data={
-        'pylsl': ['liblsl32.dll','liblsl64.dll','liblsl32.dylib','liblsl64.dylib','liblsl32.so','liblsl64.so'],
+        'pylsl': ['*.dll','*.dylib','*.so*'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -101,4 +104,6 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points={},
+
+    distclass=BinaryDistribution
 )

@@ -3,6 +3,7 @@
 /pylsl.egg-info/
 /build/
 *.so
+*.so.*
 *.dll
 *.dylib
 *.cprof
