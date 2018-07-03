@@ -12,6 +12,24 @@ Python version, including 2.7+ and 3.x.
 Let us know if you encounter any bugs (ideally using the issue tracker on
 the GitHub project).
 
+# Installation
+
+The preferred method of installation is to use [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
+
+# Usage
+
+See the examples in pylsl/examples. Note that these can be run directly from the commandline with (e.g.) `python -m pylsl.examples.SendStringMarkers`.
+
+# Development
+
+If you are a developer or if you are a user that would like to submit a pull request,
+then the easiest way to modify pylsl is to install it to your python environment in development mode:
+
+1. Clone this repository.
+1. Download the correct liblsl shared object (*.so on Linux, *.dylib on MacOS, or *.dll on Windows) from the [liblsl release page](https://github.com/labstreaminglayer/liblsl/releases) and copy it into this directory's pylsl folder.
+1. In a conda terminal / command prompt / terminal, make sure your preferred python environment is active.
+1. `cd` to the root directory for this repository, then do `pip install -e .`
+
 # Known Issues
 
 * On Linux one currently cannot call ``pylsl`` functions from a thread that is not the main thread.

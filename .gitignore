@@ -2,6 +2,7 @@
 /.idea/
 /pylsl.egg-info/
 /build/
+__pycache__
 *.so
 *.so.*
 *.dll
