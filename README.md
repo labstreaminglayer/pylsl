@@ -27,12 +27,22 @@ then the easiest way to modify pylsl is to install it to your python environment
 
 1. Clone this repository.
 1. Download the correct liblsl shared object (*.so on Linux, *.dylib on MacOS, or *.dll on Windows) from the [liblsl release page](https://github.com/labstreaminglayer/liblsl/releases) and copy it into this directory's pylsl folder.
+    * On platforms with symlinks, be sure to use `cp -L` to copy the links correctly.
 1. In a conda terminal / command prompt / terminal, make sure your preferred python environment is active.
 1. `cd` to the root directory for this repository, then do `pip install -e .`
+
+## For pypi maintainers
+
+1. Manual way:
+    1. `rm -Rf build dist *.egg-info`
+    1. `python setup.py sdist bdist_wheel`
+    1. `twine upload dist/*`
+2. TODO: AppVeyor/Travis
 
 # Known Issues
 
 * On Linux one currently cannot call ``pylsl`` functions from a thread that is not the main thread.
+* Though 
 
 # Acknowledgments
 

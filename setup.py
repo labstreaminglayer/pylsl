@@ -26,6 +26,7 @@ setup(
 
     description='Python interface to the Lab Streaming Layer',
     long_description=long_description,
+    long_description_content_type="text/markdown",
 
     # The project's main homepage.
     url='https://github.com/labstreaminglayer/liblsl-Python',
@@ -57,7 +58,6 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS',
-
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
@@ -105,5 +105,10 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={},
 
-    distclass=BinaryDistribution
+    # We want to eventually move to having platform-specific distributions
+    # with only the required platform shared objects. Unfortunately, for Linux,
+    # pypi only accepts anylinux builds. Leave the following commented until
+    # anylinux is working with AppVeyor/Travis. This will create the wheel for
+    # 'any' Python. That means we need all available shared objects when we upload.
+#    distclass=BinaryDistribution
 )
