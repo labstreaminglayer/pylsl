@@ -5,6 +5,7 @@
 __pycache__
 *.so
 *.so.*
+*.pyc
 *.dll
 *.dylib
 *.cprof

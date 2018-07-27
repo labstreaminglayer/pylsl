@@ -25,6 +25,7 @@ from ctypes import CDLL, util, byref, c_char_p, c_void_p, c_double, c_int, \
 __all__ = ['IRREGULAR_RATE', 'DEDUCED_TIMESTAMP', 'FOREVER', 'cf_float32',
            'cf_double64', 'cf_string', 'cf_int32', 'cf_int16', 'cf_int8',
            'cf_int64', 'cf_undefined', 'protocol_version', 'library_version',
+           'library_info',
            'local_clock', 'StreamInfo', 'StreamOutlet', 'resolve_streams',
            'resolve_byprop', 'resolve_bypred', 'StreamInlet', 'XMLElement',
            'ContinuousResolver', 'TimeoutError', 'LostError',
@@ -111,6 +112,13 @@ def library_version():
 
     """
     return lib.lsl_library_version()
+
+
+def library_info():
+    """Get a string containing library information. The format of the string shouldn't be used
+    for anything important except giving a a debugging person a good idea which exact library
+    version is used."""
+    return lib.lsl_library_info().decode('utf-8')
 
    
 def local_clock():
@@ -1195,6 +1203,7 @@ lib = CDLL(libpath)
 # set function return types where necessary
 lib.lsl_local_clock.restype = c_double
 lib.lsl_create_streaminfo.restype = c_void_p
+lib.lsl_library_info.restype = c_char_p
 lib.lsl_get_name.restype = c_char_p
 lib.lsl_get_type.restype = c_char_p
 lib.lsl_get_nominal_srate.restype = c_double
