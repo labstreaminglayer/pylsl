@@ -6,6 +6,7 @@ from os import path
 
 
 class BinaryDistribution(Distribution):
+    @staticmethod
     def has_ext_modules(foo):
         return True
 
@@ -22,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.12.0',
+    version='1.12.1',
 
     description='Python interface to the Lab Streaming Layer',
     long_description=long_description,
@@ -91,7 +92,7 @@ setup(
     # setup will probably only find the one library downloaded by the build
     # script or placed here manually.
     package_data={
-        'pylsl': ['*.dll','*.dylib','*.so*'],
+        'pylsl': ['*.dll', '*.dylib', '*.so*'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
