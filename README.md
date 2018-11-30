@@ -16,6 +16,8 @@ the GitHub project).
 
 The preferred method of installation is to use [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
 
+More or less experimental releases are in [tstenner's anaconda repo](https://anaconda.org/tstenner/pylsl), install with `conda install -c tstenner pylsl`.
+
 # Usage
 
 See the examples in pylsl/examples. Note that these can be run directly from the commandline with (e.g.) `python -m pylsl.examples.SendStringMarkers`.
@@ -31,18 +33,20 @@ then the easiest way to modify pylsl is to install it to your python environment
 1. In a conda terminal / command prompt / terminal, make sure your preferred python environment is active.
 1. `cd` to the root directory for this repository, then do `pip install -e .`
 
-## For pypi maintainers
+## For (pypi) maintainers
 
 1. Manual way:
     1. `rm -Rf build dist *.egg-info`
     1. `python setup.py sdist bdist_wheel`
     1. `twine upload dist/*`
-2. TODO: AppVeyor/Travis
+1. For conda
+    1. build liblsl: `conda build ../liblsl/`
+    1. `conda build .`
+1. TODO: AppVeyor/Travis
 
 # Known Issues
 
 * On Linux one currently cannot call ``pylsl`` functions from a thread that is not the main thread.
-* Though 
 
 # Acknowledgments
 
