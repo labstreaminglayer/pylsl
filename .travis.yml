@@ -1,0 +1,39 @@
+notifications:
+  email: false
+
+language: python
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      services:
+        - docker
+      env:
+        - DOCKER_IMAGE=henriquegemignani/docker-nod-ci
+        - RUN="docker run --rm -v $(pwd):/host -w /host $DOCKER_IMAGE"
+
+before_install:
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull $DOCKER_IMAGE; fi
+
+#install:
+#  - docker pull $DOCKER_IMAGE
+
+#before_script
+
+script:
+  - $RUN ./travis/build-wheels.sh
+  - sudo chown -R $(whoami) .
+  - ls wheelhouse/
+
+#after_success
+
+#after_failure
+
+#before_deploy
+
+#deploy
+
+#after_deploy
+
+#after_script

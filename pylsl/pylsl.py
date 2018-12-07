@@ -1190,7 +1190,7 @@ elif os_name == 'Linux':
     libname = 'liblsl32.so' if bitness == 32 else 'liblsl64.so'
 else:
     raise RuntimeError("unrecognized operating system:", os_name)
-libpath = os.path.join(os.path.dirname(__file__), libname)
+libpath = os.path.join(os.path.dirname(__file__), 'lib', libname)
 if not os.path.isfile(libpath):
     libpath = util.find_library('lsl' + str(bitness))
 if not libpath:
