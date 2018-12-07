@@ -1,0 +1,71 @@
+version: 1.13.0.{build}
+pull_requests:
+  do_not_increment_build_number: true
+shallow_clone: true
+services:
+- docker
+stack: python 3
+environment:
+  TWINE_USERNAME: cboulay
+# Note: TWINE_PASSWORD is set in Appveyor web settings
+  CIBW_BUILD_VERBOSITY: 3
+  CIBW_TEST_COMMAND: python -c "import pylsl; print(pylsl.library_version()); print(pylsl.local_clock())"
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      VCVER: 14.0
+      ARCH: x64
+      CIBW_BUILD: "*-win_amd64"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      VCVER: 9.0
+      ARCH: x86
+      CIBW_BUILD: "*-win32"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
+      BUILD_LSL_IMAGE: alpine
+      CIBW_PLATFORM: linux
+      CIBW_MANYLINUX1_X86_64_IMAGE: henriquegemignani/docker-nod-ci
+      CIBW_BUILD: "*-manylinux1_x86_64"
+      CIBW_SKIP: "cp27-* cp34-*"
+
+#https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/#running-windows-and-linux-builds-side-by-side
+install:
+- cmd: appveyor DownloadFile https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip -FileName ninja.zip
+- cmd: 7z x ninja.zip -oC:\projects\deps\ninja > nul
+- cmd: set PATH=C:\projects\deps\ninja;%PATH%
+- cmd: ninja --version
+- cmd: git clone --depth 1 https://github.com/sccn/liblsl.git
+- cmd: cd liblsl
+- cmd: mkdir build
+- cmd: cd build
+- cmd: call "C:\Program Files (x86)\Microsoft Visual Studio %VCVER%\VC\vcvarsall.bat" %ARCH%
+- cmd: cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../pylsl/ -DLSL_UNIXFOLDERS=ON -DLSL_SO_LINKS_STDCPP_STATIC=ON ..
+- cmd: cmake --build . --config Release --target install
+- cmd: cd ../..
+- pip install cibuildwheel
+
+before_build:
+- sh: chmod +x ci/build_liblsl_linux.sh
+# docker service is not available during install so we build liblsl here instead.
+# liblsl is built on alpine because it has a more portable C lib, and other libs are statically linked, making pylsl portable.
+# Though the linked libs are not compatible with cp27 and cp34.
+- sh: docker run --rm -v $(pwd):/host -w /host $BUILD_LSL_IMAGE /host/ci/build_liblsl_linux.sh
+
+build_script:
+- cibuildwheel --output-dir wheelhouse
+- ps: >-
+      if ($env:APPVEYOR_REPO_TAG -eq "true") {
+        python -m pip install twine
+        python -m twine upload wheelhouse/*.whl
+      }
+
+#after_build
+# before_test
+# test_script
+# after_test
+
+artifacts:
+- path: "wheelhouse\\*.whl"
+  name: Wheels
+
+# before_deploy
+# deploy_script:
+# after_deploy
