@@ -1,38 +1,15 @@
 """Python setup script for the pylsl distribution package."""
 
-from setuptools import setup, Distribution, Extension
-from setuptools.command.install import install
+from setuptools import setup
 from codecs import open
 from os import path
 
 
-class BinaryDistribution(Distribution):
-    def has_ext_modules(self):
-        return True
-    def is_pure(self):
-        return False
-
-class InstallPlatlib(install):
-    def finalize_options(self):
-        install.finalize_options(self)
-        if self.distribution.has_ext_modules():
-            self.install_lib = self.install_platlib
-
-
 here = path.abspath(path.dirname(__file__))
-
 
 # Get the long description from the relevant file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
-
-extension_modules = [Extension(
-    'pylsl.liblsl',
-    sources=[],
-    library_dirs=['pylsl/lib'],
-    libraries=['lsl64']  # TODO: Platform-specific naming?
-)]
-
 
 setup(
     name='pylsl',
@@ -85,9 +62,9 @@ setup(
 
     # What does your project relate to?
     keywords='networking lsl lab streaming layer labstreaminglayer data acquisition',
-    
-    distclass=BinaryDistribution,
-    cmdclass={'install': InstallPlatlib},
+
+    setup_requires=["cffi"],
+    cffi_modules=["_cffi_build/pylsl_cffi.py:ffi"],
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -97,7 +74,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    # install_requires=[],
+    install_requires=["cffi"],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -112,7 +89,7 @@ setup(
     # setup will probably only find the one library downloaded by the build
     # script or placed here manually.
     package_data={
-        'pylsl': ['lib/*.so*'],
+        # 'pylsl': ['lib/*.so*'],
     },
     
     # Although 'package_data' is the preferred approach, in some case you may

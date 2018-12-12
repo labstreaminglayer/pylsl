@@ -20,7 +20,7 @@ done
 
 # Bundle external shared libraries into the wheels
 for whl in wheelhouse/*.whl; do
-    auditwheel repair "$whl" --plat manylinux2010_x86_64 -w /host/wheelhouse/
+    auditwheel repair "$whl" --plat linux_x86_64 -w /host/wheelhouse/
 done
 
 # Install packages and test
