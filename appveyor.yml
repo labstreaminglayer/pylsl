@@ -55,6 +55,8 @@ build_script:
       if ($env:APPVEYOR_REPO_TAG -eq "true") {
         python -m pip install twine
         python -m twine upload wheelhouse/*.whl
+      } Else {
+        echo "Not uploading to pypi; APPVEYOR_REPO_TAG : $env:APPVEYOR_REPO_TAG"
       }
 
 #after_build
