@@ -15,6 +15,8 @@ the GitHub project).
 
 ## Prepared distributions
 
+Note: The manylinux wheels are currently broken. We are awaiting manylinux2010 rollout. Follow [here](https://github.com/pypa/manylinux/issues/179).
+
 The following platforms are supported with direct installation from [pypi](https://pypi.org/project/pylsl/)
 using [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
 
@@ -22,9 +24,9 @@ using [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
 |---|---|---|---|---|---|
 | Python 2.7 | ✅ |  |  | ✅ | ✅ |
 | Python 3.4 | ✅ |  |  | ✅ | ✅ |
-| Python 3.5 | ✅ |  | ✅ | ✅ | ✅ |
-| Python 3.6 | ✅ |  | ✅ | ✅ | ✅ |
-| Python 3.7 | ✅ |  | ✅ | ✅ | ✅ |
+| Python 3.5 | ✅ |  |  | ✅ | ✅ |
+| Python 3.6 | ✅ |  |  | ✅ | ✅ |
+| Python 3.7 | ✅ |  |  | ✅ | ✅ |
 
 More or less experimental releases are in [tstenner's anaconda repo](https://anaconda.org/tstenner/pylsl), install with `conda install -c tstenner pylsl`.
 
