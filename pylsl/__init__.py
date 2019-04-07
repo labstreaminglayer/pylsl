@@ -1,3 +1,5 @@
+__version__ = "1.13.1"
+
 # (not using import * for Python 2.5 support)
 from .pylsl import IRREGULAR_RATE, DEDUCED_TIMESTAMP, FOREVER, cf_float32,\
     cf_double64, cf_string, cf_int32, cf_int16, cf_int8, cf_int64,\
