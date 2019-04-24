@@ -56,6 +56,9 @@ the CI systems will deploy new wheels to pypi.
 1. Manual way:
     1. `rm -Rf build dist *.egg-info`
     1. `python setup.py sdist bdist_wheel`
+    1. Additional steps on Linux:
+        * `auditwheel repair dist/*.whl -w dist`
+        * `rm dist/*-linux_x86_64.whl`
     1. `twine upload dist/*`
 1. For conda
     1. build liblsl: `conda build ../liblsl/`
