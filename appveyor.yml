@@ -40,6 +40,7 @@ install:
 - cmd: cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../pylsl/ -DLSL_UNIXFOLDERS=ON -DLSL_SO_LINKS_STDCPP_STATIC=ON ..
 - cmd: cmake --build . --config Release --target install
 - cmd: cd ../..
+- cmd: copy pylsl\bin\liblsl*.dll pylsl\lib
 - pip install cibuildwheel
 
 before_build:
