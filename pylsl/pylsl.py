@@ -1190,6 +1190,10 @@ def find_liblsl_libraries():
         libsuffix = '.so'
     else:
         raise RuntimeError("unrecognized operating system:", os_name)
+
+    if 'PYLSL_LIB' in os.environ:
+        yield os.environ['PYLSL_LIB']
+
     libbasepath = os.path.join(os.path.dirname(__file__), 'liblsl')
     for debugsuffix in ['', '-debug']:
         for bitness in ['', str(8 * struct.calcsize("P"))]:
