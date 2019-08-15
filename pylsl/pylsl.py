@@ -1179,24 +1179,36 @@ def resolve_stream(*args):
 # === Module Initialization Code ===
 # ==================================
 
-# find and load library
-os_name = platform.system()
-bitness = 8 * struct.calcsize("P")
-if os_name in ['Windows', 'Microsoft']:
-    libname = 'liblsl32.dll' if bitness == 32 else 'liblsl64.dll'
-elif os_name == 'Darwin':
-    libname = 'liblsl32.dylib' if bitness == 32 else 'liblsl64.dylib'
-elif os_name == 'Linux':
-    libname = 'liblsl32.so' if bitness == 32 else 'liblsl64.so'
-else:
-    raise RuntimeError("unrecognized operating system:", os_name)
-libpath = os.path.join(os.path.dirname(__file__), 'lib', libname)
-if not os.path.isfile(libpath):
-    libpath = util.find_library('lsl' + str(bitness))
-if not libpath:
-    raise RuntimeError("library " + libname + " was not found - make sure "
+def find_liblsl_libraries():
+    # find and load library
+    os_name = platform.system()
+    if os_name in ['Windows', 'Microsoft']:
+        libsuffix = '.dll'
+    elif os_name == 'Darwin':
+        libsuffix = '.dylib'
+    elif os_name == 'Linux':
+        libsuffix = '.so'
+    else:
+        raise RuntimeError("unrecognized operating system:", os_name)
+    libbasepath = os.path.join(os.path.dirname(__file__), 'liblsl')
+    for debugsuffix in ['', '-debug']:
+        for bitness in ['', str(8 * struct.calcsize("P"))]:
+            path = libbasepath + bitness + debugsuffix + libsuffix
+            print(path)
+            if os.path.isfile(path):
+                yield path
+            path = util.find_library('lsl' + bitness + debugsuffix )
+            print(path)
+            if path is not None:
+                yield path
+
+
+try:
+    libpath = next(find_liblsl_libraries())
+except StopIteration:
+    raise RuntimeError("liblsl library was not found - make sure "
                        "that it is on the search path (e.g., in the same "
-                       "folder as pylsl.py).")
+                       "folder as pylsl.py or the system search path).")
 lib = CDLL(libpath)
 
 
