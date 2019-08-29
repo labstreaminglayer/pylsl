@@ -2,47 +2,36 @@ version: 1.13.0.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
-services:
-- docker
 stack: python 3
 environment:
   GITHUB_URL: https://github.com/sccn/liblsl/releases/download
   LIBLSL_TAG: 1.13.0-b12
+  LIBLSL_VERSION: 1.13.0
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
-  CIBW_BUILD_VERBOSITY: 3
-  CIBW_TEST_COMMAND: python -c "import pylsl; print(pylsl.library_version()); print(pylsl.library_info()); print(pylsl.local_clock())"
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCHIVENAME: liblsl-1.13.0-Win64.7z
-      CIBW_BUILD: "*-win_amd64"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCHIVENAME: liblsl-1.13.0-Win32.7z
-      CIBW_BUILD: "*-win32"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
-      ARCHIVENAME: liblsl-1.13.0-manylinux2010_x64.so
-      CIBW_PLATFORM: linux
-#      CIBW_MANYLINUX1_X86_64_IMAGE: henriquegemignani/docker-nod-ci
-      CIBW_BUILD: "*-manylinux2010_x86_64"
-      CIBW_SKIP: "cp27-* cp34-*"
 
 #https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/#running-windows-and-linux-builds-side-by-side
-install:
-- cmd: echo %GITHUB_URL%/%LIBLSL_TAG%/%ARCHIVENAME%
-- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/%ARCHIVENAME% -FileName liblsl.7z
-- cmd: 7z e liblsl.7z bin/liblsl*.dll -Opylsl/lib
-- sh: wget ${GITHUB_URL}/${LIBLSL_TAG}/${ARCHIVENAME} -O pylsl/lib/liblsl64.so
-- pip install cibuildwheel
-
 build_script:
-- cibuildwheel --output-dir wheelhouse
+- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-Win64.7z -FileName win_amd64.7z
+- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-Win32.7z -FileName win32.7z
+- cmd: mkdir manylinux2010_x86_64
+- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-manylinux2010_x64.so -FileName manylinux2010_x86_64/liblsl.so
+- cmd: python -m pip install --upgrade setuptools wheel
+- cmd: 7z e win_amd64.7z bin/liblsl*.dll -Owin_amd64
+- cmd: 7z e win32.7z bin/liblsl*.dll -Owin32
+- pwsh: >-
+        Foreach($platform in 'win_amd64', 'win32', 'manylinux2010_x86_64') {
+                Copy-Item $platform -Destination pylsl/lib -Recurse
+                python setup.py bdist_wheel -p $platform --python-tag py3
+                Remove-Item -LiteralPath pylsl/lib -Force -Recurse
+        }
 - ps: >-
       if ($env:APPVEYOR_REPO_TAG -eq "true") {
         python -m pip install twine
-        python -m twine upload wheelhouse/*.whl
+        python -m twine upload dist/*.whl
       } Else {
         echo "Not uploading to pypi; APPVEYOR_REPO_TAG : $env:APPVEYOR_REPO_TAG"
       }
 artifacts:
-- path: "wheelhouse\\*.whl"
+- path: "dist/*.whl"
   name: Wheels
