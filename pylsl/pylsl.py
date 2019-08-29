@@ -1194,7 +1194,7 @@ def find_liblsl_libraries():
     else:
         raise RuntimeError("unrecognized operating system:", os_name)
 
-    libbasepath = os.path.join(os.path.dirname(__file__), 'liblsl')
+    libbasepath = os.path.join(os.path.dirname(__file__), 'lib', 'liblsl')
     for debugsuffix in ['', '-debug']:
         for bitness in ['', str(8 * struct.calcsize("P"))]:
             path = libbasepath + bitness + debugsuffix + libsuffix
@@ -1211,8 +1211,9 @@ try:
     libpath = next(find_liblsl_libraries())
 except StopIteration:
     raise RuntimeError("liblsl library was not found - make sure "
-                       "that it is on the search path (e.g., in the same "
-                       "folder as pylsl.py or the system search path).")
+                       "that it is on the search path (e.g., in the lib/ "
+                       "subfolder of the pylsl package or the system search "
+                       "path). Alternatively, specify the env var PYLSL_LIB")
 lib = CDLL(libpath)
 
 

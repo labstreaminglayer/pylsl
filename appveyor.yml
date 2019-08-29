@@ -30,8 +30,8 @@ environment:
 install:
 - cmd: echo %GITHUB_URL%/%LIBLSL_TAG%/%ARCHIVENAME%
 - cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/%ARCHIVENAME% -FileName liblsl.7z
-- cmd: 7z e liblsl.7z bin/liblsl*.dll -Opylsl
-- sh: wget ${GITHUB_URL}/${LIBLSL_TAG}/${ARCHIVENAME} -O pylsl/liblsl64.so
+- cmd: 7z e liblsl.7z bin/liblsl*.dll -Opylsl/lib
+- sh: wget ${GITHUB_URL}/${LIBLSL_TAG}/${ARCHIVENAME} -O pylsl/lib/liblsl64.so
 - pip install cibuildwheel
 
 build_script:
