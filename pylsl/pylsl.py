@@ -1181,6 +1181,9 @@ def resolve_stream(*args):
 
 def find_liblsl_libraries():
     # find and load library
+    if 'PYLSL_LIB' in os.environ:
+        yield os.environ['PYLSL_LIB']
+
     os_name = platform.system()
     if os_name in ['Windows', 'Microsoft']:
         libsuffix = '.dll'
@@ -1190,9 +1193,6 @@ def find_liblsl_libraries():
         libsuffix = '.so'
     else:
         raise RuntimeError("unrecognized operating system:", os_name)
-
-    if 'PYLSL_LIB' in os.environ:
-        yield os.environ['PYLSL_LIB']
 
     libbasepath = os.path.join(os.path.dirname(__file__), 'liblsl')
     for debugsuffix in ['', '-debug']:
