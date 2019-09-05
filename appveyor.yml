@@ -22,7 +22,7 @@ build_script:
 - pwsh: >-
         Foreach($platform in 'win_amd64', 'win32', 'manylinux2010_x86_64') {
                 Copy-Item $platform -Destination pylsl/lib -Recurse
-                python setup.py bdist_wheel -p $platform --python-tag py3
+                python setup.py bdist_wheel -p $platform --python-tag py3 --py-limited-api cp32
                 Remove-Item -LiteralPath pylsl/lib -Force -Recurse
         }
 - ps: >-
