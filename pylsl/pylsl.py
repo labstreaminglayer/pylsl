@@ -1308,7 +1308,19 @@ try:
 except:
     print("pylsl: ContinuousResolver not (fully) available in your liblsl "
           "version.")
-        
+
+# int64 support on windows and 32bit OSes isn't there yet
+if struct.calcsize("P") != 4 and platform.system() != 'Windows':
+    push_sample_int64 = lib.lsl_push_sample_ltp
+    pull_sample_int64 = lib.lsl_pull_sample_l
+    push_chunk_int64 = lib.lsl_push_chunk_ltp
+    pull_chunk_int64 = lib.lsl_pull_chunk_l
+else:
+    def push_sample_int64(*_):
+        raise NotImplementedError('int64 support isn\'t enabled on your platform')
+    pull_sample_int64 = push_chunk_int64 = pull_chunk_int64 = push_sample_int64
+
+
 # set up some type maps
 string2fmt = {'float32': cf_float32, 'double64': cf_double64,
               'string': cf_string, 'int32': cf_int32, 'int16': cf_int16,
@@ -1318,18 +1330,18 @@ fmt2string = ['undefined', 'float32', 'double64', 'string', 'int32', 'int16',
 fmt2type = [[], c_float, c_double, c_char_p, c_int, c_short, c_byte, c_longlong]
 fmt2push_sample = [[], lib.lsl_push_sample_ftp, lib.lsl_push_sample_dtp,
                    lib.lsl_push_sample_strtp, lib.lsl_push_sample_itp,
-                   lib.lsl_push_sample_stp, lib.lsl_push_sample_ctp, []]
+                   lib.lsl_push_sample_stp, lib.lsl_push_sample_ctp, push_sample_int64]
 fmt2pull_sample = [[], lib.lsl_pull_sample_f, lib.lsl_pull_sample_d,
                    lib.lsl_pull_sample_str, lib.lsl_pull_sample_i,
-                   lib.lsl_pull_sample_s, lib.lsl_pull_sample_c, []]
+                   lib.lsl_pull_sample_s, lib.lsl_pull_sample_c, pull_sample_int64]
 # noinspection PyBroadException
 try:
     fmt2push_chunk = [[], lib.lsl_push_chunk_ftp, lib.lsl_push_chunk_dtp,
                       lib.lsl_push_chunk_strtp, lib.lsl_push_chunk_itp,
-                      lib.lsl_push_chunk_stp, lib.lsl_push_chunk_ctp, []]
+                      lib.lsl_push_chunk_stp, lib.lsl_push_chunk_ctp, push_chunk_int64]
     fmt2pull_chunk = [[], lib.lsl_pull_chunk_f, lib.lsl_pull_chunk_d,
                       lib.lsl_pull_chunk_str, lib.lsl_pull_chunk_i,
-                      lib.lsl_pull_chunk_s, lib.lsl_pull_chunk_c, []]
+                      lib.lsl_pull_chunk_s, lib.lsl_pull_chunk_c, pull_chunk_int64]
 except:
     # if not available
     fmt2push_chunk = [None, None, None, None, None, None, None, None]
