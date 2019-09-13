@@ -4,7 +4,7 @@ pull_requests:
 shallow_clone: true
 stack: python 3
 environment:
-  GITHUB_URL: https://github.com/sccn/liblsl/releases/download
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.0-b13/liblsl-1.13.0
   LIBLSL_TAG: 1.13.0-b13
   LIBLSL_VERSION: 1.13.0
   TWINE_USERNAME: cboulay
@@ -12,17 +12,23 @@ environment:
 
 #https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/#running-windows-and-linux-builds-side-by-side
 build_script:
-- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-Win64.7z -FileName win_amd64.7z
-- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-Win32.7z -FileName win32.7z
-- cmd: mkdir manylinux2010_x86_64
-- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-manylinux2010_x64.so -FileName manylinux2010_x86_64/liblsl.so
-- cmd: mkdir manylinux1_x86_64
-- cmd: appveyor DownloadFile %GITHUB_URL%/%LIBLSL_TAG%/liblsl-%LIBLSL_VERSION%-manylinux1_x64.so -FileName manylinux1_x86_64/liblsl.so
-- cmd: python -m pip install --upgrade setuptools wheel
-- cmd: 7z e win_amd64.7z bin/liblsl*.dll -Owin_amd64
-- cmd: 7z e win32.7z bin/liblsl*.dll -Owin32
+# Windows
+- appveyor DownloadFile %URL_PREFIX%-Win64.7z -FileName win_amd64.7z
+- 7z e win_amd64.7z bin/liblsl*.dll -Owin_amd64
+- appveyor DownloadFile %URL_PREFIX%-Win32.7z -FileName win32.7z
+- 7z e win32.7z bin/liblsl*.dll -Owin32
+# Linux
+- mkdir manylinux2010_x86_64
+- appveyor DownloadFile %URL_PREFIX%-manylinux2010_x64.so -FileName manylinux2010_x86_64/liblsl.so
+- mkdir manylinux1_x86_64
+- appveyor DownloadFile %URL_PREFIX%-manylinux1_x64.so -FileName manylinux1_x86_64/liblsl.so
+# macOS
+- appveyor DownloadFile %URL_PREFIX%-MacOS10.11.tar.bz2 -FileName osx.tar.bz2
+- 7z x osx.tar.bz2
+- 7z e osx.tar lib/liblsl*.dylib -Omacosx_10_11_x86_64
+- python -m pip install --upgrade setuptools wheel
 - pwsh: >-
-        Foreach($platform in 'win_amd64', 'win32', 'manylinux2010_x86_64', 'manylinux1_x86_64') {
+        Foreach($platform in 'win_amd64', 'win32', 'manylinux2010_x86_64', 'manylinux1_x86_64', 'macosx_10_11_x86_64') {
                 Copy-Item $platform -Destination pylsl/lib -Recurse
                 python setup.py bdist_wheel -p $platform
                 Remove-Item -LiteralPath pylsl/lib -Force -Recurse
