@@ -2,44 +2,54 @@ version: 1.13.0.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
-stack: python 3
 environment:
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.0-b13/liblsl-1.13.0
-  LIBLSL_TAG: 1.13.0-b13
-  LIBLSL_VERSION: 1.13.0
+  APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.0-b13/liblsl-1.13.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
 #https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/#running-windows-and-linux-builds-side-by-side
 build_script:
-# Windows
-- appveyor DownloadFile %URL_PREFIX%-Win64.7z -FileName win_amd64.7z
-- 7z e win_amd64.7z bin/liblsl*.dll -Owin_amd64
-- appveyor DownloadFile %URL_PREFIX%-Win32.7z -FileName win32.7z
-- 7z e win32.7z bin/liblsl*.dll -Owin32
-# Linux
-- mkdir manylinux2010_x86_64
-- appveyor DownloadFile %URL_PREFIX%-manylinux2010_x64.so -FileName manylinux2010_x86_64/liblsl.so
-- mkdir manylinux1_x86_64
-- appveyor DownloadFile %URL_PREFIX%-manylinux1_x64.so -FileName manylinux1_x86_64/liblsl.so
-# macOS
-- appveyor DownloadFile %URL_PREFIX%-MacOS10.11.tar.bz2 -FileName osx.tar.bz2
-- 7z x osx.tar.bz2
-- 7z e osx.tar lib/liblsl*.dylib -Omacosx_10_11_x86_64
-- python -m pip install --upgrade setuptools wheel
-- pwsh: >-
-        Foreach($platform in 'win_amd64', 'win32', 'manylinux2010_x86_64', 'manylinux1_x86_64', 'macosx_10_11_x86_64') {
-                Copy-Item $platform -Destination pylsl/lib -Recurse
-                python setup.py bdist_wheel -p $platform
-                Remove-Item -LiteralPath pylsl/lib -Force -Recurse
-        }
+- python -m pip install --user --upgrade setuptools wheel
 - ps: >-
-      if ($env:APPVEYOR_REPO_TAG -eq "true") {
-        python -m pip install twine
-        python -m twine upload dist/*.whl
-      } Else {
-        echo "Not uploading to pypi; APPVEYOR_REPO_TAG : $env:APPVEYOR_REPO_TAG"
-      }
+        $files = @{
+                win_amd64 = 'Win64.7z'
+                win32 = 'Win32.7z'
+                manylinux2010_x86_64 = 'manylinux2010_x64.so'
+                manylinux1_x86_64 = 'manylinux1_x64.so'
+                macosx_10_11_x86_64 = 'MacOS10.11.tar.bz2'
+                };
+
+        ls;
+
+        $files.GetEnumerator() | foreach -Process {
+                iwr ($env:URL_PREFIX + $_.value) -ErrorAction Stop -OutFile $_.value;
+
+                iex "mkdir -p pylsl/lib";
+
+                if($_.value.EndsWith('.7z')) {
+                        iex "7z e $($_.value) bin/liblsl* -Opylsl/lib"
+                }
+                if($_.value.EndsWith('.so')) {
+                        Copy-Item $_.value -Destination pylsl/lib
+                }
+                if($_.value.Endswith('.bz2')) {
+                        # https://xkcd.com/1168/
+                        tar xvf $_.value --wildcards -C pylsl 'lib/liblsl*'
+                }
+
+                ls pylsl/lib/
+                python setup.py bdist_wheel -p $_.key
+                Remove-Item -Path pylsl/lib/*
+                Remove-Item -Path build -Force -Recurse
+        };
+
+        if ($env:APPVEYOR_REPO_TAG -eq "true") {
+                python -m pip install --user twine
+                python -m twine upload dist/*.whl
+        } else {
+                echo "Not uploading to pypi; APPVEYOR_REPO_TAG : $env:APPVEYOR_REPO_TAG"
+        }
 artifacts:
 - path: "dist/*.whl"
   name: Wheels
