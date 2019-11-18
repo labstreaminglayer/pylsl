@@ -14,7 +14,8 @@ class Inlet:
     __slots__ = ['channel_count', 'inlet', 'name']
     
     def __init__(self, info: pylsl.StreamInfo):
-        self.inlet = pylsl.StreamInlet(info, max_buflen=plot_duration)
+        self.inlet = pylsl.StreamInlet(info, max_buflen=plot_duration,
+                                       processing_flags=pylsl.proc_clocksync | pylsl.proc_dejitter)
         self.name = info.name()
         self.channel_count = info.channel_count()
 
