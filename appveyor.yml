@@ -2,73 +2,54 @@ version: 1.13.0.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
-services:
-- docker
-stack: python 3
 environment:
+  APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.0-b13/liblsl-1.13.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
-  CIBW_BUILD_VERBOSITY: 3
-  CIBW_TEST_COMMAND: python -c "import pylsl; print(pylsl.library_version()); print(pylsl.local_clock())"
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      VCVER: 14.0
-      ARCH: x64
-      CIBW_BUILD: "*-win_amd64"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      VCVER: 9.0
-      ARCH: x86
-      CIBW_BUILD: "*-win32"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
-      BUILD_LSL_IMAGE: alpine
-      CIBW_PLATFORM: linux
-      CIBW_MANYLINUX1_X86_64_IMAGE: henriquegemignani/docker-nod-ci
-      CIBW_BUILD: "*-manylinux1_x86_64"
-      CIBW_SKIP: "cp27-* cp34-*"
 
 #https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/#running-windows-and-linux-builds-side-by-side
-install:
-- cmd: appveyor DownloadFile https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip -FileName ninja.zip
-- cmd: 7z x ninja.zip -oC:\projects\deps\ninja > nul
-- cmd: set PATH=C:\projects\deps\ninja;%PATH%
-- cmd: ninja --version
-- cmd: git clone --depth 1 https://github.com/sccn/liblsl.git
-- cmd: cd liblsl
-- cmd: mkdir build
-- cmd: cd build
-- cmd: call "C:\Program Files (x86)\Microsoft Visual Studio %VCVER%\VC\vcvarsall.bat" %ARCH%
-- cmd: cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../pylsl/ -DLSL_UNIXFOLDERS=ON -DLSL_SO_LINKS_STDCPP_STATIC=ON ..
-- cmd: cmake --build . --config Release --target install
-- cmd: cd ../..
-- cmd: copy pylsl\bin\liblsl*.dll pylsl\lib
-- pip install cibuildwheel
-
-before_build:
-- sh: chmod +x ci/build_liblsl_linux.sh
-# docker service is not available during install so we build liblsl here instead.
-# liblsl is built on alpine because it has a more portable C lib, and other libs are statically linked, making pylsl portable.
-# Though the linked libs are not compatible with cp27 and cp34.
-- sh: docker run --rm -v $(pwd):/host -w /host $BUILD_LSL_IMAGE /host/ci/build_liblsl_linux.sh
-
 build_script:
-- cibuildwheel --output-dir wheelhouse
+- python -m pip install --user --upgrade setuptools wheel
 - ps: >-
-      if ($env:APPVEYOR_REPO_TAG -eq "true") {
-        python -m pip install twine
-        python -m twine upload wheelhouse/*.whl
-      } Else {
-        echo "Not uploading to pypi; APPVEYOR_REPO_TAG : $env:APPVEYOR_REPO_TAG"
-      }
+        $files = @{
+                win_amd64 = 'Win64.7z'
+                win32 = 'Win32.7z'
+                manylinux2010_x86_64 = 'manylinux2010_x64.so'
+                manylinux1_x86_64 = 'manylinux1_x64.so'
+                macosx_10_11_x86_64 = 'MacOS10.11.tar.bz2'
+                };
 
-#after_build
-# before_test
-# test_script
-# after_test
+        ls;
 
+        $files.GetEnumerator() | foreach -Process {
+                iwr ($env:URL_PREFIX + $_.value) -ErrorAction Stop -OutFile $_.value;
+
+                iex "mkdir -p pylsl/lib";
+
+                if($_.value.EndsWith('.7z')) {
+                        iex "7z e $($_.value) bin/liblsl* -Opylsl/lib"
+                }
+                if($_.value.EndsWith('.so')) {
+                        Copy-Item $_.value -Destination pylsl/lib
+                }
+                if($_.value.Endswith('.bz2')) {
+                        # https://xkcd.com/1168/
+                        tar xvf $_.value --wildcards -C pylsl 'lib/liblsl*'
+                }
+
+                ls pylsl/lib/
+                python setup.py bdist_wheel -p $_.key
+                Remove-Item -Path pylsl/lib/*
+                Remove-Item -Path build -Force -Recurse
+        };
+
+        if ($env:APPVEYOR_REPO_TAG -eq "true") {
+                python -m pip install --user twine
+                python -m twine upload dist/*.whl
+        } else {
+                echo "Not uploading to pypi; APPVEYOR_REPO_TAG : $env:APPVEYOR_REPO_TAG"
+        }
 artifacts:
-- path: "wheelhouse\\*.whl"
+- path: "dist/*.whl"
   name: Wheels
-
-# before_deploy
-# deploy_script:
-# after_deploy

@@ -7,8 +7,6 @@ from os import path
 
 
 class BinaryDistribution(Distribution):
-    def has_ext_modules(self):
-        return True
     def is_pure(self):
         return False
 
