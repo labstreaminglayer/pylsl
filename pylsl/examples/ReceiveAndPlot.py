@@ -11,8 +11,6 @@ pull_interval = 500  # ms between each pull operation
 
 
 class Inlet:
-    __slots__ = ['channel_count', 'inlet', 'name']
-    
     def __init__(self, info: pylsl.StreamInfo):
         self.inlet = pylsl.StreamInlet(info, max_buflen=plot_duration,
                                        processing_flags=pylsl.proc_clocksync | pylsl.proc_dejitter)
@@ -25,7 +23,6 @@ class Inlet:
 
 class DataInlet(Inlet):
     dtypes = [[], np.float32, np.float64, None, np.int32, np.int16, np.int8, np.int64]
-    __slots__ = ['buffer', 'curves']
 
     def __init__(self, info: pylsl.StreamInfo, plt: pg.PlotItem):
         super().__init__(info)
