@@ -1201,7 +1201,8 @@ def find_liblsl_libraries():
             print(path)
             if os.path.isfile(path):
                 yield path
-            path = util.find_library('lsl' + bitness + debugsuffix )
+            path = util.find_library('lsl' + bitness + debugsuffix) or \
+                   util.find_library('liblsl' + bitness + debugsuffix)
             if path is not None:
                 print(path)
                 yield path
