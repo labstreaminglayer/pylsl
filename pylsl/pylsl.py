@@ -120,7 +120,7 @@ def library_info():
     version is used."""
     return lib.lsl_library_info().decode('utf-8')
 
-   
+
 def local_clock():
     """Obtain a local system time stamp in seconds.
 
@@ -135,11 +135,11 @@ def local_clock():
     """
     return lib.lsl_local_clock()
 
-    
+
 # ==========================
 # === Stream Declaration ===
 # ==========================
-    
+
 class StreamInfo:
     """The StreamInfo object stores the declaration of a data stream.
 
@@ -211,7 +211,7 @@ class StreamInfo:
             if not self.obj:
                 raise RuntimeError("could not create stream description "
                                    "object.")
-    
+
     def __del__(self):
         """ Destroy a previously created StreamInfo object. """
         # noinspection PyBroadException
@@ -221,7 +221,7 @@ class StreamInfo:
             pass
 
     # === Core Information (assigned at construction) ===
-            
+
     def name(self):
         """Name of the stream.
 
@@ -247,7 +247,7 @@ class StreamInfo:
 
         """
         return lib.lsl_get_type(self.obj).decode('utf-8')
-    
+
     def channel_count(self):
         """Number of channels of the stream.
 
@@ -256,7 +256,7 @@ class StreamInfo:
 
         """
         return lib.lsl_get_channel_count(self.obj)
-    
+
     def nominal_srate(self):
         """Sampling rate of the stream, according to the source (in Hz).
 
@@ -292,13 +292,13 @@ class StreamInfo:
 
         """
         return lib.lsl_get_source_id(self.obj).decode('utf-8')
-    
+
     # === Hosting Information (assigned when bound to an outlet/inlet) ===
-    
+
     def version(self):
         """Protocol version used to deliver the stream."""
         return lib.lsl_get_version(self.obj)
-    
+
     def created_at(self):
         """Creation time stamp of the stream.
 
@@ -307,7 +307,7 @@ class StreamInfo:
 
         """
         return lib.lsl_get_created_at(self.obj)
-    
+
     def uid(self):
         """Unique ID of the stream outlet instance (once assigned).
 
@@ -330,13 +330,13 @@ class StreamInfo:
 
         """
         return lib.lsl_get_session_id(self.obj).decode('utf-8')
-    
+
     def hostname(self):
         """Hostname of the providing machine."""
         return lib.lsl_get_hostname(self.obj).decode('utf-8')
-    
+
     # === Data Description (can be modified) ===
-    
+
     def desc(self):
         """Extended description of the stream.
 
@@ -354,7 +354,7 @@ class StreamInfo:
 
         """
         return XMLElement(lib.lsl_get_desc(self.obj))
-                
+
     def as_xml(self):
         """Retrieve the entire stream_info in XML format.
 
@@ -371,20 +371,20 @@ class StreamInfo:
 
         """
         return lib.lsl_get_xml(self.obj).decode('utf-8')
-        
+
 
 # =====================    
 # === Stream Outlet ===
 # =====================
-        
+
 class StreamOutlet:
     """A stream outlet.
 
     Outlets are used to make streaming data (and the meta-data) available on 
     the lab network.
 
-    """ 
-    
+    """
+
     def __init__(self, info, chunk_size=0, max_buffered=360):
         """Establish a new stream outlet. This makes the stream discoverable.
         
@@ -412,8 +412,8 @@ class StreamOutlet:
         self.do_push_sample = fmt2push_sample[self.channel_format]
         self.do_push_chunk = fmt2push_chunk[self.channel_format]
         self.value_type = fmt2type[self.channel_format]
-        self.sample_type = self.value_type*self.channel_count
-                
+        self.sample_type = self.value_type * self.channel_count
+
     def __del__(self):
         """Destroy an outlet.
 
@@ -426,7 +426,7 @@ class StreamOutlet:
             lib.lsl_destroy_outlet(self.obj)
         except:
             pass
-        
+
     def push_sample(self, x, timestamp=0.0, pushthrough=True):
         """Push a sample into the outlet.
 
@@ -484,7 +484,7 @@ class StreamOutlet:
                 if self.channel_format == cf_string:
                     x = [v.encode('utf-8') for v in x]
                 if len(x) % self.channel_count == 0:
-                    constructor = self.value_type*len(x)
+                    constructor = self.value_type * len(x)
                     # noinspection PyCallingNonCallable
                     handle_error(self.do_push_chunk(self.obj, constructor(*x),
                                                     c_long(len(x)),
@@ -493,7 +493,7 @@ class StreamOutlet:
                 else:
                     raise ValueError("each sample must have the same number of "
                                      "channels.")
-                                
+
     def have_consumers(self):
         """Check whether consumers are currently registered.
 
@@ -502,7 +502,7 @@ class StreamOutlet:
 
         """
         return bool(lib.lsl_have_consumers(self.obj))
-        
+
     def wait_for_consumers(self, timeout):
         """Wait until some consumer shows up (without wasting resources).
 
@@ -511,7 +511,7 @@ class StreamOutlet:
         """
         return bool(lib.lsl_wait_for_consumers(self.obj, c_double(timeout)))
 
- 
+
 # =========================
 # === Resolve Functions ===
 # =========================
@@ -538,7 +538,7 @@ def resolve_streams(wait_time=1.0):
 
     """
     # noinspection PyCallingNonCallable
-    buffer = (c_void_p*1024)()
+    buffer = (c_void_p * 1024)()
     num_found = lib.lsl_resolve_all(byref(buffer), 1024, c_double(wait_time))
     return [StreamInfo(handle=buffer[k]) for k in range(num_found)]
 
@@ -566,7 +566,7 @@ def resolve_byprop(prop, value, minimum=1, timeout=FOREVER):
 
     """
     # noinspection PyCallingNonCallable
-    buffer = (c_void_p*1024)()
+    buffer = (c_void_p * 1024)()
     num_found = lib.lsl_resolve_byprop(byref(buffer), 1024,
                                        c_char_p(str.encode(prop)),
                                        c_char_p(str.encode(value)),
@@ -597,7 +597,7 @@ def resolve_bypred(predicate, minimum=1, timeout=FOREVER):
 
     """
     # noinspection PyCallingNonCallable
-    buffer = (c_void_p*1024)()
+    buffer = (c_void_p * 1024)()
     num_found = lib.lsl_resolve_bypred(byref(buffer), 1024,
                                        c_char_p(str.encode(predicate)),
                                        minimum,
@@ -608,16 +608,17 @@ def resolve_bypred(predicate, minimum=1, timeout=FOREVER):
 # ====================
 # === Memory functions
 # ====================
-def free_char_p_array_memory(char_p_array,num_elements):
+def free_char_p_array_memory(char_p_array, num_elements):
     pointers = cast(char_p_array, POINTER(c_void_p))
     for p in range(num_elements):
         if pointers[p] is not None:  # only free initialized pointers
             lib.lsl_destroy_string(pointers[p])
 
+
 # ====================
 # === Stream Inlet ===
 # ====================
-    
+
 class StreamInlet:
     """A stream inlet.
 
@@ -625,7 +626,7 @@ class StreamInlet:
     network.
 
     """
-    
+
     def __init__(self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=0):
         """Construct a new stream inlet from a resolved stream description.
         
@@ -664,7 +665,7 @@ class StreamInlet:
         self.obj = lib.lsl_create_inlet(info.obj, max_buflen, max_chunklen,
                                         recover)
         self.obj = c_void_p(self.obj)
-        if not self.obj: 
+        if not self.obj:
             raise RuntimeError("could not create stream inlet.")
         if processing_flags > 0:
             handle_error(lib.lsl_set_postprocessing(self.obj, processing_flags))
@@ -673,7 +674,7 @@ class StreamInlet:
         self.do_pull_sample = fmt2pull_sample[self.channel_format]
         self.do_pull_chunk = fmt2pull_chunk[self.channel_format]
         self.value_type = fmt2type[self.channel_format]
-        self.sample_type = self.value_type*self.channel_count
+        self.sample_type = self.value_type * self.channel_count
         self.sample = self.sample_type()
         self.buffers = {}
 
@@ -684,7 +685,7 @@ class StreamInlet:
             lib.lsl_destroy_inlet(self.obj)
         except:
             pass
-        
+
     def info(self, timeout=FOREVER):
         """Retrieve the complete information of the given stream.
 
@@ -722,7 +723,7 @@ class StreamInlet:
         errcode = c_int()
         lib.lsl_open_stream(self.obj, c_double(timeout), byref(errcode))
         handle_error(errcode)
-        
+
     def close_stream(self):
         """Drop the current data stream.
 
@@ -762,7 +763,7 @@ class StreamInlet:
                                          byref(errcode))
         handle_error(errcode)
         return result
-        
+
     def pull_sample(self, timeout=FOREVER, sample=None):
         """Pull a sample from the inlet and return it.
         
@@ -782,14 +783,14 @@ class StreamInlet:
         not considered an error).
 
         """
-        
+
         # support for the legacy API
         if type(timeout) is list:
             assign_to = timeout
             timeout = sample if type(sample) is float else 0.0
         else:
             assign_to = None
-                
+
         errcode = c_int()
         timestamp = self.do_pull_sample(self.obj, byref(self.sample),
                                         self.channel_count, c_double(timeout),
@@ -804,7 +805,7 @@ class StreamInlet:
             return sample, timestamp
         else:
             return None, None
-        
+
     def pull_chunk(self, timeout=0.0, max_samples=1024, dest_obj=None):
         """Pull a chunk of samples from the inlet.
         
@@ -830,12 +831,12 @@ class StreamInlet:
         """
         # look up a pre-allocated buffer of appropriate length        
         num_channels = self.channel_count
-        max_values = max_samples*num_channels
+        max_values = max_samples * num_channels
 
         if max_samples not in self.buffers:
             # noinspection PyCallingNonCallable
-            self.buffers[max_samples] = ((self.value_type*max_values)(),
-                                         (c_double*max_samples)())
+            self.buffers[max_samples] = ((self.value_type * max_values)(),
+                                         (c_double * max_samples)())
         if dest_obj is not None:
             data_buff = (self.value_type * max_values).from_buffer(dest_obj)
         else:
@@ -852,9 +853,9 @@ class StreamInlet:
         handle_error(errcode)
         # return results (note: could offer a more efficient format in the 
         # future, e.g., a numpy array)
-        num_samples = num_elements/num_channels
+        num_samples = num_elements / num_channels
         if dest_obj is None:
-            samples = [[data_buff[s*num_channels+c] for c in range(num_channels)]
+            samples = [[data_buff[s * num_channels + c] for c in range(num_channels)]
                        for s in range(int(num_samples))]
             if self.channel_format == cf_string:
                 samples = [[v.decode('utf-8') for v in s] for s in samples]
@@ -863,7 +864,7 @@ class StreamInlet:
             samples = None
         timestamps = [ts_buff[s] for s in range(int(num_samples))]
         return samples, timestamps
-        
+
     def samples_available(self):
         """Query whether samples are currently available for immediate pickup.
 
@@ -875,7 +876,7 @@ class StreamInlet:
 
         """
         return lib.lsl_samples_available(self.obj)
-        
+
     def was_clock_reset(self):
         """Query whether the clock was potentially reset since the last call.
 
@@ -891,7 +892,7 @@ class StreamInlet:
 # ===================
 # === XML Element ===
 # ===================
-  
+
 class XMLElement:
     """A lightweight XML element tree modeling the .desc() field of StreamInfo.
 
@@ -902,17 +903,17 @@ class XMLElement:
     additional documentation.
 
     """
-    
+
     def __init__(self, handle):
         """Construct new XML element from existing handle."""
         self.e = c_void_p(handle)
-    
+
     # === Tree Navigation ===
-    
+
     def first_child(self):
         """Get the first child of the element."""
         return XMLElement(lib.lsl_first_child(self.e))
-     
+
     def last_child(self):
         """Get the last child of the element."""
         return XMLElement(lib.lsl_last_child(self.e))
@@ -920,7 +921,7 @@ class XMLElement:
     def child(self, name):
         """Get a child with a specified name."""
         return XMLElement(lib.lsl_child(self.e, str.encode(name)))
-        
+
     def next_sibling(self, name=None):
         """Get the next sibling in the children list of the parent node.
 
@@ -931,7 +932,7 @@ class XMLElement:
             return XMLElement(lib.lsl_next_sibling(self.e))
         else:
             return XMLElement(lib.lsl_next_sibling_n(self.e, str.encode(name)))
-    
+
     def previous_sibling(self, name=None):
         """Get the previous sibling in the children list of the parent node.
 
@@ -944,17 +945,17 @@ class XMLElement:
         else:
             return XMLElement(lib.lsl_previous_sibling_n(self.e,
                                                          str.encode(name)))
-        
+
     def parent(self):
         """Get the parent node."""
         return XMLElement(lib.lsl_parent(self.e))
-    
+
     # === Content Queries ===
-    
+
     def empty(self):
         """Whether this node is empty."""
         return bool(lib.lsl_empty(self.e))
-    
+
     def is_text(self):
         """Whether this is a text body (instead of an XML element).
 
@@ -962,15 +963,15 @@ class XMLElement:
 
         """
         return bool(lib.lsl_is_text(self.e))
-    
+
     def name(self):
         """Name of the element."""
         return lib.lsl_name(self.e).decode('utf-8')
-    
+
     def value(self):
         """Value of the element."""
         return lib.lsl_value(self.e).decode('utf-8')
-        
+
     def child_value(self, name=None):
         """Get child value (value of the first child that is text).
 
@@ -985,14 +986,14 @@ class XMLElement:
         return res.decode('utf-8')
 
     # === Modification ===
-        
+
     def append_child_value(self, name, value):
         """Append a child node with a given name, which has a (nameless) 
         plain-text child with the given text value."""
         return XMLElement(lib.lsl_append_child_value(self.e,
                                                      str.encode(name),
                                                      str.encode(value)))
-    
+
     def prepend_child_value(self, name, value):
         """Prepend a child node with a given name, which has a (nameless) 
         plain-text child with the given text value."""
@@ -1006,31 +1007,31 @@ class XMLElement:
         return XMLElement(lib.lsl_set_child_value(self.e,
                                                   str.encode(name),
                                                   str.encode(value)))
-        
+
     def set_name(self, name):
         """Set the element's name. Returns False if the node is empty."""
         return bool(lib.lsl_set_name(self.e, str.encode(name)))
-     
+
     def set_value(self, value):
         """Set the element's value. Returns False if the node is empty."""
         return bool(lib.lsl_set_value(self.e, str.encode(value)))
-        
+
     def append_child(self, name):
         """Append a child element with the specified name."""
         return XMLElement(lib.lsl_append_child(self.e, str.encode(name)))
-     
+
     def prepend_child(self, name):
         """Prepend a child element with the specified name."""
         return XMLElement(lib.lsl_prepend_child(self.e, str.encode(name)))
-        
+
     def append_copy(self, elem):
         """Append a copy of the specified element as a child."""
         return XMLElement(lib.lsl_append_copy(self.e, elem.e))
-        
+
     def prepend_copy(self, elem):
         """Prepend a copy of the specified element as a child."""
         return XMLElement(lib.lsl_prepend_copy(self.e, elem.e))
-        
+
     def remove_child(self, rhs):
         """Remove a given child element, specified by name or as element."""
         if type(rhs) is XMLElement:
@@ -1038,7 +1039,7 @@ class XMLElement:
         else:
             lib.lsl_remove_child_n(self.e, rhs)
 
-            
+
 # ==========================
 # === ContinuousResolver ===
 # ==========================
@@ -1050,7 +1051,7 @@ class ContinuousResolver:
     currently visible on the network.
 
     """
-    
+
     def __init__(self, prop=None, value=None, pred=None, forget_after=5.0):
         """Construct a new continuous_resolver.
 
@@ -1080,7 +1081,7 @@ class ContinuousResolver:
         self.obj = c_void_p(self.obj)
         if not self.obj:
             raise RuntimeError("could not create continuous resolver.")
-        
+
     def __del__(self):
         """Destructor for the continuous resolver."""
         # noinspection PyBroadException
@@ -1088,7 +1089,7 @@ class ContinuousResolver:
             lib.lsl_destroy_continuous_resolver(self.obj)
         except:
             pass
-    
+
     def results(self):
         """Obtain the set of currently present streams on the network.
 
@@ -1097,7 +1098,7 @@ class ContinuousResolver:
 
         """
         # noinspection PyCallingNonCallable
-        buffer = (c_void_p*1024)()
+        buffer = (c_void_p * 1024)()
         num_found = lib.lsl_resolver_results(self.obj, byref(buffer), 1024)
         return [StreamInfo(handle=buffer[k]) for k in range(num_found)]
 
@@ -1140,7 +1141,7 @@ def handle_error(errcode):
         raise InvalidArgumentError("an argument was incorrectly specified.")
     elif errcode == -4:
         raise InternalError("an internal error has occurred.")
-    elif errcode < 0: 
+    elif errcode < 0:
         raise RuntimeError("an unknown error has occurred.")
 
 
@@ -1173,7 +1174,7 @@ def resolve_stream(*args):
                 return resolve_byprop(args[0], args[1])
             else:
                 return resolve_byprop(args[0], args[1], args[2])
-        
+
 
 # ==================================
 # === Module Initialization Code ===
@@ -1201,7 +1202,8 @@ def find_liblsl_libraries():
             print(path)
             if os.path.isfile(path):
                 yield path
-            path = util.find_library('lsl' + bitness + debugsuffix )
+            path = util.find_library('lsl' + bitness + debugsuffix) or \
+                   util.find_library('liblsl' + bitness + debugsuffix)
             if path is not None:
                 print(path)
                 yield path
@@ -1215,7 +1217,6 @@ except StopIteration:
                        "subfolder of the pylsl package or the system search "
                        "path). Alternatively, specify the env var PYLSL_LIB")
 lib = CDLL(libpath)
-
 
 # set function return types where necessary
 lib.lsl_local_clock.restype = c_double
@@ -1232,7 +1233,7 @@ lib.lsl_get_hostname.restype = c_char_p
 lib.lsl_get_desc.restype = c_void_p
 lib.lsl_get_xml.restype = c_char_p
 lib.lsl_create_outlet.restype = c_void_p
-lib.lsl_create_inlet.restype = c_void_p 
+lib.lsl_create_inlet.restype = c_void_p
 lib.lsl_get_fullinfo.restype = c_void_p
 lib.lsl_open_stream.restype = c_void_p
 lib.lsl_time_correction.restype = c_double
@@ -1309,6 +1310,7 @@ except:
     print("pylsl: ContinuousResolver not (fully) available in your liblsl "
           "version.")
 
+
 # int64 support on windows and 32bit OSes isn't there yet
 if struct.calcsize("P") != 4 and platform.system() != 'Windows':
     push_sample_int64 = lib.lsl_push_sample_ltp
@@ -1319,7 +1321,6 @@ else:
     def push_sample_int64(*_):
         raise NotImplementedError('int64 support isn\'t enabled on your platform')
     pull_sample_int64 = push_chunk_int64 = pull_chunk_int64 = push_sample_int64
-
 
 # set up some type maps
 string2fmt = {'float32': cf_float32, 'double64': cf_double64,
