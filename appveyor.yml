@@ -47,7 +47,7 @@ build_script:
                 Remove-Item -Path build -Force -Recurse
 
                 if($_.value.StartsWith('manylinux2010')) {
-                    pip install dist/pylsl-1.13.5-py2.py3-none-manylinux2010_x86_64.whl
+                    python3 -m pip install --user dist/pylsl-1.13.5-py2.py3-none-manylinux2010_x86_64.whl
                     python3 -c 'import pylsl; print(pylsl.library_info()); pylsl.stream_outlet(pylsl.stream_info());'
                 }
 
