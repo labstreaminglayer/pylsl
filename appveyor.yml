@@ -34,7 +34,7 @@ build_script:
                         iex "unzip -oj $($_.value) bin/liblsl* -d pylsl/lib"
                 }
                 if($_.value.EndsWith('.so')) {
-                        Copy-Item $_.value -Destination pylsl/lib
+                        Copy-Item $_.value -Destination pylsl/lib/liblsl.so
                 }
                 if($_.value.Endswith('.bz2')) {
                         # https://xkcd.com/1168/
@@ -46,8 +46,8 @@ build_script:
                 Remove-Item -Path pylsl/lib/* -Force -Recurse
                 Remove-Item -Path build -Force -Recurse
 
-                if($_.value.StartsWith('manylinux1')) {
-                    python -m pip install --user dist/pylsl-1.13.5-py2.py3-none-manylinux1_x86_64.whl
+                if($_.value.StartsWith('manylinux2010')) {
+                    python -m pip install --user dist/pylsl-1.13.5-py2.py3-none-manylinux2010_x86_64.whl
                     python -c 'import pylsl; print(pylsl.library_info()); pylsl.stream_outlet(pylsl.stream_info());'
                 }
 
