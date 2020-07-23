@@ -1199,24 +1199,17 @@ def find_liblsl_libraries():
     for debugsuffix in ['', '-debug']:
         for bitness in ['', str(8 * struct.calcsize("P"))]:
             path = libbasepath + bitness + debugsuffix + libsuffix
-            print("Seeking", path)
             if os.path.isfile(path):
-                print("Found", path)
                 yield path
             path = util.find_library('lsl' + bitness + debugsuffix) or \
                    util.find_library('liblsl' + bitness + debugsuffix)
             if path is not None:
-                print("util", path)
                 yield path
 
 
 try:
     libpath = next(find_liblsl_libraries())
 except StopIteration:
-    print("listdir", os.path.dirname(__file__))
-    print(os.listdir(os.path.dirname(__file__)))
-    print("listdir", os.path.join(os.path.dirname(__file__), 'lib'))
-    print(os.listdir(os.path.join(os.path.dirname(__file__), 'lib')))
     raise RuntimeError("liblsl library was not found - make sure "
                        "that it is on the search path (e.g., in the lib/ "
                        "subfolder of the pylsl package or the system search "
