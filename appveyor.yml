@@ -31,7 +31,7 @@ build_script:
                         iex "7z e $($_.value) bin/liblsl* -Opylsl/lib"
                 }
                 if($_.value.Endswith('.zip')) {
-                        iex "unzip $($_.value) -o bin/liblsl* -d pylsl/lib"
+                        iex "unzip $($_.value) bin/liblsl* -d pylsl/lib"
                 }
                 if($_.value.EndsWith('.so')) {
                         Copy-Item $_.value -Destination pylsl/lib
@@ -43,7 +43,7 @@ build_script:
 
                 ls pylsl/lib/
                 python setup.py bdist_wheel -p $_.key
-                Remove-Item -Path pylsl/lib/*
+                Remove-Item -Path pylsl/lib/* -Force -Recurse
                 Remove-Item -Path build -Force -Recurse
         };
 
