@@ -31,7 +31,7 @@ build_script:
                         iex "7z e $($_.value) bin/liblsl* -Opylsl/lib"
                 }
                 if($_.value.Endswith('.zip')) {
-                        unzip $_.value -d pylsl/lib
+                        iex "unzip $($_.value) -o bin/liblsl* -d pylsl/lib"
                 }
                 if($_.value.EndsWith('.so')) {
                         Copy-Item $_.value -Destination pylsl/lib
