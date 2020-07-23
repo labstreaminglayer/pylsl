@@ -1,4 +1,4 @@
-version: 1.13.5.{build}
+version: 1.13.6.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
@@ -46,10 +46,10 @@ build_script:
                 Remove-Item -Path pylsl/lib/* -Force -Recurse
                 Remove-Item -Path build -Force -Recurse
 
-                if($_.value.StartsWith('manylinux2010')) {
-                    python -m pip install --user dist/pylsl-1.13.5-py2.py3-none-manylinux2010_x86_64.whl
-                    python -c 'import pylsl; print(pylsl.library_info()); pylsl.stream_outlet(pylsl.stream_info());'
-                }
+                #if($_.value.StartsWith('manylinux2010')) {
+                #    python -m pip install --user dist/pylsl-1.13.6-py2.py3-none-manylinux2010_x86_64.whl
+                #    python -c 'import pylsl; print(pylsl.library_info()); pylsl.stream_outlet(pylsl.stream_info());'
+                #}
 
         };
 
