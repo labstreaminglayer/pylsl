@@ -1199,13 +1199,11 @@ def find_liblsl_libraries():
     for debugsuffix in ['', '-debug']:
         for bitness in ['', str(8 * struct.calcsize("P"))]:
             path = libbasepath + bitness + debugsuffix + libsuffix
-            print(path)
             if os.path.isfile(path):
                 yield path
             path = util.find_library('lsl' + bitness + debugsuffix) or \
                    util.find_library('liblsl' + bitness + debugsuffix)
             if path is not None:
-                print(path)
                 yield path
 
 

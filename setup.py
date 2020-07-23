@@ -24,6 +24,14 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+# Get the version number from the version file
+# Versions should comply with PEP440.  For a discussion on single-sourcing
+# the version across setup.py and the project code, see
+# https://packaging.python.org/en/latest/single_source_version.html
+with open('pylsl/version.py') as f:
+    exec(f.read())  # Sets __version__ in setup namespace
+
 #extension_modules = [Extension(
 #    'pylsl.liblsl',
 #    sources=[],
@@ -34,10 +42,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='pylsl',
 
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.13.2',
+    version=__version__,
 
     description='Python interface to the Lab Streaming Layer',
     long_description=long_description,

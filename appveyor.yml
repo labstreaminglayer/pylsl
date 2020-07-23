@@ -1,10 +1,10 @@
-version: 1.13.0.{build}
+version: 1.13.2.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
 environment:
   APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.0-b13/liblsl-1.13.0-
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
@@ -53,3 +53,4 @@ build_script:
 artifacts:
 - path: "dist/*.whl"
   name: Wheels
+
