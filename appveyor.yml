@@ -13,11 +13,11 @@ build_script:
 - python -m pip install --user --upgrade setuptools wheel
 - ps: >-
         $files = @{
-                win_amd64 = 'Win64.7z'
-                win32 = 'Win32.7z'
+                win_amd64 = 'Win64.zip'
+                win32 = 'Win32.zip'
                 manylinux2010_x86_64 = 'manylinux2010_x64.so'
                 manylinux1_x86_64 = 'manylinux1_x64.so'
-                macosx_10_11_x86_64 = 'MacOS10.11.tar.bz2'
+                macosx_10_13_x86_64 = 'MacOS10.13.tar.bz2'
                 };
 
         ls;
@@ -29,6 +29,9 @@ build_script:
 
                 if($_.value.EndsWith('.7z')) {
                         iex "7z e $($_.value) bin/liblsl* -Opylsl/lib"
+                }
+                if($_.value.Endswith('.zip')) {
+                        unzip $_.value -d pylsl/lib
                 }
                 if($_.value.EndsWith('.so')) {
                         Copy-Item $_.value -Destination pylsl/lib

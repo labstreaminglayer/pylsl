@@ -22,11 +22,11 @@ using [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
 
 |   | macOS 10.6+ | manylinux i686 | manylinux x86_64 |  Windows 32bit | Windows 64bit |
 |---|---|---|---|---|---|
-| Python 2.7 | ✅ |  |  | ✅ | ✅ |
+| Python 2.7 | ✅ |  | ✅ | ✅ | ✅ |
 | Python 3.4 | ✅ |  |  | ✅ | ✅ |
-| Python 3.5 | ✅ |  |  | ✅ | ✅ |
-| Python 3.6 | ✅ |  |  | ✅ | ✅ |
-| Python 3.7 | ✅ |  |  | ✅ | ✅ |
+| Python 3.5 | ✅ |  | ✅ | ✅ | ✅ |
+| Python 3.6 | ✅ |  | ✅ | ✅ | ✅ |
+| Python 3.7 | ✅ |  | ✅ | ✅ | ✅ |
 
 More or less experimental releases are in [tstenner's anaconda repo](https://anaconda.org/tstenner/pylsl), install with `conda install -c tstenner pylsl`.
 
