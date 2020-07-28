@@ -1,6 +1,5 @@
 # pylsl
 
-[![Build Status](https://travis-ci.com/labstreaminglayer/liblsl-Python.svg?branch=master)](https://travis-ci.com/labstreaminglayer/liblsl-Python)
 [![Build status](https://ci.appveyor.com/api/projects/status/ggouc09585l2518i/branch/master?svg=true)](https://ci.appveyor.com/project/cboulay/liblsl-python/branch/master)
 
 This is the Python interface to the [Lab Streaming Layer (LSL)](https://github.com/sccn/labstreaminglayer).
