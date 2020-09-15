@@ -1195,16 +1195,16 @@ def find_liblsl_libraries():
     else:
         raise RuntimeError("unrecognized operating system:", os_name)
 
-    libbasepath = os.path.join(os.path.dirname(__file__), 'lib', 'liblsl')
-    for debugsuffix in ['', '-debug']:
-        for bitness in ['', str(8 * struct.calcsize("P"))]:
-            path = libbasepath + bitness + debugsuffix + libsuffix
-            if os.path.isfile(path):
-                yield path
-            path = util.find_library('lsl' + bitness + debugsuffix) or \
-                   util.find_library('liblsl' + bitness + debugsuffix)
-            if path is not None:
-                yield path
+    libbasepath = os.path.join(os.path.dirname(__file__), 'lib')
+    for libprefix in ['', 'lib']:
+        for debugsuffix in ['', '-debug']:
+            for bitness in ['', str(8 * struct.calcsize("P"))]:
+                path = os.path.join(libbasepath, libprefix + 'lsl' + bitness + debugsuffix + libsuffix)
+                if os.path.isfile(path):
+                    yield path
+                path = util.find_library(libprefix + 'lsl' + bitness + debugsuffix)
+                if path is not None:
+                    yield path
 
 
 try:
