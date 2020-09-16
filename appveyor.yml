@@ -4,7 +4,7 @@ pull_requests:
 shallow_clone: true
 environment:
   APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.14.0b3/liblsl-1.14.0-
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.14.0b4/liblsl-1.14.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
