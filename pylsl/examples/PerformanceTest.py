@@ -1,18 +1,21 @@
 import time
 import random
 import numpy as np
-from pylsl import StreamInfo, StreamInlet, StreamOutlet, local_clock, resolve_byprop,\
+from pylsl import StreamInfo, StreamInlet, StreamOutlet, local_clock, resolve_byprop, \
     resolve_bypred, proc_clocksync, proc_dejitter, proc_monotonize
+
 try:
-    from pyfftw.interfaces.numpy_fft import rfft, irfft       # Performs much better than numpy's fftpack
+    from pyfftw.interfaces.numpy_fft import rfft, irfft  # Performs much better than numpy's fftpack
 except ImportError:
     from numpy.fft import rfft, irfft
 try:
     import pyqtgraph as pg
     import sys
+
     haspyqtgraph = True
 except ImportError:
     haspyqtgraph = False
+
 
 # The code for pink noise generation is taken from
 # https://github.com/python-acoustics/python-acoustics/blob/master/acoustics/generator.py
@@ -24,18 +27,20 @@ def ms(x):
     """
     return (np.abs(x) ** 2.0).mean()
 
+
 def normalize(y, x=None):
     """normalize power in y to a (standard normal) white noise signal.
     Optionally normalize to power in signal `x`.
     #The mean power of a Gaussian with :math:`\\mu=0` and :math:`\\sigma=1` is 1.
     """
-    #return y * np.sqrt( (np.abs(x)**2.0).mean() / (np.abs(y)**2.0).mean() )
+    # return y * np.sqrt( (np.abs(x)**2.0).mean() / (np.abs(y)**2.0).mean() )
     if x is not None:
         x = ms(x)
     else:
         x = 1.0
-    return y * np.sqrt( x / ms(y) )
-    #return y * np.sqrt( 1.0 / (np.abs(y)**2.0).mean() )
+    return y * np.sqrt(x / ms(y))
+    # return y * np.sqrt( 1.0 / (np.abs(y)**2.0).mean() )
+
 
 def pink(N):
     """
@@ -67,7 +72,7 @@ class PinkNoiseGenerator(object):
     def __init__(self, nSampsPerBlock=1024):
         self.N = nSampsPerBlock
         self.uneven = self.N % 2
-        lenX = self.N//2 + 1 + self.uneven
+        lenX = self.N // 2 + 1 + self.uneven
         self.S = np.sqrt(np.arange(lenX) + 1.)
 
     def generate(self):
@@ -79,7 +84,7 @@ class PinkNoiseGenerator(object):
 
 
 class BetaGeneratorOutlet(object):
-    def __init__(self, Fs=2**14, FreqBeta=20.0, AmpBeta=100.0, AmpNoise=20.0, NCyclesPerChunk=4,
+    def __init__(self, Fs=2 ** 14, FreqBeta=20.0, AmpBeta=100.0, AmpNoise=20.0, NCyclesPerChunk=4,
                  channels=["RAW1", "SPK1", "RAW2", "SPK2", "RAW3", "SPK3"]):
         """
         :param Fs:              Sampling rate
@@ -91,20 +96,20 @@ class BetaGeneratorOutlet(object):
         """
         # Saved arguments
         self.FreqBeta = FreqBeta
-        self.AmpBeta = AmpBeta                                          # Amplitude of Beta (uV)
-        self.AmpNoise = AmpNoise                                        # Amplitude of pink noise
+        self.AmpBeta = AmpBeta  # Amplitude of Beta (uV)
+        self.AmpNoise = AmpNoise  # Amplitude of pink noise
         self.channels = channels
         # Derived variables
-        chunk_dur = NCyclesPerChunk / self.FreqBeta           # Duration, in sec, of one chunk
-        chunk_len = int(Fs * chunk_dur)                  # Number of samples in a chunk
-        self.tvec = 1.0 * (np.arange(chunk_len) + 1) / Fs     # time vector for chunk (sec)
+        chunk_dur = NCyclesPerChunk / self.FreqBeta  # Duration, in sec, of one chunk
+        chunk_len = int(Fs * chunk_dur)  # Number of samples in a chunk
+        self.tvec = 1.0 * (np.arange(chunk_len) + 1) / Fs  # time vector for chunk (sec)
         # Pink noise generator
         self.pinkNoiseGen = PinkNoiseGenerator(nSampsPerBlock=chunk_len)
 
         # Create a stream of fake 'raw' data
         raw_info = StreamInfo(name='BetaGen', type='EEG',
-                           channel_count=len(self.channels), nominal_srate=Fs,
-                           channel_format='float32', source_id='betagen1234')
+                              channel_count=len(self.channels), nominal_srate=Fs,
+                              channel_format='float32', source_id='betagen1234')
         raw_xml = raw_info.desc()
         chans = raw_xml.append_child("channels")
         for channame in self.channels:
@@ -126,9 +131,11 @@ class BetaGeneratorOutlet(object):
 
         this_tvec = self.tvec + self.last_time  # Sample times
         # Put the signal together
-        this_sig = self.AmpNoise * np.asarray(self.pinkNoiseGen.generate(), dtype=np.float32)  # Start with some pink noise
+        this_sig = self.AmpNoise * np.asarray(self.pinkNoiseGen.generate(),
+                                              dtype=np.float32)  # Start with some pink noise
         this_sig += beta_amp * np.sin(this_tvec * 2 * np.pi * self.FreqBeta)  # Add our beta signal
-        this_sig = np.atleast_2d(this_sig).T * np.ones((1, len(self.channels)), dtype=np.float32)  # Tile across channels
+        this_sig = np.atleast_2d(this_sig).T * np.ones((1, len(self.channels)),
+                                                       dtype=np.float32)  # Tile across channels
 
         time_to_sleep = max(0, this_tvec[-1] - local_clock())
         time.sleep(time_to_sleep)
@@ -161,10 +168,11 @@ class BetaInlet(object):
             ch = ch.next_sibling("channel")
         self.channel_names = [ch_xml.child_value("label") for ch_xml in chan_xml_list]
         print("Reading from inlet named {} with channels {} sending data at {} Hz".format(stream_info.name(),
-                                                                                          self.channel_names, stream_Fs))
+                                                                                          self.channel_names,
+                                                                                          stream_Fs))
 
     def update(self):
-        max_samps = 3276*2
+        max_samps = 3276 * 2
         data = np.nan * np.ones((max_samps, len(self.channel_names)), dtype=np.float32)
         _, timestamps = self.inlet.pull_chunk(max_samples=max_samps, dest_obj=data)
         data = data[:len(timestamps), :]
@@ -191,9 +199,9 @@ class MarkersGeneratorOutlet(object):
         stream_name = 'GeneratedCentreOutMarkers'
         stream_type = 'Markers'
         outlet_info = StreamInfo(name=stream_name, type=stream_type,
-                   channel_count=1, nominal_srate=0,
-                   channel_format='string',
-                   source_id='centreoutmarkergen1234')
+                                 channel_count=1, nominal_srate=0,
+                                 channel_format='string',
+                                 source_id='centreoutmarkergen1234')
         outlet_xml = outlet_info.desc()
         channels_xml = outlet_xml.append_child("channels")
         chan_xml = channels_xml.append_child("channel")
@@ -243,7 +251,7 @@ class MarkersGeneratorOutlet(object):
                 hit_string = "Hit" if random.randint(0, 1) == 1 else "Miss"
                 out_string = "{}, Class {}, Target {}".format(hit_string, self.class_id, self.target_id)
             print("Marker outlet pushing string: {}".format(out_string))
-            self.outlet.push_sample([out_string,])
+            self.outlet.push_sample([out_string, ])
 
             return True
         return False
@@ -251,7 +259,7 @@ class MarkersGeneratorOutlet(object):
 
 class MarkerInlet(object):
     def __init__(self):
-        self.task = {'phase':'precue', 'class':1, 'target':1}
+        self.task = {'phase': 'precue', 'class': 1, 'target': 1}
         print("Looking for stream with type Markers")
         streams = resolve_bypred("type='Markers'", minimum=1)
         proc_flags = 0  # Marker events are relatively rare. No need to post-process.
@@ -299,6 +307,7 @@ if haspyqtgraph:
     qwindow.clear()
     qwindow.parent().setWindowTitle("pylsl PerformanceTest")
 
+
 def update():
     markerGen.update()
     markerIn.update()
@@ -316,6 +325,7 @@ def update():
             # update graphs
             for i in range(signal.shape[1]):
                 graphs[i].setData(signal[:, i], x=tvec)
+
 
 if __name__ == '__main__':
     """
