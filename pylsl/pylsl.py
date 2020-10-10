@@ -1181,40 +1181,87 @@ def resolve_stream(*args):
 # ==================================
 
 def find_liblsl_libraries():
+    """finds the binary lsl library by looking
+
+    search order is to first try to use the path stored in the environment
+    variable PYLSL_LIB (if available), then search through the package
+    directory and if there is no library, finally search the whole system
+
+    returns
+    -------
+
+    path: Generator[str]
+        a generator yielding possible paths to the library
+
+    """
     # find and load library
-    if 'PYLSL_LIB' in os.environ:
-        yield os.environ['PYLSL_LIB']
+    if "PYLSL_LIB" in os.environ:
+        path = os.environ["PYLSL_LIB"]
+        if os.path.isfile(path):
+            yield path
+        else:
+            print('Skipping PYLSL_LIB:', path, ' because it was either not ' +
+                  'found or is not a valid file')
 
     os_name = platform.system()
-    if os_name in ['Windows', 'Microsoft']:
-        libsuffix = '.dll'
-    elif os_name == 'Darwin':
-        libsuffix = '.dylib'
-    elif os_name == 'Linux':
-        libsuffix = '.so'
+    if os_name in ["Windows", "Microsoft"]:
+        libsuffix = ".dll"
+    elif os_name == "Darwin":
+        libsuffix = ".dylib"
+    elif os_name == "Linux":
+        libsuffix = ".so"
     else:
         raise RuntimeError("unrecognized operating system:", os_name)
 
-    libbasepath = os.path.join(os.path.dirname(__file__), 'lib')
-    for libprefix in ['', 'lib']:
-        for debugsuffix in ['', '-debug']:
-            for bitness in ['', str(8 * struct.calcsize("P"))]:
-                path = os.path.join(libbasepath, libprefix + 'lsl' + bitness + debugsuffix + libsuffix)
-                if os.path.isfile(path):
-                    yield path
-                path = util.find_library(libprefix + 'lsl' + bitness + debugsuffix)
-                if path is not None:
-                    yield path
+    libbasepath = os.path.join(os.path.dirname(__file__), "lib")
+
+    # because there were quite a few errors with pickung up old binaries
+    # still lurking in the system or environment, we first search through all
+    # prefix/suffix/bitness variants in the package itself, i.e. in libbasepath
+    # before searching through the system with util.find_library
+    for scope in ["package", "system"]:
+        for libprefix in ["", "lib"]:
+            for debugsuffix in ["", "-debug"]:
+                for bitness in ["", str(8 * struct.calcsize("P"))]:
+                    if scope == "package":
+                        path = os.path.join(
+                            libbasepath,
+                            libprefix
+                            + "lsl"
+                            + bitness
+                            + debugsuffix
+                            + libsuffix,
+                        )
+                        if os.path.isfile(path):
+                            yield path
+                    elif scope == "system":
+                        # according to docs:
+                        # On Linux, find_library tries to run external
+                        # programs (/sbin/ldconfig, gcc, and objdump) to find
+                        # the library file
+                        # On OS X, find_library tries several predefined
+                        # naming schemes and paths to locate the library,
+                        # On Windows, find_library searches along the system
+                        # search path
+                        path = util.find_library(
+                            libprefix + "lsl" + bitness + debugsuffix
+                        )
+                        if path is not None:
+                            yield path
 
 
 try:
     libpath = next(find_liblsl_libraries())
+    lib = CDLL(libpath)
 except StopIteration:
-    raise RuntimeError("liblsl library was not found - make sure "
-                       "that it is on the search path (e.g., in the lib/ "
-                       "subfolder of the pylsl package or the system search "
+    raise RuntimeError("liblsl library was not found - make sure " +
+                       "that it is on the search path (e.g., in the lib/ " +
+                       "subfolder of the pylsl package or the system search " +
                        "path). Alternatively, specify the env var PYLSL_LIB")
-lib = CDLL(libpath)
+except OSError:
+    raise RuntimeError("liblsl library '" + libpath + "' could not be loaded" +
+                       " - make sure bitness and suffix match your OS." +
+                       "Alternatively, specify the env var PYLSL_LIB")
 
 # set function return types where necessary
 lib.lsl_local_clock.restype = c_double
