@@ -1,10 +1,10 @@
-version: 1.13.6.{build}
+version: 1.14.0.b5  # {build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
 environment:
   APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.14.0b5/liblsl-1.14.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
@@ -14,7 +14,7 @@ build_script:
 - ps: >-
         $files = @{
                 win_amd64 = 'Win64.zip'
-                win32 = 'Win32.zip'
+                # win32 = 'Win32.zip'
                 manylinux2010_x86_64 = 'manylinux2010_x64.so'
                 manylinux1_x86_64 = 'manylinux1_x64.so'
                 macosx_10_13_x86_64 = 'MacOS10.13.tar.bz2'

@@ -45,10 +45,11 @@ See the examples in pylsl/examples. Note that these can be run directly from the
 
 ## Continuous Integration
 
-pylsl uses continuous integration. It uses AppVeyor for Windows and Linux, and Travis-CI for MacOS.
-Whenever a new commit is pushed, AppVeyor and Travis build liblsl, copy it into the correct directory, install pylsl, then test its basic functionality.
+pylsl uses continuous integration.
+Whenever a new commit is pushed, AppVeyor downloads liblsl from its releases page, copies it to the package,
+then builds wheels for ditribution. This process is repeated for each of Windows, Mac, and Linux.
 In addition, whenever a new `git tag` is used on a commit that is pushed to the master branch,
-the CI systems will deploy new wheels to pypi.
+the CI systems will deploy the wheels to pypi.
 
 ## Manual Distrubtion
 
