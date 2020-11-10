@@ -1,4 +1,4 @@
-version: 1.14.0.b5  # {build}
+version: 1.14.0b6.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
@@ -31,7 +31,7 @@ build_script:
                         iex "7z e $($_.value) bin/liblsl* -Opylsl/lib"
                 }
                 if($_.value.Endswith('.zip')) {
-                        iex "unzip -oj $($_.value) bin/liblsl* -d pylsl/lib"
+                        iex "unzip -oj $($_.value) bin/lsl* -d pylsl/lib"
                 }
                 if($_.value.EndsWith('.so')) {
                         Copy-Item $_.value -Destination pylsl/lib/liblsl.so
