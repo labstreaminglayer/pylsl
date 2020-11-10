@@ -10,6 +10,7 @@ class BinaryDistribution(Distribution):
     def is_pure(self):
         return False
 
+
 class InstallPlatlib(install):
     def finalize_options(self):
         install.finalize_options(self)

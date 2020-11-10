@@ -1180,12 +1180,12 @@ def resolve_stream(*args):
 # === Module Initialization Code ===
 # ==================================
 
-def find_liblsl_libraries():
-    """finds the binary lsl library by looking
+def find_liblsl_libraries(verbose=False):
+    """finds the binary lsl library.
 
-    search order is to first try to use the path stored in the environment
+    Search order is to first try to use the path stored in the environment
     variable PYLSL_LIB (if available), then search through the package
-    directory and if there is no library, finally search the whole system
+    directory, and finally search the whole system.
 
     returns
     -------
@@ -1199,7 +1199,7 @@ def find_liblsl_libraries():
         path = os.environ["PYLSL_LIB"]
         if os.path.isfile(path):
             yield path
-        else:
+        elif verbose:
             print('Skipping PYLSL_LIB:', path, ' because it was either not ' +
                   'found or is not a valid file')
 
@@ -1234,7 +1234,7 @@ def find_liblsl_libraries():
                         )
                         if os.path.isfile(path):
                             yield path
-                    elif scope == "system":
+                    elif (scope == "system") and os_name not in ["Windows", "Microsoft"]:
                         # according to docs:
                         # On Linux, find_library tries to run external
                         # programs (/sbin/ldconfig, gcc, and objdump) to find
@@ -1242,7 +1242,9 @@ def find_liblsl_libraries():
                         # On OS X, find_library tries several predefined
                         # naming schemes and paths to locate the library,
                         # On Windows, find_library searches along the system
-                        # search path
+                        # search path. However, we disallow finding system-level
+                        # lsl.dll on Windows because it causes too many problems
+                        # and should never be necessary.
                         path = util.find_library(
                             libprefix + "lsl" + bitness + debugsuffix
                         )
@@ -1250,18 +1252,26 @@ def find_liblsl_libraries():
                             yield path
 
 
+__dload_msg = "You can download the correct LSL library for your platform from the liblsl releases page assets: " \
+              "https://github.com/sccn/liblsl/releases"
 try:
     libpath = next(find_liblsl_libraries())
     lib = CDLL(libpath)
 except StopIteration:
-    raise RuntimeError("liblsl library was not found - make sure " +
-                       "that it is on the search path (e.g., in the lib/ " +
-                       "subfolder of the pylsl package or the system search " +
-                       "path). Alternatively, specify the env var PYLSL_LIB")
+    err_msg = ("LSL binary library file was not found. Please make sure that the " +
+                 "binary file can be found in the package lib folder\n (" +
+                 os.path.join(os.path.dirname(__file__), "lib") + ")\n or ")
+    if platform.system() not in ["Windows", "Microsoft"]:
+        err_msg += "the system search path. Alternatively, "
+    err_msg += "specify the PYLSL_LIB environment variable.\n "
+    raise RuntimeError(err_msg + __dload_msg)
 except OSError:
-    raise RuntimeError("liblsl library '" + libpath + "' could not be loaded" +
-                       " - make sure bitness and suffix match your OS." +
-                       "Alternatively, specify the env var PYLSL_LIB")
+    err_msg = "liblsl library '" + libpath + "' found but could not be loaded "
+    err_msg += "- possible platform/architecture mismatch.\n "
+    if platform.system() in ["Windows", "Microsoft"]:
+        err_msg += "You may need to download and install the latest Microsoft Visual C++ Redistributable."
+    raise RuntimeError(err_msg + "\n " + __dload_msg)
+
 
 # set function return types where necessary
 lib.lsl_local_clock.restype = c_double
