@@ -1,10 +1,10 @@
-version: 1.14.0b6.{build}
+version: 1.14.0rc1.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
 environment:
   APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.14.0b5/liblsl-1.14.0-
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.14.0rc1/liblsl-1.14.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
@@ -13,11 +13,11 @@ build_script:
 - python -m pip install --user --upgrade setuptools wheel
 - ps: >-
         $files = @{
-                win_amd64 = 'Win64.zip'
-                # win32 = 'Win32.zip'
+                win_amd64 = 'Win_amd64.zip'
+                win32 = 'Win_i386.zip'
                 manylinux2010_x86_64 = 'manylinux2010_x64.so'
                 manylinux1_x86_64 = 'manylinux1_x64.so'
-                macosx_10_13_x86_64 = 'MacOS10.13.tar.bz2'
+                macosx_10_13_x86_64 = 'OSX_amd64.tar.bz2'
                 };
 
         ls;
@@ -47,7 +47,7 @@ build_script:
                 Remove-Item -Path build -Force -Recurse
 
                 #if($_.value.StartsWith('manylinux2010')) {
-                #    python -m pip install --user dist/pylsl-1.13.6-py2.py3-none-manylinux2010_x86_64.whl
+                #    python -m pip install --user dist/pylsl-1.14.0-py2.py3-none-manylinux2010_x86_64.whl
                 #    python -c 'import pylsl; print(pylsl.library_info()); pylsl.stream_outlet(pylsl.stream_info());'
                 #}
 
