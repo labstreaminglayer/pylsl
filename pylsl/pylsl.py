@@ -877,6 +877,13 @@ class StreamInlet:
         """
         return lib.lsl_samples_available(self.obj)
 
+    def flush(self):
+        """
+        Drop all queued not-yet pulled samples.
+        :return: The number of dropped samples.
+        """
+        return lib.lsl_inlet_flush(self.obj)
+
     def was_clock_reset(self):
         """Query whether the clock was potentially reset since the last call.
 
