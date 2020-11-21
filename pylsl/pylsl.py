@@ -451,8 +451,9 @@ class StreamOutlet:
                                              c_double(timestamp),
                                              c_int(pushthrough)))
         else:
-            raise ValueError("length of the data must correspond to the "
-                             "stream's channel count.")
+            raise ValueError("length of the sample (" + str(len(x)) + ") must "
+                             "correspond to the stream's channel count ("
+                             + str(self.channel_count) + ").")
 
     def push_chunk(self, x, timestamp=0.0, pushthrough=True):
         """Push a list of samples into the outlet.
@@ -491,8 +492,8 @@ class StreamOutlet:
                                                     c_double(timestamp),
                                                     c_int(pushthrough)))
                 else:
-                    raise ValueError("each sample must have the same number of "
-                                     "channels.")
+                    raise ValueError("Each sample must have the same number of channels ("
+                                     + str(self.channel_count) + ").")
 
     def have_consumers(self):
         """Check whether consumers are currently registered.
