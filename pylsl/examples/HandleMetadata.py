@@ -11,7 +11,7 @@ def main():
     info = StreamInfo("MetaTester", "EEG", 8, 100, "float32", "myuid56872")
 
     # now attach some meta-data (in accordance with XDF format,
-    # see also code.google.com/p/xdf)
+    # see also https://github.com/sccn/xdf/wiki/Meta-Data)
     chns = info.desc().append_child("channels")
     for label in ["C3", "C4", "Cz", "FPz", "POz", "CPz", "O1", "O2"]:
         ch = chns.append_child("channel")

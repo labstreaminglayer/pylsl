@@ -11,12 +11,13 @@ from pylsl import StreamInfo, StreamOutlet, local_clock
 
 def main(argv):
     srate = 100
-    name = 'BioSemi'
+    name = 'LSLExampleAmp'
     type = 'EEG'
-    n_channels = 8
+    channel_names = ["C3", "C4", "Cz", "FPz", "POz", "CPz", "O1", "O2"]
+    n_channels = len(channel_names)
     help_string = 'SendData.py -s <sampling_rate> -n <stream_name> -t <stream_type>'
     try:
-        opts, args = getopt.getopt(argv, "hs:c:n:t:", longopts=["srate=", "channels=", "name=", "type"])
+        opts, args = getopt.getopt(argv, "hs:n:t:", longopts=["srate=", "name=", "type"])
     except getopt.GetoptError:
         print(help_string)
         sys.exit(2)
@@ -26,8 +27,6 @@ def main(argv):
             sys.exit()
         elif opt in ("-s", "--srate"):
             srate = float(arg)
-        elif opt in ("-c", "--channels"):
-            n_channels = int(arg)
         elif opt in ("-n", "--name"):
             name = arg
         elif opt in ("-t", "--type"):
@@ -41,13 +40,18 @@ def main(argv):
     info = StreamInfo(name, type, n_channels, srate, 'float32', 'myuid2424')
 
     # append some meta-data
-    info.desc().append_child_value("manufacturer", "BioSemi")
-    channels = info.desc().append_child("channels")
-    for c in ["C3", "C4", "Cz", "FPz", "POz", "CPz", "O1", "O2"]:
-        channels.append_child("channel") \
-            .append_child_value("label", c) \
-            .append_child_value("unit", "microvolts") \
-            .append_child_value("type", "EEG")
+    info.desc().append_child_value("manufacturer", "LSLExampleAmp")
+    chns = info.desc().append_child("channels")
+    for label in channel_names:
+        ch = chns.append_child("channel")
+        ch.append_child_value("label", label)
+        ch.append_child_value("unit", "microvolts")
+        ch.append_child_value("type", "EEG")
+    info.desc().append_child_value("manufacturer", "LSLExamples")
+    cap = info.desc().append_child("cap")
+    cap.append_child_value("name", "ComfyCap")
+    cap.append_child_value("size", "54")
+    cap.append_child_value("labelscheme", "10-20")
 
     # next make an outlet; we set the transmission chunk size to 32 samples and
     # the outgoing buffer size to 360 seconds (max.)
@@ -69,6 +73,7 @@ def main(argv):
             stamp = local_clock() - 0.125
             # now send it and wait for a bit
             outlet.push_chunk(mychunk, stamp)
+            sent_samples += required_samples
         time.sleep(0.02)
 
 
