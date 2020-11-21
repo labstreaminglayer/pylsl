@@ -1,10 +1,10 @@
-version: 1.14.0rc1.{build}
+version: 1.14.0rc2.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
 environment:
   APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.14.0rc1/liblsl-1.14.0-
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.14.0rc2/liblsl-1.14.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
