@@ -78,11 +78,11 @@ cf_int64 = 7
 cf_undefined = 0
 
 # Post processing flags
-proc_none = 0
-proc_clocksync = 1
-proc_dejitter = 2
-proc_monotonize = 4
-proc_threadsafe = 8
+proc_none = 0  # No automatic post-processing; return the ground-truth time stamps for manual post-processing.
+proc_clocksync = 1  # Perform automatic clock synchronization; equivalent to manually adding the time_correction().
+proc_dejitter = 2  # Remove jitter from time stamps using a smoothing algorithm to the received time stamps.
+proc_monotonize = 4  # Force the time-stamps to be monotonically ascending. Only makes sense if timestamps are dejittered.
+proc_threadsafe = 8  # Post-processing is thread-safe (same inlet can be read from by multiple threads).
 proc_ALL = proc_none | proc_clocksync | proc_dejitter | proc_monotonize | proc_threadsafe
 
 
@@ -658,7 +658,10 @@ class StreamInlet:
                    (recover is False or the stream is not recoverable) 
                    functions may throw a lost_error if the stream's source is 
                    lost (e.g., due to an app or computer crash). (default True)
-
+        processing_flags -- Post-processing options. Use one of the post-processing
+                   flags `proc_none`, `proc_clocksync`, `proc_dejitter`, `proc_monotonize`,
+                   or `proc_threadsafe`. Can also be a logical OR combination of multiple
+                   flags. Use `proc_ALL` for all flags. (default proc_none).
         """
         if type(info) is list:
             raise TypeError("description needs to be of type StreamInfo, "
