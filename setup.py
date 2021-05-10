@@ -30,20 +30,23 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 # Versions should comply with PEP440.  For a discussion on single-sourcing
 # the version across setup.py and the project code, see
 # https://packaging.python.org/en/latest/single_source_version.html
-with open('pylsl/version.py') as f:
-    exec(f.read())  # Sets __version__ in setup namespace
+version = {}
+with open("pylsl/version.py") as fp:
+    exec(fp.read(), version)
 
-#extension_modules = [Extension(
+
+# extension_modules = [Extension(
 #    'pylsl.liblsl',
 #    sources=[],
 #    library_dirs=['pylsl/lib'],
 #    libraries=['lsl64']  # TODO: Platform-specific naming?
-#)]
+# )]
+
 
 setup(
     name='pylsl',
 
-    version=__version__,
+    version=version,
 
     description='Python interface to the Lab Streaming Layer',
     long_description=long_description,
