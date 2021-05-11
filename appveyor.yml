@@ -15,7 +15,6 @@ build_script:
         $files = @{
                 win_amd64 = 'Win_amd64.zip'
                 win32 = 'Win_i386.zip'
-                manylinux2010_x86_64 = 'manylinux2010_x64.so'
                 manylinux1_x86_64 = 'manylinux1_x64.so'
                 macosx_10_13_x86_64 = 'OSX_amd64.tar.bz2'
                 };
