@@ -512,6 +512,10 @@ class StreamOutlet:
         """
         return bool(lib.lsl_wait_for_consumers(self.obj, c_double(timeout)))
 
+    def get_info(self):
+        outlet_info = lib.lsl_get_info(self.obj)
+        return StreamInfo(handle=outlet_info)
+
 
 # =========================
 # === Resolve Functions ===
@@ -1301,6 +1305,7 @@ lib.lsl_get_xml.restype = c_char_p
 lib.lsl_create_outlet.restype = c_void_p
 lib.lsl_create_inlet.restype = c_void_p
 lib.lsl_get_fullinfo.restype = c_void_p
+lib.lsl_get_info.restype = c_void_p
 lib.lsl_open_stream.restype = c_void_p
 lib.lsl_time_correction.restype = c_double
 lib.lsl_pull_sample_f.restype = c_double
