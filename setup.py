@@ -46,7 +46,7 @@ with open("pylsl/version.py") as fp:
 setup(
     name='pylsl',
 
-    version=version,
+    version=version['__version__'],
 
     description='Python interface to the Lab Streaming Layer',
     long_description=long_description,
