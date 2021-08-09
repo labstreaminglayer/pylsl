@@ -13,29 +13,29 @@ the GitHub project).
 
 # Installation
 
+## Prerequisites
+
+On all non-Windows platforms and for some Windows-Python combinations, you must first obtain a liblsl shared library:
+
+* On many platforms it can be installed with `conda install -c conda-forge liblsl`
+* Alternatively on Mac it can be installed with `brew install labstreaminglayer/tap/lsl`
+* You might be able to find the appropriate liblsl shared object (*.so on Linux, *.dylib on MacOS, or *.dll on Windows) from the [liblsl release page](https://github.com/sccn/liblsl/releases).
+* Otherwise you might try to clone liblsl and use its `standalone_compilation_linux.sh` script (works on raspberry pi).
+
 ## Prepared distributions
 
-The following platforms are supported with direct installation from [pypi](https://pypi.org/project/pylsl/)
+Install from [pypi](https://pypi.org/project/pylsl/)
 using [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
 
-|            | macOS 10.6+ | manylinux i686 | manylinux x86_64 |  Windows 32bit | Windows 64bit |
-|---         |---          |---             |---               |---             |---            |
-| Python 2.7 | ✅ |  | ✅ | ✅ | ✅ |
-| Python 3.4 | ✅ |  |    | ✅ | ✅ |
-| Python 3.5 | ✅ |  | ✅ | ✅ | ✅ |
-| Python 3.6 | ✅ |  | ✅ | ✅ | ✅ |
-| Python 3.7 | ✅ |  | ✅ | ✅ | ✅ |
-| Python 3.8 | ✅ |  | ✅ | ✅ | ✅ |
+For several distributions, the pip distribution ships with lsl.dll. For every other case, liblsl must be installed somewhere on the PATH (see Prerequisites above) or downloaded and copied somewhere on the search path. We recommend you copy it to the pylsl installed module path's `lib` subfolder. You can find the pylsl installed module path with `python -c "import pylsl; print(pylsl.__file__)"`
+
+(use `cp -L` on platforms that use symlinks)
 
 ## Self-built
-
-* You must first obtain a liblsl shared library for your platform.
-    * You might be able to find the appropriate liblsl shared object (*.so on Linux, *.dylib on MacOS, or *.dll on Windows) from the [liblsl release page](https://github.com/sccn/liblsl/releases).
-    * Otherwise you might try to clone liblsl and use its `standalone_compilation_linux.sh` script (works on raspberry pi).  
-* Copy the shared object into `liblsl-Python/pylsl/lib` (use `cp -L` on platforms that use symlinks).
+  
+* Copy the shared object (see Prerequisites above) into `liblsl-Python/pylsl/lib`.
 * From the `liblsl-Python` working directory, run `pip install .`.
     * Note: You can use `pip install -e .` to install while keeping the files in-place. This is convenient for developing pylsl.
-* Please consider building a portable wheel with `python setup.py sdist bdist_wheel` and attaching the produced .whl file to a GitHub issue to benefit other users of the same platform.
 
 # Usage
 
@@ -47,7 +47,7 @@ See the examples in pylsl/examples. Note that these can be run directly from the
 
 pylsl uses continuous integration and distribution.
 
-Whenever a new commit is pushed, AppVeyor downloads liblsl from its releases page, copies it to the package,  then builds wheels for distribution. This process is repeated for each of Windows, Mac, and Linux.
+Whenever a new commit is pushed, AppVeyor downloads liblsl from its releases page, copies it to the package, then builds wheels for distribution. This process is repeated for each of Windows, Mac, and Linux.
 
 In addition, whenever a new `git tag` is used on a commit that is pushed to the master branch, the CI systems will deploy the wheels to pypi.
 

@@ -1267,15 +1267,20 @@ def find_liblsl_libraries(verbose=False):
                             yield path
 
 
-__dload_msg = "You can download the correct LSL library for your platform from the liblsl releases page assets: " \
-              "https://github.com/sccn/liblsl/releases"
+__dload_msg = "You can install the LSL library with conda: `conda install -c conda-forge liblsl`"
+if platform.system() == "Darwin":
+    __dload_msg += "\nor with homebrew: `brew install labstreaminglayer/tap/lsl`"
+__dload_msg += "\nor otherwise download it from the liblsl releases page assets: " \
+               "https://github.com/sccn/liblsl/releases"
+
+
 try:
     libpath = next(find_liblsl_libraries())
     lib = CDLL(libpath)
 except StopIteration:
     err_msg = ("LSL binary library file was not found. Please make sure that the " +
-                 "binary file can be found in the package lib folder\n (" +
-                 os.path.join(os.path.dirname(__file__), "lib") + ")\n or ")
+               "binary file can be found in the package lib folder\n (" +
+               os.path.join(os.path.dirname(__file__), "lib") + ")\n or ")
     if platform.system() not in ["Windows", "Microsoft"]:
         err_msg += "the system search path. Alternatively, "
     err_msg += "specify the PYLSL_LIB environment variable.\n "
