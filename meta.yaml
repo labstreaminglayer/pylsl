@@ -1,5 +1,5 @@
 {% set name = "pylsl" %}
-{% set version = "1.14.1.b4" %}
+{% set version = "1.15.0" %}
 
 package:
   name: "{{ name|lower }}"
