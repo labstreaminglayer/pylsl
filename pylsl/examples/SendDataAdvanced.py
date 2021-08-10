@@ -47,6 +47,7 @@ def main(argv):
         ch.append_child_value("label", label)
         ch.append_child_value("unit", "microvolts")
         ch.append_child_value("type", "EEG")
+        ch.append_child_value("scaling_factor", "1")
     info.desc().append_child_value("manufacturer", "LSLExamples")
     cap = info.desc().append_child("cap")
     cap.append_child_value("name", "ComfyCap")
