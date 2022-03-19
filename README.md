@@ -72,10 +72,10 @@ When we did make manylinux distributions, these relied on special liblsl builds 
     1. build liblsl: `conda build ../liblsl/`
     1. `conda build .`
 
-# Known Issues
+# Known Issues with Multithreading on Linux
 
-* At least for some versions of pylsl, on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This can be due to pulling samples or chunks from an inlet, but also from accessing an inlets info XML.
-  * Recent tests with mulithreading (safeguarding access with locks) suggest that this issue is solved. See https://github.com/labstreaminglayer/liblsl-Python/issues/29
+* At least for some versions of pylsl , is has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
+* Recent tests with mulithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/liblsl-Python/issues/29
 
 # Acknowledgments
 
