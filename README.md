@@ -74,8 +74,8 @@ When we did make manylinux distributions, these relied on special liblsl builds 
 
 # Known Issues
 
-* On Linux one currently cannot call ``pylsl`` functions from a thread that is not the main thread.
-  * This note has been around for a long time and isn't actually tested/confirmed with more recent liblsl versions. Some users report that it indeed works. Please let us know what your experience is.
+* At least for some versions of pylsl, on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This can be due to pulling samples or chunks from an inlet, but also from accessing an inlets info XML.
+  * Recent tests with mulithreading (safeguarding access with locks) suggest that this issue is solved. See https://github.com/labstreaminglayer/liblsl-Python/issues/29
 
 # Acknowledgments
 
