@@ -1,10 +1,10 @@
-version: 1.15.0.{build}
+version: 1.16.0.{build}
 pull_requests:
   do_not_increment_build_number: true
 shallow_clone: true
 environment:
   APPVEYOR_BUILD_WORKER_IMAGE: "Ubuntu1804"
-  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.15.0/liblsl-1.15-
+  URL_PREFIX: https://github.com/sccn/liblsl/releases/download/v1.16.0/liblsl-1.16.0-
   TWINE_USERNAME: cboulay
 # Note: TWINE_PASSWORD is set in Appveyor web settings
 
@@ -23,6 +23,7 @@ build_script:
                 win_amd64 = 'Win_amd64.zip'
                 win32 = 'Win_i386.zip'
                 macosx_10_13_x86_64 = 'OSX_amd64.tar.bz2'
+                macosx_12_0_arm64 = 'OSX_arm64.tar.bz2'
                 };
 
         ls;
