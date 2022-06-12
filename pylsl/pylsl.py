@@ -1260,9 +1260,14 @@ def find_liblsl_libraries(verbose=False):
                         # search path. However, we disallow finding system-level
                         # lsl.dll on Windows because it causes too many problems
                         # and should never be necessary.
-                        path = util.find_library(
-                            libprefix + "lsl" + bitness + debugsuffix
-                        )
+                        quallibname = libprefix + "lsl" + bitness + debugsuffix
+                        path = util.find_library(quallibname)
+                        if path is None and os_name == "Darwin":
+                            # MacOS >= 10.15 requires only searches 1 or 2 paths, thus requires the full lib path
+                            # https://bugs.python.org/issue43964#msg394782
+                            # Here we try the default homebrew folder, but you may have installed it elsewhere,
+                            #  in which case you'd use the DYLD_LIBRARY_PATH (see error message below)".
+                            path = util.find_library('/opt/homebrew/lib/' + quallibname)
                         if path is not None:
                             yield path
 
@@ -1272,6 +1277,10 @@ if platform.system() == "Darwin":
     __dload_msg += "\nor with homebrew: `brew install labstreaminglayer/tap/lsl`"
 __dload_msg += "\nor otherwise download it from the liblsl releases page assets: " \
                "https://github.com/sccn/liblsl/releases"
+if platform.system() == "Darwin":
+    # https://bugs.python.org/issue43964#msg394782
+    __dload_msg += "\nOn modern MacOS (>= 10.15) it is further necessary to set the DYLD_LIBRARY_PATH " \
+                   "environment variable. e.g. `>DYLD_LIBRARY_PATH=/opt/homebrew/lib python path/to/my_lsl_script.py`"
 
 
 try:
