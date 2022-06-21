@@ -96,8 +96,8 @@ def protocol_version():
     The major version is protocol_version() / 100;
     The minor version is protocol_version() % 100;
 
-    Clients with different minor versions are protocol-compatible with each 
-    other while clients with different major versions will refuse to work 
+    Clients with different minor versions are protocol-compatible with each
+    other while clients with different major versions will refuse to work
     together.
 
     """
@@ -124,12 +124,12 @@ def library_info():
 def local_clock():
     """Obtain a local system time stamp in seconds.
 
-    The resolution is better than a milisecond. This reading can be used to 
+    The resolution is better than a millisecond. This reading can be used to
     assign time stamps to samples as they are being acquired.
 
-    If the "age" of a sample is known at a particular time (e.g., from USB 
-    transmission delays), it can be used as an offset to lsl_local_clock() to 
-    obtain a better estimate of when a sample was actually captured. See 
+    If the "age" of a sample is known at a particular time (e.g., from USB
+    transmission delays), it can be used as an offset to lsl_local_clock() to
+    obtain a better estimate of when a sample was actually captured. See
     StreamOutlet.push_sample() for a use case.
 
     """
@@ -146,14 +146,14 @@ class StreamInfo:
     Represents the following information:
      a) stream data format (#channels, channel format)
      b) core information (stream name, content type, sampling rate)
-     c) optional meta-data about the stream content (channel labels, 
+     c) optional meta-data about the stream content (channel labels,
         measurement units, etc.)
 
-    Whenever a program wants to provide a new stream on the lab network it will 
-    typically first create a StreamInfo to describe its properties and then 
-    construct a StreamOutlet with it to create the stream on the network. 
-    Recipients who discover the outlet can query the StreamInfo; it is also 
-    written to disk when recording the stream (playing a similar role as a file 
+    Whenever a program wants to provide a new stream on the lab network it will
+    typically first create a StreamInfo to describe its properties and then
+    construct a StreamOutlet with it to create the stream on the network.
+    Recipients who discover the outlet can query the StreamInfo; it is also
+    written to disk when recording the stream (playing a similar role as a file
     header).
 
     """
@@ -163,35 +163,35 @@ class StreamInfo:
                  source_id='', handle=None):
         """Construct a new StreamInfo object.
 
-        Core stream information is specified here. Any remaining meta-data can 
+        Core stream information is specified here. Any remaining meta-data can
         be added later.
-        
+
         Keyword arguments:
-        name -- Name of the stream. Describes the device (or product series)    
-                that this stream makes available (for use by programs, 
+        name -- Name of the stream. Describes the device (or product series)
+                that this stream makes available (for use by programs,
                 experimenters or data analysts). Cannot be empty.
-        type -- Content type of the stream. By convention LSL uses the content 
-                types defined in the XDF file format specification where 
-                applicable (https://github.com/sccn/xdf). The content type is the 
+        type -- Content type of the stream. By convention LSL uses the content
+                types defined in the XDF file format specification where
+                applicable (https://github.com/sccn/xdf). The content type is the
                 preferred way to find streams (as opposed to searching by name).
-        channel_count -- Number of channels per sample. This stays constant for 
+        channel_count -- Number of channels per sample. This stays constant for
                          the lifetime of the stream. (default 1)
-        nominal_srate -- The sampling rate (in Hz) as advertised by the data 
+        nominal_srate -- The sampling rate (in Hz) as advertised by the data
                          source, regular (otherwise set to IRREGULAR_RATE).
                          (default IRREGULAR_RATE)
-        channel_format -- Format/type of each channel. If your channels have 
-                          different formats, consider supplying multiple 
-                          streams or use the largest type that can hold 
-                          them all (such as cf_double64). It is also allowed 
+        channel_format -- Format/type of each channel. If your channels have
+                          different formats, consider supplying multiple
+                          streams or use the largest type that can hold
+                          them all (such as cf_double64). It is also allowed
                           to pass this as a string, without the cf_ prefix,
                           e.g., 'float32' (default cf_float32)
-        source_id -- Unique identifier of the device or source of the data, if 
-                     available (such as the serial number). This is critical 
-                     for system robustness since it allows recipients to 
-                     recover from failure even after the serving app, device or 
-                     computer crashes (just by finding a stream with the same 
-                     source id on the network again). Therefore, it is highly 
-                     recommended to always try to provide whatever information 
+        source_id -- Unique identifier of the device or source of the data, if
+                     available (such as the serial number). This is critical
+                     for system robustness since it allows recipients to
+                     recover from failure even after the serving app, device or
+                     computer crashes (just by finding a stream with the same
+                     source id on the network again). Therefore, it is highly
+                     recommended to always try to provide whatever information
                      can uniquely identify the data source itself.
                      (default '')
 
@@ -225,11 +225,11 @@ class StreamInfo:
     def name(self):
         """Name of the stream.
 
-        This is a human-readable name. For streams offered by device modules, 
-        it refers to the type of device or product series that is generating 
-        the data of the stream. If the source is an application, the name may 
-        be a more generic or specific identifier. Multiple streams with the 
-        same name can coexist, though potentially at the cost of ambiguity (for 
+        This is a human-readable name. For streams offered by device modules,
+        it refers to the type of device or product series that is generating
+        the data of the stream. If the source is an application, the name may
+        be a more generic or specific identifier. Multiple streams with the
+        same name can coexist, though potentially at the cost of ambiguity (for
         the recording app or experimenter).
 
         """
@@ -238,11 +238,11 @@ class StreamInfo:
     def type(self):
         """Content type of the stream.
 
-        The content type is a short string such as "EEG", "Gaze" which 
-        describes the content carried by the channel (if known). If a stream 
-        contains mixed content this value need not be assigned but may instead 
-        be stored in the description of channel types. To be useful to 
-        applications and automated processing systems using the recommended 
+        The content type is a short string such as "EEG", "Gaze" which
+        describes the content carried by the channel (if known). If a stream
+        contains mixed content this value need not be assigned but may instead
+        be stored in the description of channel types. To be useful to
+        applications and automated processing systems using the recommended
         content types is preferred.
 
         """
@@ -263,11 +263,11 @@ class StreamInfo:
         If a stream is irregularly sampled, this should be set to
         IRREGULAR_RATE.
 
-        Note that no data will be lost even if this sampling rate is incorrect 
-        or if a device has temporary hiccups, since all samples will be 
-        transmitted anyway (except for those dropped by the device itself). 
-        However, when the recording is imported into an application, a good 
-        data importer may correct such errors more accurately if the advertised 
+        Note that no data will be lost even if this sampling rate is incorrect
+        or if a device has temporary hiccups, since all samples will be
+        transmitted anyway (except for those dropped by the device itself).
+        However, when the recording is imported into an application, a good
+        data importer may correct such errors more accurately if the advertised
         sampling rate was close to the specs of the device.
 
         """
@@ -276,7 +276,7 @@ class StreamInfo:
     def channel_format(self):
         """Channel format of the stream.
 
-        All channels in a stream have the same format. However, a device might 
+        All channels in a stream have the same format. However, a device might
         offer multiple time-synched streams each with its own format.
 
         """
@@ -285,9 +285,9 @@ class StreamInfo:
     def source_id(self):
         """Unique identifier of the stream's source, if available.
 
-        The unique source (or device) identifier is an optional piece of 
-        information that, if available, allows that endpoints (such as the 
-        recording program) can re-acquire a stream automatically once it is 
+        The unique source (or device) identifier is an optional piece of
+        information that, if available, allows that endpoints (such as the
+        recording program) can re-acquire a stream automatically once it is
         back online.
 
         """
@@ -311,8 +311,8 @@ class StreamInfo:
     def uid(self):
         """Unique ID of the stream outlet instance (once assigned).
 
-        This is a unique identifier of the stream outlet, and is guaranteed to 
-        be different across multiple instantiations of the same outlet (e.g., 
+        This is a unique identifier of the stream outlet, and is guaranteed to
+        be different across multiple instantiations of the same outlet (e.g.,
         after a re-start).
 
         """
@@ -321,11 +321,11 @@ class StreamInfo:
     def session_id(self):
         """Session ID for the given stream.
 
-        The session id is an optional human-assigned identifier of the 
-        recording session. While it is rarely used, it can be used to prevent 
-        concurrent recording activitites on the same sub-network (e.g., in 
-        multiple experiment areas) from seeing each other's streams 
-        (can be assigned in a configuration file read by liblsl, see also 
+        The session id is an optional human-assigned identifier of the
+        recording session. While it is rarely used, it can be used to prevent
+        concurrent recording activitites on the same sub-network (e.g., in
+        multiple experiment areas) from seeing each other's streams
+        (can be assigned in a configuration file read by liblsl, see also
         Network Connectivity in the LSL wiki).
 
         """
@@ -340,16 +340,16 @@ class StreamInfo:
     def desc(self):
         """Extended description of the stream.
 
-        It is highly recommended that at least the channel labels are described 
-        here. See code examples on the LSL wiki. Other information, such 
-        as amplifier settings, measurement units if deviating from defaults, 
-        setup information, subject information, etc., can be specified here, as 
+        It is highly recommended that at least the channel labels are described
+        here. See code examples on the LSL wiki. Other information, such
+        as amplifier settings, measurement units if deviating from defaults,
+        setup information, subject information, etc., can be specified here, as
         well. Meta-data recommendations follow the XDF file format project
         (github.com/sccn/xdf/wiki/Meta-Data or web search for: XDF meta-data).
-        
-        Important: if you use a stream content type for which meta-data 
-        recommendations exist, please try to lay out your meta-data in 
-        agreement with these recommendations for compatibility with other 
+
+        Important: if you use a stream content type for which meta-data
+        recommendations exist, please try to lay out your meta-data in
+        agreement with these recommendations for compatibility with other
         applications.
 
         """
@@ -358,47 +358,47 @@ class StreamInfo:
     def as_xml(self):
         """Retrieve the entire stream_info in XML format.
 
-        This yields an XML document (in string form) whose top-level element is 
+        This yields an XML document (in string form) whose top-level element is
         <description>. The description element contains one element for each
         field of the stream_info class, including:
-        a) the core elements <name>, <type>, <channel_count>, <nominal_srate>, 
+        a) the core elements <name>, <type>, <channel_count>, <nominal_srate>,
            <channel_format>, <source_id>
-        b) the misc elements <version>, <created_at>, <uid>, <session_id>, 
-           <v4address>, <v4data_port>, <v4service_port>, <v6address>, 
+        b) the misc elements <version>, <created_at>, <uid>, <session_id>,
+           <v4address>, <v4data_port>, <v4service_port>, <v6address>,
            <v6data_port>, <v6service_port>
-        c) the extended description element <desc> with user-defined 
+        c) the extended description element <desc> with user-defined
            sub-elements.
 
         """
         return lib.lsl_get_xml(self.obj).decode('utf-8')
 
 
-# =====================    
+# =====================
 # === Stream Outlet ===
 # =====================
 
 class StreamOutlet:
     """A stream outlet.
 
-    Outlets are used to make streaming data (and the meta-data) available on 
+    Outlets are used to make streaming data (and the meta-data) available on
     the lab network.
 
     """
 
     def __init__(self, info, chunk_size=0, max_buffered=360):
         """Establish a new stream outlet. This makes the stream discoverable.
-        
+
         Keyword arguments:
         description -- The StreamInfo object to describe this stream. Stays
                 constant over the lifetime of the outlet.
-        chunk_size --- Optionally the desired chunk granularity (in samples) 
-                       for transmission. If unspecified, each push operation 
+        chunk_size --- Optionally the desired chunk granularity (in samples)
+                       for transmission. If unspecified, each push operation
                        yields one chunk. Inlets can override this setting.
                        (default 0)
-        max_buffered -- Optionally the maximum amount of data to buffer (in 
-                        seconds if there is a nominal sampling rate, otherwise 
-                        x100 in samples). The default is 6 minutes of data. 
-                        Note that, for high-bandwidth data, you will want to 
+        max_buffered -- Optionally the maximum amount of data to buffer (in
+                        seconds if there is a nominal sampling rate, otherwise
+                        x100 in samples). The default is 6 minutes of data.
+                        Note that, for high-bandwidth data, you will want to
                         use a lower value here to avoid running out of RAM.
                         (default 360)
 
@@ -417,7 +417,7 @@ class StreamOutlet:
     def __del__(self):
         """Destroy an outlet.
 
-        The outlet will no longer be discoverable after destruction and all 
+        The outlet will no longer be discoverable after destruction and all
         connected inlets will stop delivering data.
 
         """
@@ -434,12 +434,12 @@ class StreamOutlet:
 
         Keyword arguments:
         x -- A list of values to push (one per channel).
-        timestamp -- Optionally the capture time of the sample, in agreement 
-                     with local_clock(); if omitted, the current 
+        timestamp -- Optionally the capture time of the sample, in agreement
+                     with local_clock(); if omitted, the current
                      time is used. (default 0.0)
-        pushthrough -- Whether to push the sample through to the receivers  
-                       instead of buffering it with subsequent samples. 
-                       Note that the chunk_size, if specified at outlet 
+        pushthrough -- Whether to push the sample through to the receivers
+                       instead of buffering it with subsequent samples.
+                       Note that the chunk_size, if specified at outlet
                        construction, takes precedence over the pushthrough flag.
                        (default True)
 
@@ -458,16 +458,16 @@ class StreamOutlet:
     def push_chunk(self, x, timestamp=0.0, pushthrough=True):
         """Push a list of samples into the outlet.
 
-        samples -- A list of samples, either as a list of lists or a list of  
+        samples -- A list of samples, either as a list of lists or a list of
                    multiplexed values.
-        timestamp -- Optionally the capture time of the most recent sample, in 
-                     agreement with local_clock(); if omitted, the current 
-                     time is used. The time stamps of other samples are 
-                     automatically derived according to the sampling rate of 
+        timestamp -- Optionally the capture time of the most recent sample, in
+                     agreement with local_clock(); if omitted, the current
+                     time is used. The time stamps of other samples are
+                     automatically derived according to the sampling rate of
                      the stream. (default 0.0)
-        pushthrough Whether to push the chunk through to the receivers instead 
-                    of buffering it with subsequent samples. Note that the 
-                    chunk_size, if specified at outlet construction, takes 
+        pushthrough Whether to push the chunk through to the receivers instead
+                    of buffering it with subsequent samples. Note that the
+                    chunk_size, if specified at outlet construction, takes
                     precedence over the pushthrough flag. (default True)
 
         """
@@ -498,7 +498,7 @@ class StreamOutlet:
     def have_consumers(self):
         """Check whether consumers are currently registered.
 
-        While it does not hurt, there is technically no reason to push samples 
+        While it does not hurt, there is technically no reason to push samples
         if there is no consumer.
 
         """
@@ -524,20 +524,20 @@ class StreamOutlet:
 def resolve_streams(wait_time=1.0):
     """Resolve all streams on the network.
 
-    This function returns all currently available streams from any outlet on 
-    the network. The network is usually the subnet specified at the local 
-    router, but may also include a group of machines visible to each other via 
-    multicast packets (given that the network supports it), or list of 
-    hostnames. These details may optionally be customized by the experimenter 
-    in a configuration file (see Network Connectivity in the LSL wiki).  
-    
+    This function returns all currently available streams from any outlet on
+    the network. The network is usually the subnet specified at the local
+    router, but may also include a group of machines visible to each other via
+    multicast packets (given that the network supports it), or list of
+    hostnames. These details may optionally be customized by the experimenter
+    in a configuration file (see Network Connectivity in the LSL wiki).
+
     Keyword arguments:
-    wait_time -- The waiting time for the operation, in seconds, to search for 
-                 streams. Warning: If this is too short (<0.5s) only a subset 
-                 (or none) of the outlets that are present on the network may 
+    wait_time -- The waiting time for the operation, in seconds, to search for
+                 streams. Warning: If this is too short (<0.5s) only a subset
+                 (or none) of the outlets that are present on the network may
                  be returned. (default 1.0)
-                 
-    Returns a list of StreamInfo objects (with empty desc field), any of which 
+
+    Returns a list of StreamInfo objects (with empty desc field), any of which
     can subsequently be used to open an inlet. The full description can be
     retrieved from the inlet.
 
@@ -551,22 +551,22 @@ def resolve_streams(wait_time=1.0):
 def resolve_byprop(prop, value, minimum=1, timeout=FOREVER):
     """Resolve all streams with a specific value for a given property.
 
-    If the goal is to resolve a specific stream, this method is preferred over 
+    If the goal is to resolve a specific stream, this method is preferred over
     resolving all streams and then selecting the desired one.
-    
+
     Keyword arguments:
-    prop -- The StreamInfo property that should have a specific value (e.g.,   
+    prop -- The StreamInfo property that should have a specific value (e.g.,
             "name", "type", "source_id", or "desc/manufaturer").
-    value -- The string value that the property should have (e.g., "EEG" as 
+    value -- The string value that the property should have (e.g., "EEG" as
              the type property).
     minimum -- Return at least this many streams. (default 1)
-    timeout -- Optionally a timeout of the operation, in seconds. If the 
-               timeout expires, less than the desired number of streams 
+    timeout -- Optionally a timeout of the operation, in seconds. If the
+               timeout expires, less than the desired number of streams
                (possibly none) will be returned. (default FOREVER)
-               
-    Returns a list of matching StreamInfo objects (with empty desc field), any 
+
+    Returns a list of matching StreamInfo objects (with empty desc field), any
     of which can subsequently be used to open an inlet.
-    
+
     Example: results = resolve_Stream_byprop("type","EEG")
 
     """
@@ -583,21 +583,21 @@ def resolve_byprop(prop, value, minimum=1, timeout=FOREVER):
 def resolve_bypred(predicate, minimum=1, timeout=FOREVER):
     """Resolve all streams that match a given predicate.
 
-    Advanced query that allows to impose more conditions on the retrieved 
+    Advanced query that allows to impose more conditions on the retrieved
     streams; the given string is an XPath 1.0 predicate for the <description>
     node (omitting the surrounding []'s), see also
     http://en.wikipedia.org/w/index.php?title=XPath_1.0&oldid=474981951.
-    
+
     Keyword arguments:
-    predicate -- The predicate string, e.g. "name='BioSemi'" or 
-                "type='EEG' and starts-with(name,'BioSemi') and 
+    predicate -- The predicate string, e.g. "name='BioSemi'" or
+                "type='EEG' and starts-with(name,'BioSemi') and
                  count(description/desc/channels/channel)=32"
     minimum -- Return at least this many streams. (default 1)
-    timeout -- Optionally a timeout of the operation, in seconds. If the 
-               timeout expires, less than the desired number of streams 
+    timeout -- Optionally a timeout of the operation, in seconds. If the
+               timeout expires, less than the desired number of streams
                (possibly none) will be returned. (default FOREVER)
-               
-    Returns a list of matching StreamInfo objects (with empty desc field), any 
+
+    Returns a list of matching StreamInfo objects (with empty desc field), any
     of which can subsequently be used to open an inlet.
 
     """
@@ -627,40 +627,40 @@ def free_char_p_array_memory(char_p_array, num_elements):
 class StreamInlet:
     """A stream inlet.
 
-    Inlets are used to receive streaming data (and meta-data) from the lab 
+    Inlets are used to receive streaming data (and meta-data) from the lab
     network.
 
     """
 
     def __init__(self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=0):
         """Construct a new stream inlet from a resolved stream description.
-        
+
         Keyword arguments:
         description -- A resolved stream description object (as coming from one
                 of the resolver functions). Note: the stream_inlet may also be
-                constructed with a fully-specified stream_info, if the desired 
-                channel format and count is already known up-front, but this is 
-                strongly discouraged and should only ever be done if there is 
-                no time to resolve the stream up-front (e.g., due to 
+                constructed with a fully-specified stream_info, if the desired
+                channel format and count is already known up-front, but this is
+                strongly discouraged and should only ever be done if there is
+                no time to resolve the stream up-front (e.g., due to
                 limitations in the client program).
-        max_buflen -- Optionally the maximum amount of data to buffer (in   
-                      seconds if there is a nominal sampling rate, otherwise 
-                      x100 in samples). Recording applications want to use a 
-                      fairly large buffer size here, while real-time 
-                      applications would only buffer as much as they need to 
+        max_buflen -- Optionally the maximum amount of data to buffer (in
+                      seconds if there is a nominal sampling rate, otherwise
+                      x100 in samples). Recording applications want to use a
+                      fairly large buffer size here, while real-time
+                      applications would only buffer as much as they need to
                       perform their next calculation. (default 360)
-        max_chunklen -- Optionally the maximum size, in samples, at which 
-                        chunks are transmitted (the default corresponds to the 
-                        chunk sizes used by the sender). Recording programs  
-                        can use a generous size here (leaving it to the network 
-                        how to pack things), while real-time applications may 
-                        want a finer (perhaps 1-sample) granularity. If left 
-                        unspecified (=0), the sender determines the chunk 
+        max_chunklen -- Optionally the maximum size, in samples, at which
+                        chunks are transmitted (the default corresponds to the
+                        chunk sizes used by the sender). Recording programs
+                        can use a generous size here (leaving it to the network
+                        how to pack things), while real-time applications may
+                        want a finer (perhaps 1-sample) granularity. If left
+                        unspecified (=0), the sender determines the chunk
                         granularity. (default 0)
-        recover -- Try to silently recover lost streams that are recoverable 
-                   (=those that that have a source_id set). In all other cases 
-                   (recover is False or the stream is not recoverable) 
-                   functions may throw a lost_error if the stream's source is 
+        recover -- Try to silently recover lost streams that are recoverable
+                   (=those that that have a source_id set). In all other cases
+                   (recover is False or the stream is not recoverable)
+                   functions may throw a lost_error if the stream's source is
                    lost (e.g., due to an app or computer crash). (default True)
         processing_flags -- Post-processing options. Use one of the post-processing
                    flags `proc_none`, `proc_clocksync`, `proc_dejitter`, `proc_monotonize`,
@@ -699,11 +699,11 @@ class StreamInlet:
 
         This includes the extended description. Can be invoked at any time of
         the stream's lifetime.
-        
+
         Keyword arguments:
         timeout -- Timeout of the operation. (default FOREVER)
-        
-        Throws a TimeoutError (if the timeout expires), or LostError (if the 
+
+        Throws a TimeoutError (if the timeout expires), or LostError (if the
         stream source has been lost).
 
         """
@@ -716,15 +716,15 @@ class StreamInlet:
     def open_stream(self, timeout=FOREVER):
         """Subscribe to the data stream.
 
-        All samples pushed in at the other end from this moment onwards will be 
-        queued and eventually be delivered in response to pull_sample() or 
-        pull_chunk() calls. Pulling a sample without some preceding open_stream 
+        All samples pushed in at the other end from this moment onwards will be
+        queued and eventually be delivered in response to pull_sample() or
+        pull_chunk() calls. Pulling a sample without some preceding open_stream
         is permitted (the stream will then be opened implicitly).
-        
+
         Keyword arguments:
         timeout -- Optional timeout of the operation (default FOREVER).
-        
-        Throws a TimeoutError (if the timeout expires), or LostError (if the 
+
+        Throws a TimeoutError (if the timeout expires), or LostError (if the
         stream source has been lost).
 
         """
@@ -735,11 +735,11 @@ class StreamInlet:
     def close_stream(self):
         """Drop the current data stream.
 
-        All samples that are still buffered or in flight will be dropped and 
-        transmission and buffering of data for this inlet will be stopped. If 
-        an application stops being interested in data from a source 
-        (temporarily or not) but keeps the outlet alive, it should call 
-        lsl_close_stream() to not waste unnecessary system and network 
+        All samples that are still buffered or in flight will be dropped and
+        transmission and buffering of data for this inlet will be stopped. If
+        an application stops being interested in data from a source
+        (temporarily or not) but keeps the outlet alive, it should call
+        lsl_close_stream() to not waste unnecessary system and network
         resources.
 
         """
@@ -748,21 +748,21 @@ class StreamInlet:
     def time_correction(self, timeout=FOREVER):
         """Retrieve an estimated time correction offset for the given stream.
 
-        The first call to this function takes several miliseconds until a 
-        reliable first estimate is obtained. Subsequent calls are instantaneous 
-        (and rely on periodic background updates). The precision of these 
+        The first call to this function takes several milliseconds until a
+        reliable first estimate is obtained. Subsequent calls are instantaneous
+        (and rely on periodic background updates). The precision of these
         estimates should be below 1 ms (empirically within +/-0.2 ms).
-        
-        Keyword arguments: 
-        timeout -- Timeout to acquire the first time-correction estimate 
+
+        Keyword arguments:
+        timeout -- Timeout to acquire the first time-correction estimate
                    (default FOREVER).
-                   
-        Returns the current time correction estimate. This is the number that 
-        needs to be added to a time stamp that was remotely generated via 
-        local_clock() to map it into the local clock domain of this 
+
+        Returns the current time correction estimate. This is the number that
+        needs to be added to a time stamp that was remotely generated via
+        local_clock() to map it into the local clock domain of this
         machine.
 
-        Throws a TimeoutError (if the timeout expires), or LostError (if the 
+        Throws a TimeoutError (if the timeout expires), or LostError (if the
         stream source has been lost).
 
         """
@@ -774,20 +774,20 @@ class StreamInlet:
 
     def pull_sample(self, timeout=FOREVER, sample=None):
         """Pull a sample from the inlet and return it.
-        
+
         Keyword arguments:
         timeout -- The timeout for this operation, if any. (default FOREVER)
-                   If this is passed as 0.0, then the function returns only a 
+                   If this is passed as 0.0, then the function returns only a
                    sample if one is buffered for immediate pickup.
-        
-        Returns a tuple (sample,timestamp) where sample is a list of channel 
-        values and timestamp is the capture time of the sample on the remote 
-        machine, or (None,None) if no new sample was available. To remap this 
-        time stamp to the local clock, add the value returned by 
-        .time_correction() to it. 
-        
-        Throws a LostError if the stream source has been lost. Note that, if 
-        the timeout expires, no TimeoutError is thrown (because this case is 
+
+        Returns a tuple (sample,timestamp) where sample is a list of channel
+        values and timestamp is the capture time of the sample on the remote
+        machine, or (None,None) if no new sample was available. To remap this
+        time stamp to the local clock, add the value returned by
+        .time_correction() to it.
+
+        Throws a LostError if the stream source has been lost. Note that, if
+        the timeout expires, no TimeoutError is thrown (because this case is
         not considered an error).
 
         """
@@ -816,12 +816,12 @@ class StreamInlet:
 
     def pull_chunk(self, timeout=0.0, max_samples=1024, dest_obj=None):
         """Pull a chunk of samples from the inlet.
-        
+
         Keyword arguments:
-        timeout -- The timeout of the operation; if passed as 0.0, then only 
-                   samples available for immediate pickup will be returned. 
+        timeout -- The timeout of the operation; if passed as 0.0, then only
+                   samples available for immediate pickup will be returned.
                    (default 0.0)
-        max_samples -- Maximum number of samples to return. (default 
+        max_samples -- Maximum number of samples to return. (default
                        1024)
         dest_obj -- A Python object that supports the buffer interface.
                     If this is provided then the dest_obj will be updated in place
@@ -830,14 +830,14 @@ class StreamInlet:
                     number of samples.
                     A numpy buffer must be order='C'
                     (default None)
-                       
-        Returns a tuple (samples,timestamps) where samples is a list of samples 
+
+        Returns a tuple (samples,timestamps) where samples is a list of samples
         (each itself a list of values), and timestamps is a list of time-stamps.
 
         Throws a LostError if the stream source has been lost.
 
         """
-        # look up a pre-allocated buffer of appropriate length        
+        # look up a pre-allocated buffer of appropriate length
         num_channels = self.channel_count
         max_values = max_samples * num_channels
 
@@ -859,7 +859,7 @@ class StreamInlet:
                                           max_samples, c_double(timeout),
                                           byref(errcode))
         handle_error(errcode)
-        # return results (note: could offer a more efficient format in the 
+        # return results (note: could offer a more efficient format in the
         # future, e.g., a numpy array)
         num_samples = num_elements / num_channels
         if dest_obj is None:
@@ -876,10 +876,10 @@ class StreamInlet:
     def samples_available(self):
         """Query whether samples are currently available for immediate pickup.
 
-        Note that it is not a good idea to use samples_available() to determine 
-        whether a pull_*() call would block: to be sure, set the pull timeout 
-        to 0.0 or an acceptably low value. If the underlying implementation 
-        supports it, the value will be the number of samples available 
+        Note that it is not a good idea to use samples_available() to determine
+        whether a pull_*() call would block: to be sure, set the pull timeout
+        to 0.0 or an acceptably low value. If the underlying implementation
+        supports it, the value will be the number of samples available
         (otherwise it will be 1 or 0).
 
         """
@@ -911,10 +911,10 @@ class StreamInlet:
 class XMLElement:
     """A lightweight XML element tree modeling the .desc() field of StreamInfo.
 
-    Has a name and can have multiple named children or have text content as 
-    value; attributes are omitted. Insider note: The interface is modeled after 
-    a subset of pugixml's node type and is compatible with it. See also 
-    http://pugixml.googlecode.com/svn/tags/latest/docs/manual/access.html for 
+    Has a name and can have multiple named children or have text content as
+    value; attributes are omitted. Insider note: The interface is modeled after
+    a subset of pugixml's node type and is compatible with it. See also
+    http://pugixml.googlecode.com/svn/tags/latest/docs/manual/access.html for
     additional documentation.
 
     """
@@ -1003,21 +1003,21 @@ class XMLElement:
     # === Modification ===
 
     def append_child_value(self, name, value):
-        """Append a child node with a given name, which has a (nameless) 
+        """Append a child node with a given name, which has a (nameless)
         plain-text child with the given text value."""
         return XMLElement(lib.lsl_append_child_value(self.e,
                                                      str.encode(name),
                                                      str.encode(value)))
 
     def prepend_child_value(self, name, value):
-        """Prepend a child node with a given name, which has a (nameless) 
+        """Prepend a child node with a given name, which has a (nameless)
         plain-text child with the given text value."""
         return XMLElement(lib.lsl_prepend_child_value(self.e,
                                                       str.encode(name),
                                                       str.encode(value)))
 
     def set_child_value(self, name, value):
-        """Set the text value of the (nameless) plain-text child of a named 
+        """Set the text value of the (nameless) plain-text child of a named
         child node."""
         return XMLElement(lib.lsl_set_child_value(self.e,
                                                   str.encode(name),
@@ -1071,9 +1071,9 @@ class ContinuousResolver:
         """Construct a new continuous_resolver.
 
         Keyword arguments:
-        forget_after -- When a stream is no longer visible on the network       
-                        (e.g., because it was shut down), this is the time in 
-                        seconds after which it is no longer reported by the 
+        forget_after -- When a stream is no longer visible on the network
+                        (e.g., because it was shut down), this is the time in
+                        seconds after which it is no longer reported by the
                         resolver.
 
         """
@@ -1119,13 +1119,13 @@ class ContinuousResolver:
 
 
 # =========================
-# === Error Definitions ===            
+# === Error Definitions ===
 # =========================
 
 # noinspection PyShadowingBuiltins
 class TimeoutError(RuntimeError):
     # note: although this overrides the name of a built-in exception,
-    #       this API is retained here for compatiblity with the Python 2.x
+    #       this API is retained here for compatibility with the Python 2.x
     #       version of pylsl
     pass
 
@@ -1160,9 +1160,9 @@ def handle_error(errcode):
         raise RuntimeError("an unknown error has occurred.")
 
 
-# =================================================        
-# === Compatibility Interface for old pylsl API ===                   
-# =================================================                   
+# =================================================
+# === Compatibility Interface for old pylsl API ===
+# =================================================
 
 # set class aliases
 stream_info = StreamInfo
