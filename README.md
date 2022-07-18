@@ -43,6 +43,14 @@ See the examples in pylsl/examples. Note that these can be run directly from the
 
 You can get a list of the examples with `python -c "import pylsl.examples; help(pylsl.examples)"`
 
+## liblsl dependency
+
+See the note above about separately installing the liblsl dependency on non-Windows platforms. `pylsl` will search for liblsl first in the package directory (default location for Windows), then in normal system library folders, then finally at the filepath specified by an environment variable named `PYLSL_LIB`. A user-installed liblsl will typically be findable by Python's `util.find_library` in most cases.
+
+If `pylsl` cannot find the liblsl binary (e.g., see [this issue](https://github.com/labstreaminglayer/liblsl-Python/issues/48)), set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. i.e.,
+
+`LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
+
 # For maintainers
 
 ## Continuous Integration
