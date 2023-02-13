@@ -20,7 +20,7 @@ import os
 import platform
 import struct
 from ctypes import CDLL, util, byref, c_char_p, c_void_p, c_double, c_int, \
-    c_long, c_float, c_short, c_byte, c_longlong, cast, POINTER
+    c_long, c_float, c_short, c_byte, c_longlong, c_size_t, cast, POINTER
 
 __all__ = ['IRREGULAR_RATE', 'DEDUCED_TIMESTAMP', 'FOREVER', 'cf_float32',
            'cf_double64', 'cf_string', 'cf_int32', 'cf_int16', 'cf_int8',
@@ -855,8 +855,8 @@ class StreamInlet:
         errcode = c_int()
         # noinspection PyCallingNonCallable
         num_elements = self.do_pull_chunk(self.obj, byref(data_buff),
-                                          byref(ts_buff), max_values,
-                                          max_samples, c_double(timeout),
+                                          byref(ts_buff), c_size_t(max_values),
+                                          c_size_t(max_samples), c_double(timeout),
                                           byref(errcode))
         handle_error(errcode)
         # return results (note: could offer a more efficient format in the
