@@ -1,21 +1,25 @@
 """Python setup script for the pylsl distribution package."""
 
-from setuptools import setup, Distribution, Extension
+from setuptools import setup
 from setuptools.command.install import install
 from codecs import open
 from os import path
+import sys
 
 
-class BinaryDistribution(Distribution):
-    def is_pure(self):
-        return False
-
-
-class InstallPlatlib(install):
-    def finalize_options(self):
-        install.finalize_options(self)
-        if self.distribution.has_ext_modules():
-            self.install_lib = self.install_platlib
+try:
+    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+    class bdist_wheel(_bdist_wheel):
+        def finalize_options(self):
+            super().finalize_options()
+            self.root_is_pure = not sys.platform.startswith("win")
+        def get_tag(self):
+            python, abi, plat = _bdist_wheel.get_tag(self)
+            # We don't contain any python source
+            python, abi = 'py2.py3', 'none'
+            return python, abi, plat
+except ImportError:
+    bdist_wheel = None
 
 
 here = path.abspath(path.dirname(__file__))
@@ -33,14 +37,6 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 version = {}
 with open("pylsl/version.py") as fp:
     exec(fp.read(), version)
-
-
-# extension_modules = [Extension(
-#    'pylsl.liblsl',
-#    sources=[],
-#    library_dirs=['pylsl/lib'],
-#    libraries=['lsl64']  # TODO: Platform-specific naming?
-# )]
 
 
 setup(
@@ -91,9 +87,10 @@ setup(
 
     # What does your project relate to?
     keywords='networking lsl lab streaming layer labstreaminglayer data acquisition',
-    
-    distclass=BinaryDistribution,
-    cmdclass={'install': InstallPlatlib},
+
+    cmdclass={
+        'bdist_wheel': bdist_wheel
+    },
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -118,11 +115,11 @@ setup(
     # setup will probably only find the one library downloaded by the build
     # script or placed here manually.
     package_data={
-        'pylsl': ['lib/*.so*', 'lib/*.dll', 'lib/*.dylib'],
+        'pylsl': ['lib/*.dll'],
     },
     
     # Although 'package_data' is the preferred approach, in some case you may
-    # need to place data files outside of your packages. See:
+    # need to place data files outside your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
     # data_files=[],
