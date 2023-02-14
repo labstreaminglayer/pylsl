@@ -55,17 +55,11 @@ If `pylsl` cannot find the liblsl binary (e.g., see [this issue](https://github.
 
 ## Continuous Integration
 
-pylsl uses continuous integration and distribution.
-
-Whenever a new commit is pushed, AppVeyor prepares several files. First it prepares the source wheels -- this is useful on any platform & Python version that does not have a specific binary distribution. Then it prepares the binary wheels; it downloads liblsl from its releases page, copies it to the package, then builds wheels for distribution. This process is repeated for several variants of Windows and Mac.
-
-In addition, whenever a new `git tag` is used on a commit that is pushed to the master branch, the CI systems will deploy the wheels to pypi.
+pylsl uses continuous integration and distribution. GitHub Actions will upload a new release to pypi whenever a Release is created in GitHub.
 
 ### Linux Binaries Deprecated
 
 We recently stopped building binary wheels for Linux. In practice, the `manylinux` dependencies were often incompatible with real systems.
-
-When we did make manylinux distributions, these relied on special liblsl builds that are not automatically pushed to the liblsl releases page. Special pipelines needed to be run manually on [Azure](https://dev.azure.com/labstreaminglayer/liblsl), then the artifacts uploaded to the release page. The Azure pipelines config remains in the liblsl repo in case it is needed again (unlikely). 
 
 ## Manual Distribution
 
