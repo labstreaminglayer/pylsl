@@ -1,6 +1,6 @@
 # pylsl
 
-[![Build status](https://ci.appveyor.com/api/projects/status/ggouc09585l2518i/branch/master?svg=true)](https://ci.appveyor.com/project/cboulay/liblsl-python/branch/master)
+![publish workflow](https://github.com/labstreaminglayer/pylsl/actions/workflows/publish-to-pypi.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/pylsl.svg)](https://badge.fury.io/py/pylsl)
 
 This is the Python interface to the [Lab Streaming Layer (LSL)](https://github.com/sccn/labstreaminglayer).
@@ -32,9 +32,9 @@ For several distributions, the pip distribution ships with lsl.dll. For every ot
 
 ## Self-built
 
-* Download the pylsl source: `git clone https://github.com/labstreaminglayer/liblsl-Python.git && cd liblsl-Python`  
-* Copy the shared object (see Prerequisites above) into `liblsl-Python/pylsl/lib`.
-* From the `liblsl-Python` working directory, run `pip install .`.
+* Download the pylsl source: `git clone https://github.com/labstreaminglayer/pylsl.git && cd pylsl`  
+* Copy the shared object (see Prerequisites above) into `pylsl/pylsl/lib`.
+* From the `pylsl` working directory, run `pip install .`.
     * Note: You can use `pip install -e .` to install while keeping the files in-place. This is convenient for developing pylsl.
 
 # Usage
@@ -47,7 +47,7 @@ You can get a list of the examples with `python -c "import pylsl.examples; help(
 
 See the note above about separately installing the liblsl dependency on non-Windows platforms. `pylsl` will search for liblsl first in the package directory (default location for Windows), then in normal system library folders, then finally at the filepath specified by an environment variable named `PYLSL_LIB`. A user-installed liblsl will typically be findable by Python's `util.find_library` in most cases.
 
-If `pylsl` cannot find the liblsl binary (e.g., see [this issue](https://github.com/labstreaminglayer/liblsl-Python/issues/48)), set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. i.e.,
+If `pylsl` cannot find the liblsl binary (e.g., see [this issue](https://github.com/labstreaminglayer/pylsl/issues/48)), set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. i.e.,
 
 `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
 
@@ -83,7 +83,7 @@ When we did make manylinux distributions, these relied on special liblsl builds 
 # Known Issues with Multithreading on Linux
 
 * At least for some versions of pylsl , is has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
-* Recent tests with mulithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/liblsl-Python/issues/29
+* Recent tests with mulithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/pylsl/issues/29
 
 # Acknowledgments
 
