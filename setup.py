@@ -49,7 +49,7 @@ setup(
     long_description_content_type="text/markdown",
 
     # The project's main homepage.
-    url='https://github.com/labstreaminglayer/liblsl-Python',
+    url='https://github.com/labstreaminglayer/pylsl',
 
     # Author details
     author='Christian Kothe',
