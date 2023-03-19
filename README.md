@@ -15,25 +15,17 @@ the GitHub project).
 
 ## Prerequisites
 
-On all non-Windows platforms and for some Windows-Python combinations, you must first obtain a liblsl shared library:
+On all non-Windows platforms and for some Windows-Python combinations, you must first obtain a liblsl shared library. See the [liblsl repo documentation](https://github.com/sccn/liblsl) for further details.
 
-* On many platforms it can be installed with `conda install -c conda-forge liblsl`
-* Additionally, on Mac it can be installed with `brew install labstreaminglayer/tap/lsl`
-* You might be able to find the appropriate liblsl shared object (*.so on Linux, *.dylib on MacOS, or *.dll on Windows) from the [liblsl release page](https://github.com/sccn/liblsl/releases).
-* Otherwise you might try to clone liblsl and use its `standalone_compilation_linux.sh` script (works on raspberry pi).
+## Get pylsl from PyPI
 
-## Prepared distributions
+* `pip install pylsl`
 
-Install from [pypi](https://pypi.org/project/pylsl/)
-using [pip](https://pip.pypa.io/en/stable/installing/): `pip install pylsl`
+## Get pylsl from source
 
-For several distributions, the pip distribution ships with lsl.dll. For every other case, liblsl must be installed somewhere on the PATH (see Prerequisites above) or downloaded and copied somewhere on the search path. We recommend you copy it to the pylsl installed module path's `lib` subfolder. i.e. `{path/to/env/}site-packages/pylsl/lib`. Use `python -m site` to find the "site-packages" path.
-(use `cp -L` on platforms that use symlinks)
-
-## Self-built
+This should only be necessary if you need to modify or debug pylsl.
 
 * Download the pylsl source: `git clone https://github.com/labstreaminglayer/pylsl.git && cd pylsl`  
-* Copy the shared object (see Prerequisites above) into `pylsl/pylsl/lib`.
 * From the `pylsl` working directory, run `pip install .`.
     * Note: You can use `pip install -e .` to install while keeping the files in-place. This is convenient for developing pylsl.
 
@@ -43,13 +35,21 @@ See the examples in pylsl/examples. Note that these can be run directly from the
 
 You can get a list of the examples with `python -c "import pylsl.examples; help(pylsl.examples)"`
 
-## liblsl dependency
+## liblsl loading
 
-See the note above about separately installing the liblsl dependency on non-Windows platforms. `pylsl` will search for liblsl first in the package directory (default location for Windows), then in normal system library folders, then finally at the filepath specified by an environment variable named `PYLSL_LIB`. A user-installed liblsl will typically be findable by Python's `util.find_library` in most cases.
+`pylsl` will search for `liblsl` first at the filepath specified by an environment variable named `PYLSL_LIB`, then in the package directory (default location for Windows), then finally in normal system library folders.
 
-If `pylsl` cannot find the liblsl binary (e.g., see [this issue](https://github.com/labstreaminglayer/pylsl/issues/48)), set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. i.e.,
+If the shared object is not installed onto a standard search path (or it is but can't be found for some [other bug](https://github.com/labstreaminglayer/pylsl/issues/48)), then we recommend that you copy it to the pylsl installed module path's `lib` subfolder. i.e. `{path/to/env/}site-packages/pylsl/lib`.
 
-`LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
+* The `site-packages/pylsl` path will only exist _after_ you install `pylsl` in your Pyton environment.
+* You may have to create the `lib` subfolder.
+* Use `python -m site` to find the "site-packages" path.
+* Use `cp -L` on platforms that use symlinks.
+
+Alternatively, you can use an the environment variable. Set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. For example,
+
+1. `PYLSL_LIB=/usr/local/lib/liblsl.so python -m pylsl.examples.{name-of-example}`, or
+2. `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
 
 # For maintainers
 
@@ -76,7 +76,7 @@ We recently stopped building binary wheels for Linux. In practice, the `manylinu
 
 # Known Issues with Multithreading on Linux
 
-* At least for some versions of pylsl , is has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
+* At least for some versions of pylsl, is has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
 * Recent tests with mulithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/pylsl/issues/29
 
 # Acknowledgments
