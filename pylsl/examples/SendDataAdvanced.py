@@ -27,6 +27,11 @@ def main(name='LSLExampleAmp', stream_type='EEG', srate=100):
     # First create a new stream info.
     #  The first 4 arguments are stream name, stream type, number of channels, and
     #  sampling rate -- all parameterized by the keyword arguments or the channel list above.
+    #  The 5th parameter is the data format. This should match the origin format (unless the
+    #   data will be transformed prior to pushing, then it should match the transformed-to format).
+    #   Possible values are "float32", "double64", "string", "int32", "int16", "int8", or "int64".
+    #   Alternatively, one could use the constants in the pylsl namespace beginning with `cf_`.
+    #   i.e., cf_float32, cf_double64, etc.
     #  For this example, we will always use float32 data so we provide that as the 5th parameter.
     #  The last value would be the serial number of the device or some other more or
     #  less locally unique identifier for the stream as far as available (you
