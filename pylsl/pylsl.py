@@ -482,9 +482,12 @@ class StreamOutlet:
         # Convert timestamp to corresponding ctype
         try:
             timestamp_c = c_double(timestamp)
+            # Select the corresponding push_chunk method
+            liblsl_push_chunk_func = self.do_push_chunk
         except TypeError:
             try:
                 timestamp_c = (c_double * len(timestamp))(*timestamp)
+                liblsl_push_chunk_func = self.do_push_chunk_n
             except TypeError:
                 raise TypeError(
                     "timestamp must be a float or an iterable of floats"
@@ -493,10 +496,14 @@ class StreamOutlet:
         try:
             n_values = self.channel_count * len(x)
             data_buff = (self.value_type * n_values).from_buffer(x)
-            handle_error(self.do_push_chunk(self.obj, data_buff,
-                                            c_long(n_values),
-                                            timestamp_c,
-                                            c_int(pushthrough)))
+            handle_error(
+                liblsl_push_chunk_func(
+                    self.obj, data_buff,
+                    c_long(n_values),
+                    timestamp_c,
+                    c_int(pushthrough)
+                )
+            )
         except TypeError:
             # don't send empty chunks
             if len(x):
@@ -508,10 +515,14 @@ class StreamOutlet:
                     # x is a flattened list of multiplexed values
                     constructor = self.value_type * len(x)
                     # noinspection PyCallingNonCallable
-                    handle_error(self.do_push_chunk(self.obj, constructor(*x),
-                                                    c_long(len(x)),
-                                                    timestamp_c,
-                                                    c_int(pushthrough)))
+                    handle_error(
+                        liblsl_push_chunk_func(
+                            self.obj, constructor(*x),
+                            c_long(len(x)),
+                            timestamp_c,
+                            c_int(pushthrough)
+                        )
+                    )
                 else:
                     raise ValueError("Each sample must have the same number of channels ("
                                      + str(self.channel_count) + ").")
