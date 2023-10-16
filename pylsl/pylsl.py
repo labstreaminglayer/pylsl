@@ -458,8 +458,9 @@ class StreamOutlet:
     def push_chunk(self, x, timestamp=0.0, pushthrough=True):
         """Push a list of samples into the outlet.
 
-        samples -- A list of samples, either as a list of lists or a list of
-                   multiplexed values.
+        samples -- A list of samples, preferably as a numpy array. `samples`
+                   can also be a list of lists, or a list of multiplexed
+                   values.
         timestamp -- Optionally the capture time of the most recent sample, in
                      agreement with local_clock(); if omitted, the current
                      time is used. The time stamps of other samples are
