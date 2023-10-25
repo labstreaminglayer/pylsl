@@ -5,8 +5,8 @@ on:
     types: [published]
 
 env:
-  LSL_RELEASE_URL: 'https://github.com/sccn/liblsl/releases/download/v1.16.1/'
-  LSL_RELEASE: '1.16.1'
+  LSL_RELEASE_URL: 'https://github.com/sccn/liblsl/releases/download/v1.16.2/'
+  LSL_RELEASE: '1.16.2'
 
 defaults:
   run:

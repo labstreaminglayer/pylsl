@@ -46,7 +46,7 @@ If the shared object is not installed onto a standard search path (or it is but 
 * Use `python -m site` to find the "site-packages" path.
 * Use `cp -L` on platforms that use symlinks.
 
-Alternatively, you can use an the environment variable. Set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. For example,
+Alternatively, you can use an environment variable. Set the `PYLSL_LIB` environment variable to the location of the library or set `LD_LIBRARY_PATH` to the folder containing the library. For example,
 
 1. `PYLSL_LIB=/usr/local/lib/liblsl.so python -m pylsl.examples.{name-of-example}`, or
 2. `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
@@ -56,6 +56,8 @@ Alternatively, you can use an the environment variable. Set the `PYLSL_LIB` envi
 ## Continuous Integration
 
 pylsl uses continuous integration and distribution. GitHub Actions will upload a new release to pypi whenever a Release is created in GitHub.
+Before creating the GitHub release, be sure to bump the version number in `pylsl/version.py` and consider updating the liblsl dependency
+in `.github/workflows/publish-to-pypi.yml`.
 
 ### Linux Binaries Deprecated
 
@@ -76,7 +78,7 @@ We recently stopped building binary wheels for Linux. In practice, the `manylinu
 
 # Known Issues with Multithreading on Linux
 
-* At least for some versions of pylsl, is has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
+* At least for some versions of pylsl, it has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
 * Recent tests with mulithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/pylsl/issues/29
 
 # Acknowledgments
