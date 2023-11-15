@@ -372,6 +372,176 @@ class StreamInfo:
         """
         return lib.lsl_get_xml(self.obj).decode('utf-8')
 
+    def get_channel_labels(self):
+        """Get the channel names in the description.
+
+        Returns
+        -------
+        labels : list of str or ``None`` | None
+            List of channel names, matching the number of total channels.
+            If ``None``, the channel names are not set.
+
+            .. warning::
+
+                If a list of str and ``None`` are returned, some of the channel names
+                are missing. This is not expected and could occur if the XML tree in
+                the ``desc`` property is tempered with outside of the defined getter and
+                setter.
+        """
+        return self._get_channel_info("label")
+
+    def get_channel_types(self):
+        """Get the channel types in the description.
+
+        Returns
+        -------
+        types : list of str or ``None`` | None
+            List of channel types, matching the number of total channels.
+            If ``None``, the channel types are not set.
+
+            .. warning::
+
+                If a list of str and ``None`` are returned, some of the channel types
+                are missing. This is not expected and could occur if the XML tree in
+                the ``desc`` property is tempered with outside of the defined getter and
+                setter.
+        """
+        return self._get_channel_info("type")
+
+    def get_channel_units(self):
+        """Get the channel units in the description.
+
+        Returns
+        -------
+        units : list of str or ``None`` | None
+            List of channel units, matching the number of total channels.
+            If ``None``, the channel units are not set.
+
+            .. warning::
+
+                If a list of str and ``None`` are returned, some of the channel units
+                are missing. This is not expected and could occur if the XML tree in
+                the ``desc`` property is tempered with outside of the defined getter and
+                setter.
+        """
+        return self._get_channel_info("unit")
+
+    def _get_channel_info(self, name):
+        """Get the 'channel/name' element in the XML tree."""
+        if self.desc().child("channels").empty():
+            return None
+        ch_infos = list()
+        channels = self.desc().child("channels")
+        ch = channels.child("channel")
+        while not ch.empty():
+            ch_info = ch.child(name).first_child().value()
+            if len(ch_info) != 0:
+                ch_infos.append(ch_info)
+            else:
+                ch_infos.append(None)
+            ch = ch.next_sibling()
+        if all(ch_info is None for ch_info in ch_infos):
+            return None
+        return ch_infos
+
+    def set_channel_labels(self, labels):
+        """Set the channel names in the description. Existing labels are overwritten.
+
+        Parameters
+        ----------
+        labels : list of str
+            List of channel names, matching the number of total channels.
+        """
+        self._set_channel_info(labels, "label")
+
+    def set_channel_types(self, types):
+        """Set the channel types in the description. Existing types are overwritten.
+
+        The types are given as human readable strings, e.g. ``'eeg'``.
+
+        Parameters
+        ----------
+        types : list of str | str
+            List of channel types, matching the number of total channels.
+            If a single `str` is provided, the type is applied to all channels.
+        """
+        types = [types] * self.channel_count() if isinstance(types, str) else types
+        self._set_channel_info(types, "type")
+
+    def set_channel_units(self, units):
+        """Set the channel units in the description. Existing units are overwritten.
+
+        The units are given as human readable strings, e.g. ``'microvolts'``, or as
+        multiplication factor, e.g. ``-6`` for ``1e-6`` thus converting e.g. Volts to
+        microvolts.
+
+        Parameters
+        ----------
+        units : list of str | list of int | array of int | str | int
+            List of channel units, matching the number of total channels.
+            If a single `str` or `int` is provided, the unit is applied to all channels.
+
+        Notes
+        -----
+        Some channel types do not have a unit. The `str` ``none`` or the `int` 0 should
+        be used to denote this channel unit, corresponding to ``FIFF_UNITM_NONE`` in
+        MNE-Python.
+        """
+        if isinstance(units, (int, str)):
+            units = [units] * self.channel_count()
+        else:  # iterable
+            units = [
+                str(int(unit)) if isinstance(unit, int) else unit for unit in units
+            ]
+        self._set_channel_info(units, "unit")
+
+    def _set_channel_info(self, ch_infos, name) -> None:
+        """Set the 'channel/name' element in the XML tree."""
+        if len(ch_infos) != self.channel_count():
+            raise ValueError(
+                f"The number of provided channel {name} {len(ch_infos)} "
+                f"must match the number of channels {self.channel_count()}."
+            )
+
+        channels = StreamInfo._add_first_node(self.desc, "channels")
+        # fill the 'channel/name' element of the tree and overwrite existing values
+        ch = channels.child("channel")
+        for ch_info in ch_infos:
+            ch = channels.append_child("channel") if ch.empty() else ch
+            StreamInfo._set_description_node(ch, {name: ch_info})
+            ch = ch.next_sibling()
+        StreamInfo._prune_description_node(ch, channels)
+
+    # -- Helper methods to interact with the XMLElement tree ---------------------------
+    @staticmethod
+    def _add_first_node(desc, name):
+        """Add the first node in the description and return it."""
+        if desc().child(name).empty():
+            node = desc().append_child(name)
+        else:
+            node = desc().child(name)
+        return node
+
+    @staticmethod
+    def _prune_description_node(node, parent):
+        """Prune a node and remove outdated entries."""
+        # this is useful in case the sinfo is tempered with and had more entries of type
+        # 'node' than it should.
+        while not node.empty():
+            node_next = node.next_sibling()
+            parent.remove_child(node)
+            node = node_next
+
+    @staticmethod
+    def _set_description_node(node, mapping):
+        """Set the key: value child(s) of a node."""
+        for key, value in mapping.items():
+            value = str(int(value)) if isinstance(value, int) else str(value)
+            if node.child(key).empty():
+                node.append_child_value(key, value)
+            else:
+                node.child(key).first_child().set_value(value)
+
 
 # =====================
 # === Stream Outlet ===
@@ -724,7 +894,7 @@ class StreamInlet:
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_inlet(self.obj)
-        except:
+        except Exception:
             pass
 
     def info(self, timeout=FOREVER):
