@@ -382,7 +382,7 @@ class StreamInfo:
 
         The session id is an optional human-assigned identifier of the
         recording session. While it is rarely used, it can be used to prevent
-        concurrent recording activitites on the same sub-network (e.g., in
+        concurrent recording activities on the same sub-network (e.g., in
         multiple experiment areas) from seeing each other's streams
         (can be assigned in a configuration file read by liblsl, see also
         Network Connectivity in the LSL wiki).
@@ -829,7 +829,7 @@ def resolve_byprop(prop, value, minimum=1, timeout=FOREVER):
 
     Keyword arguments:
     prop -- The StreamInfo property that should have a specific value (e.g.,
-            "name", "type", "source_id", or "desc/manufaturer").
+            "name", "type", "source_id", or "desc/manufacturer").
     value -- The string value that the property should have (e.g., "EEG" as
              the type property).
     minimum -- Return at least this many streams. (default 1)
