@@ -500,6 +500,11 @@ class StreamInfo:
             ch = ch.next_sibling()
         if all(ch_info is None for ch_info in ch_infos):
             return None
+        if len(ch_infos) != self.channel_count():
+            print(
+                f"The stream description contains {len(ch_infos)} elements for "
+                f"{self.channel_count()} channels.",
+            )
         return ch_infos
 
     def set_channel_labels(self, labels):
@@ -1397,7 +1402,7 @@ class ContinuousResolver:
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_continuous_resolver(self.obj)
-        except:
+        except Exception:
             pass
 
     def results(self):
@@ -1707,14 +1712,14 @@ try:
     lib.lsl_pull_chunk_c.restype = c_long
     lib.lsl_pull_chunk_str.restype = c_long
     lib.lsl_pull_chunk_buf.restype = c_long
-except:
+except Exception:
     print("pylsl: chunk transfer functions not available in your liblsl " "version.")
 # noinspection PyBroadException
 try:
     lib.lsl_create_continuous_resolver.restype = c_void_p
     lib.lsl_create_continuous_resolver_bypred.restype = c_void_p
     lib.lsl_create_continuous_resolver_byprop.restype = c_void_p
-except:
+except Exception:
     print("pylsl: ContinuousResolver not (fully) available in your liblsl " "version.")
 
 
@@ -1808,7 +1813,7 @@ try:
         lib.lsl_pull_chunk_c,
         pull_chunk_int64,
     ]
-except:
+except Exception:
     # if not available
     fmt2push_chunk = [None] * len(fmt2string)
     fmt2push_chunk_n = [None] * len(fmt2string)
