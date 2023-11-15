@@ -7,7 +7,7 @@ from pylsl import StreamInlet, resolve_stream
 def main():
     # first resolve an EEG stream on the lab network
     print("looking for an EEG stream...")
-    streams = resolve_stream('type', 'EEG')
+    streams = resolve_stream("type", "EEG")
 
     # create a new inlet to read from the stream
     inlet = StreamInlet(streams[0])
@@ -20,5 +20,5 @@ def main():
             print(timestamps, chunk)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

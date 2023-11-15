@@ -6,7 +6,7 @@ from pylsl import StreamInlet, resolve_stream
 def main():
     # first resolve a marker stream on the lab network
     print("looking for a marker stream...")
-    streams = resolve_stream('type', 'Markers')
+    streams = resolve_stream("type", "Markers")
 
     # create a new inlet to read from the stream
     inlet = StreamInlet(streams[0])
@@ -18,5 +18,5 @@ def main():
         print("got %s at time %s" % (sample[0], timestamp))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
