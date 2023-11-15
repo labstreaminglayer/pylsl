@@ -19,20 +19,67 @@ pylsl has been tested with Python 2.7 and 3.4.
 import os
 import platform
 import struct
-from ctypes import CDLL, util, byref, c_char_p, c_void_p, c_double, c_int, \
-    c_long, c_float, c_short, c_byte, c_longlong, c_size_t, cast, POINTER
+from ctypes import (
+    CDLL,
+    POINTER,
+    byref,
+    c_byte,
+    c_char_p,
+    c_double,
+    c_float,
+    c_int,
+    c_long,
+    c_longlong,
+    c_short,
+    c_size_t,
+    c_void_p,
+    cast,
+    util,
+)
 
-__all__ = ['IRREGULAR_RATE', 'DEDUCED_TIMESTAMP', 'FOREVER', 'cf_float32',
-           'cf_double64', 'cf_string', 'cf_int32', 'cf_int16', 'cf_int8',
-           'cf_int64', 'cf_undefined', 'protocol_version', 'library_version',
-           'library_info',
-           'local_clock', 'StreamInfo', 'StreamOutlet', 'resolve_streams',
-           'resolve_byprop', 'resolve_bypred', 'StreamInlet', 'XMLElement',
-           'ContinuousResolver', 'TimeoutError', 'LostError',
-           'InvalidArgumentError', 'InternalError', 'stream_info',
-           'stream_outlet', 'stream_inlet', 'xml_element', 'timeout_error',
-           'lost_error', 'vectorf', 'vectord', 'vectorl', 'vectori',
-           'vectors', 'vectorc', 'vectorstr', 'resolve_stream']
+__all__ = [
+    "IRREGULAR_RATE",
+    "DEDUCED_TIMESTAMP",
+    "FOREVER",
+    "cf_float32",
+    "cf_double64",
+    "cf_string",
+    "cf_int32",
+    "cf_int16",
+    "cf_int8",
+    "cf_int64",
+    "cf_undefined",
+    "protocol_version",
+    "library_version",
+    "library_info",
+    "local_clock",
+    "StreamInfo",
+    "StreamOutlet",
+    "resolve_streams",
+    "resolve_byprop",
+    "resolve_bypred",
+    "StreamInlet",
+    "XMLElement",
+    "ContinuousResolver",
+    "TimeoutError",
+    "LostError",
+    "InvalidArgumentError",
+    "InternalError",
+    "stream_info",
+    "stream_outlet",
+    "stream_inlet",
+    "xml_element",
+    "timeout_error",
+    "lost_error",
+    "vectorf",
+    "vectord",
+    "vectorl",
+    "vectori",
+    "vectors",
+    "vectorc",
+    "vectorstr",
+    "resolve_stream",
+]
 
 # =================
 # === Constants ===
@@ -83,12 +130,15 @@ proc_clocksync = 1  # Perform automatic clock synchronization; equivalent to man
 proc_dejitter = 2  # Remove jitter from time stamps using a smoothing algorithm to the received time stamps.
 proc_monotonize = 4  # Force the time-stamps to be monotonically ascending. Only makes sense if timestamps are dejittered.
 proc_threadsafe = 8  # Post-processing is thread-safe (same inlet can be read from by multiple threads).
-proc_ALL = proc_none | proc_clocksync | proc_dejitter | proc_monotonize | proc_threadsafe
+proc_ALL = (
+    proc_none | proc_clocksync | proc_dejitter | proc_monotonize | proc_threadsafe
+)
 
 
 # ==========================================================
 # === Free Functions provided by the lab streaming layer ===
 # ==========================================================
+
 
 def protocol_version():
     """Protocol version.
@@ -118,7 +168,7 @@ def library_info():
     """Get a string containing library information. The format of the string shouldn't be used
     for anything important except giving a a debugging person a good idea which exact library
     version is used."""
-    return lib.lsl_library_info().decode('utf-8')
+    return lib.lsl_library_info().decode("utf-8")
 
 
 def local_clock():
@@ -140,6 +190,7 @@ def local_clock():
 # === Stream Declaration ===
 # ==========================
 
+
 class StreamInfo:
     """The StreamInfo object stores the declaration of a data stream.
 
@@ -158,9 +209,16 @@ class StreamInfo:
 
     """
 
-    def __init__(self, name='untitled', type='', channel_count=1,
-                 nominal_srate=IRREGULAR_RATE, channel_format=cf_float32,
-                 source_id='', handle=None):
+    def __init__(
+        self,
+        name="untitled",
+        type="",
+        channel_count=1,
+        nominal_srate=IRREGULAR_RATE,
+        channel_format=cf_float32,
+        source_id="",
+        handle=None,
+    ):
         """Construct a new StreamInfo object.
 
         Core stream information is specified here. Any remaining meta-data can
@@ -201,19 +259,20 @@ class StreamInfo:
         else:
             if isinstance(channel_format, str):
                 channel_format = string2fmt[channel_format]
-            self.obj = lib.lsl_create_streaminfo(c_char_p(str.encode(name)),
-                                                 c_char_p(str.encode(type)),
-                                                 channel_count,
-                                                 c_double(nominal_srate),
-                                                 channel_format,
-                                                 c_char_p(str.encode(source_id)))
+            self.obj = lib.lsl_create_streaminfo(
+                c_char_p(str.encode(name)),
+                c_char_p(str.encode(type)),
+                channel_count,
+                c_double(nominal_srate),
+                channel_format,
+                c_char_p(str.encode(source_id)),
+            )
             self.obj = c_void_p(self.obj)
             if not self.obj:
-                raise RuntimeError("could not create stream description "
-                                   "object.")
+                raise RuntimeError("could not create stream description " "object.")
 
     def __del__(self):
-        """ Destroy a previously created StreamInfo object. """
+        """Destroy a previously created StreamInfo object."""
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_streaminfo(self.obj)
@@ -233,7 +292,7 @@ class StreamInfo:
         the recording app or experimenter).
 
         """
-        return lib.lsl_get_name(self.obj).decode('utf-8')
+        return lib.lsl_get_name(self.obj).decode("utf-8")
 
     def type(self):
         """Content type of the stream.
@@ -246,7 +305,7 @@ class StreamInfo:
         content types is preferred.
 
         """
-        return lib.lsl_get_type(self.obj).decode('utf-8')
+        return lib.lsl_get_type(self.obj).decode("utf-8")
 
     def channel_count(self):
         """Number of channels of the stream.
@@ -291,7 +350,7 @@ class StreamInfo:
         back online.
 
         """
-        return lib.lsl_get_source_id(self.obj).decode('utf-8')
+        return lib.lsl_get_source_id(self.obj).decode("utf-8")
 
     # === Hosting Information (assigned when bound to an outlet/inlet) ===
 
@@ -316,27 +375,26 @@ class StreamInfo:
         after a re-start).
 
         """
-        return lib.lsl_get_uid(self.obj).decode('utf-8')
+        return lib.lsl_get_uid(self.obj).decode("utf-8")
 
     def session_id(self):
         """Session ID for the given stream.
 
         The session id is an optional human-assigned identifier of the
         recording session. While it is rarely used, it can be used to prevent
-        concurrent recording activitites on the same sub-network (e.g., in
+        concurrent recording activities on the same sub-network (e.g., in
         multiple experiment areas) from seeing each other's streams
         (can be assigned in a configuration file read by liblsl, see also
         Network Connectivity in the LSL wiki).
 
         """
-        return lib.lsl_get_session_id(self.obj).decode('utf-8')
+        return lib.lsl_get_session_id(self.obj).decode("utf-8")
 
     def hostname(self):
         """Hostname of the providing machine."""
-        return lib.lsl_get_hostname(self.obj).decode('utf-8')
+        return lib.lsl_get_hostname(self.obj).decode("utf-8")
 
     # === Data Description (can be modified) ===
-
     def desc(self):
         """Extended description of the stream.
 
@@ -370,12 +428,188 @@ class StreamInfo:
            sub-elements.
 
         """
-        return lib.lsl_get_xml(self.obj).decode('utf-8')
+        return lib.lsl_get_xml(self.obj).decode("utf-8")
+
+    def get_channel_labels(self):
+        """Get the channel names in the description.
+
+        Returns
+        -------
+        labels : list of str or ``None`` | None
+            List of channel names, matching the number of total channels.
+            If ``None``, the channel names are not set.
+
+            .. warning::
+
+                If a list of str and ``None`` are returned, some of the channel names
+                are missing. This is not expected and could occur if the XML tree in
+                the ``desc`` property is tempered with outside of the defined getter and
+                setter.
+        """
+        return self._get_channel_info("label")
+
+    def get_channel_types(self):
+        """Get the channel types in the description.
+
+        Returns
+        -------
+        types : list of str or ``None`` | None
+            List of channel types, matching the number of total channels.
+            If ``None``, the channel types are not set.
+
+            .. warning::
+
+                If a list of str and ``None`` are returned, some of the channel types
+                are missing. This is not expected and could occur if the XML tree in
+                the ``desc`` property is tempered with outside of the defined getter and
+                setter.
+        """
+        return self._get_channel_info("type")
+
+    def get_channel_units(self):
+        """Get the channel units in the description.
+
+        Returns
+        -------
+        units : list of str or ``None`` | None
+            List of channel units, matching the number of total channels.
+            If ``None``, the channel units are not set.
+
+            .. warning::
+
+                If a list of str and ``None`` are returned, some of the channel units
+                are missing. This is not expected and could occur if the XML tree in
+                the ``desc`` property is tempered with outside of the defined getter and
+                setter.
+        """
+        return self._get_channel_info("unit")
+
+    def _get_channel_info(self, name):
+        """Get the 'channel/name' element in the XML tree."""
+        if self.desc().child("channels").empty():
+            return None
+        ch_infos = list()
+        channels = self.desc().child("channels")
+        ch = channels.child("channel")
+        while not ch.empty():
+            ch_info = ch.child(name).first_child().value()
+            if len(ch_info) != 0:
+                ch_infos.append(ch_info)
+            else:
+                ch_infos.append(None)
+            ch = ch.next_sibling()
+        if all(ch_info is None for ch_info in ch_infos):
+            return None
+        if len(ch_infos) != self.channel_count():
+            print(
+                f"The stream description contains {len(ch_infos)} elements for "
+                f"{self.channel_count()} channels.",
+            )
+        return ch_infos
+
+    def set_channel_labels(self, labels):
+        """Set the channel names in the description. Existing labels are overwritten.
+
+        Parameters
+        ----------
+        labels : list of str
+            List of channel names, matching the number of total channels.
+        """
+        self._set_channel_info(labels, "label")
+
+    def set_channel_types(self, types):
+        """Set the channel types in the description. Existing types are overwritten.
+
+        The types are given as human readable strings, e.g. ``'eeg'``.
+
+        Parameters
+        ----------
+        types : list of str | str
+            List of channel types, matching the number of total channels.
+            If a single `str` is provided, the type is applied to all channels.
+        """
+        types = [types] * self.channel_count() if isinstance(types, str) else types
+        self._set_channel_info(types, "type")
+
+    def set_channel_units(self, units):
+        """Set the channel units in the description. Existing units are overwritten.
+
+        The units are given as human readable strings, e.g. ``'microvolts'``, or as
+        multiplication factor, e.g. ``-6`` for ``1e-6`` thus converting e.g. Volts to
+        microvolts.
+
+        Parameters
+        ----------
+        units : list of str | list of int | array of int | str | int
+            List of channel units, matching the number of total channels.
+            If a single `str` or `int` is provided, the unit is applied to all channels.
+
+        Notes
+        -----
+        Some channel types do not have a unit. The `str` ``none`` or the `int` 0 should
+        be used to denote this channel unit, corresponding to ``FIFF_UNITM_NONE`` in
+        MNE-Python.
+        """
+        if isinstance(units, (int, str)):
+            units = [units] * self.channel_count()
+        else:  # iterable
+            units = [
+                str(int(unit)) if isinstance(unit, int) else unit for unit in units
+            ]
+        self._set_channel_info(units, "unit")
+
+    def _set_channel_info(self, ch_infos, name) -> None:
+        """Set the 'channel/name' element in the XML tree."""
+        if len(ch_infos) != self.channel_count():
+            raise ValueError(
+                f"The number of provided channel {name} {len(ch_infos)} "
+                f"must match the number of channels {self.channel_count()}."
+            )
+
+        channels = StreamInfo._add_first_node(self.desc, "channels")
+        # fill the 'channel/name' element of the tree and overwrite existing values
+        ch = channels.child("channel")
+        for ch_info in ch_infos:
+            ch = channels.append_child("channel") if ch.empty() else ch
+            StreamInfo._set_description_node(ch, {name: ch_info})
+            ch = ch.next_sibling()
+        StreamInfo._prune_description_node(ch, channels)
+
+    # -- Helper methods to interact with the XMLElement tree ---------------------------
+    @staticmethod
+    def _add_first_node(desc, name):
+        """Add the first node in the description and return it."""
+        if desc().child(name).empty():
+            node = desc().append_child(name)
+        else:
+            node = desc().child(name)
+        return node
+
+    @staticmethod
+    def _prune_description_node(node, parent):
+        """Prune a node and remove outdated entries."""
+        # this is useful in case the sinfo is tempered with and had more entries of type
+        # 'node' than it should.
+        while not node.empty():
+            node_next = node.next_sibling()
+            parent.remove_child(node)
+            node = node_next
+
+    @staticmethod
+    def _set_description_node(node, mapping):
+        """Set the key: value child(s) of a node."""
+        for key, value in mapping.items():
+            value = str(int(value)) if isinstance(value, int) else str(value)
+            if node.child(key).empty():
+                node.append_child_value(key, value)
+            else:
+                node.child(key).first_child().set_value(value)
 
 
 # =====================
 # === Stream Outlet ===
 # =====================
+
 
 class StreamOutlet:
     """A stream outlet.
@@ -447,14 +681,22 @@ class StreamOutlet:
         """
         if len(x) == self.channel_count:
             if self.channel_format == cf_string:
-                x = [v.encode('utf-8') for v in x]
-            handle_error(self.do_push_sample(self.obj, self.sample_type(*x),
-                                             c_double(timestamp),
-                                             c_int(pushthrough)))
+                x = [v.encode("utf-8") for v in x]
+            handle_error(
+                self.do_push_sample(
+                    self.obj,
+                    self.sample_type(*x),
+                    c_double(timestamp),
+                    c_int(pushthrough),
+                )
+            )
         else:
-            raise ValueError("length of the sample (" + str(len(x)) + ") must "
-                             "correspond to the stream's channel count ("
-                             + str(self.channel_count) + ").")
+            raise ValueError(
+                "length of the sample (" + str(len(x)) + ") must "
+                "correspond to the stream's channel count ("
+                + str(self.channel_count)
+                + ")."
+            )
 
     def push_chunk(self, x, timestamp=0.0, pushthrough=True):
         """Push a list of samples into the outlet.
@@ -489,19 +731,18 @@ class StreamOutlet:
                 timestamp_c = (c_double * len(timestamp))(*timestamp)
                 liblsl_push_chunk_func = self.do_push_chunk_n
             except TypeError:
-                raise TypeError(
-                    "timestamp must be a float or an iterable of floats"
-                )
+                raise TypeError("timestamp must be a float or an iterable of floats")
 
         try:
             n_values = self.channel_count * len(x)
             data_buff = (self.value_type * n_values).from_buffer(x)
             handle_error(
                 liblsl_push_chunk_func(
-                    self.obj, data_buff,
+                    self.obj,
+                    data_buff,
                     c_long(n_values),
                     timestamp_c,
-                    c_int(pushthrough)
+                    c_int(pushthrough),
                 )
             )
         except TypeError:
@@ -510,23 +751,26 @@ class StreamOutlet:
                 if type(x[0]) is list:
                     x = [v for sample in x for v in sample]
                 if self.channel_format == cf_string:
-                    x = [v.encode('utf-8') for v in x]
+                    x = [v.encode("utf-8") for v in x]
                 if len(x) % self.channel_count == 0:
                     # x is a flattened list of multiplexed values
                     constructor = self.value_type * len(x)
                     # noinspection PyCallingNonCallable
                     handle_error(
                         liblsl_push_chunk_func(
-                            self.obj, constructor(*x),
+                            self.obj,
+                            constructor(*x),
                             c_long(len(x)),
                             timestamp_c,
-                            c_int(pushthrough)
+                            c_int(pushthrough),
                         )
                     )
                 else:
-                    raise ValueError("Each sample must have the same number of channels ("
-                                     + str(self.channel_count) + ").")
-
+                    raise ValueError(
+                        "Each sample must have the same number of channels ("
+                        + str(self.channel_count)
+                        + ")."
+                    )
 
     def have_consumers(self):
         """Check whether consumers are currently registered.
@@ -553,6 +797,7 @@ class StreamOutlet:
 # =========================
 # === Resolve Functions ===
 # =========================
+
 
 def resolve_streams(wait_time=1.0):
     """Resolve all streams on the network.
@@ -589,7 +834,7 @@ def resolve_byprop(prop, value, minimum=1, timeout=FOREVER):
 
     Keyword arguments:
     prop -- The StreamInfo property that should have a specific value (e.g.,
-            "name", "type", "source_id", or "desc/manufaturer").
+            "name", "type", "source_id", or "desc/manufacturer").
     value -- The string value that the property should have (e.g., "EEG" as
              the type property).
     minimum -- Return at least this many streams. (default 1)
@@ -605,11 +850,14 @@ def resolve_byprop(prop, value, minimum=1, timeout=FOREVER):
     """
     # noinspection PyCallingNonCallable
     buffer = (c_void_p * 1024)()
-    num_found = lib.lsl_resolve_byprop(byref(buffer), 1024,
-                                       c_char_p(str.encode(prop)),
-                                       c_char_p(str.encode(value)),
-                                       minimum,
-                                       c_double(timeout))
+    num_found = lib.lsl_resolve_byprop(
+        byref(buffer),
+        1024,
+        c_char_p(str.encode(prop)),
+        c_char_p(str.encode(value)),
+        minimum,
+        c_double(timeout),
+    )
     return [StreamInfo(handle=buffer[k]) for k in range(num_found)]
 
 
@@ -636,10 +884,9 @@ def resolve_bypred(predicate, minimum=1, timeout=FOREVER):
     """
     # noinspection PyCallingNonCallable
     buffer = (c_void_p * 1024)()
-    num_found = lib.lsl_resolve_bypred(byref(buffer), 1024,
-                                       c_char_p(str.encode(predicate)),
-                                       minimum,
-                                       c_double(timeout))
+    num_found = lib.lsl_resolve_bypred(
+        byref(buffer), 1024, c_char_p(str.encode(predicate)), minimum, c_double(timeout)
+    )
     return [StreamInfo(handle=buffer[k]) for k in range(num_found)]
 
 
@@ -657,6 +904,7 @@ def free_char_p_array_memory(char_p_array, num_elements):
 # === Stream Inlet ===
 # ====================
 
+
 class StreamInlet:
     """A stream inlet.
 
@@ -665,7 +913,9 @@ class StreamInlet:
 
     """
 
-    def __init__(self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=0):
+    def __init__(
+        self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=0
+    ):
         """Construct a new stream inlet from a resolved stream description.
 
         Keyword arguments:
@@ -701,10 +951,10 @@ class StreamInlet:
                    flags. Use `proc_ALL` for all flags. (default proc_none).
         """
         if type(info) is list:
-            raise TypeError("description needs to be of type StreamInfo, "
-                            "got a list.")
-        self.obj = lib.lsl_create_inlet(info.obj, max_buflen, max_chunklen,
-                                        recover)
+            raise TypeError(
+                "description needs to be of type StreamInfo, " "got a list."
+            )
+        self.obj = lib.lsl_create_inlet(info.obj, max_buflen, max_chunklen, recover)
         self.obj = c_void_p(self.obj)
         if not self.obj:
             raise RuntimeError("could not create stream inlet.")
@@ -724,7 +974,7 @@ class StreamInlet:
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_inlet(self.obj)
-        except:
+        except Exception:
             pass
 
     def info(self, timeout=FOREVER):
@@ -741,8 +991,7 @@ class StreamInlet:
 
         """
         errcode = c_int()
-        result = lib.lsl_get_fullinfo(self.obj, c_double(timeout),
-                                      byref(errcode))
+        result = lib.lsl_get_fullinfo(self.obj, c_double(timeout), byref(errcode))
         handle_error(errcode)
         return StreamInfo(handle=result)
 
@@ -800,8 +1049,7 @@ class StreamInlet:
 
         """
         errcode = c_int()
-        result = lib.lsl_time_correction(self.obj, c_double(timeout),
-                                         byref(errcode))
+        result = lib.lsl_time_correction(self.obj, c_double(timeout), byref(errcode))
         handle_error(errcode)
         return result
 
@@ -833,14 +1081,18 @@ class StreamInlet:
             assign_to = None
 
         errcode = c_int()
-        timestamp = self.do_pull_sample(self.obj, byref(self.sample),
-                                        self.channel_count, c_double(timeout),
-                                        byref(errcode))
+        timestamp = self.do_pull_sample(
+            self.obj,
+            byref(self.sample),
+            self.channel_count,
+            c_double(timeout),
+            byref(errcode),
+        )
         handle_error(errcode)
         if timestamp:
             sample = [v for v in self.sample]
             if self.channel_format == cf_string:
-                sample = [v.decode('utf-8') for v in sample]
+                sample = [v.decode("utf-8") for v in sample]
             if assign_to is not None:
                 assign_to[:] = sample
             return sample, timestamp
@@ -876,8 +1128,10 @@ class StreamInlet:
 
         if max_samples not in self.buffers:
             # noinspection PyCallingNonCallable
-            self.buffers[max_samples] = ((self.value_type * max_values)(),
-                                         (c_double * max_samples)())
+            self.buffers[max_samples] = (
+                (self.value_type * max_values)(),
+                (c_double * max_samples)(),
+            )
         if dest_obj is not None:
             data_buff = (self.value_type * max_values).from_buffer(dest_obj)
         else:
@@ -887,19 +1141,26 @@ class StreamInlet:
         # read data into it
         errcode = c_int()
         # noinspection PyCallingNonCallable
-        num_elements = self.do_pull_chunk(self.obj, byref(data_buff),
-                                          byref(ts_buff), c_size_t(max_values),
-                                          c_size_t(max_samples), c_double(timeout),
-                                          byref(errcode))
+        num_elements = self.do_pull_chunk(
+            self.obj,
+            byref(data_buff),
+            byref(ts_buff),
+            c_size_t(max_values),
+            c_size_t(max_samples),
+            c_double(timeout),
+            byref(errcode),
+        )
         handle_error(errcode)
         # return results (note: could offer a more efficient format in the
         # future, e.g., a numpy array)
         num_samples = num_elements / num_channels
         if dest_obj is None:
-            samples = [[data_buff[s * num_channels + c] for c in range(num_channels)]
-                       for s in range(int(num_samples))]
+            samples = [
+                [data_buff[s * num_channels + c] for c in range(num_channels)]
+                for s in range(int(num_samples))
+            ]
             if self.channel_format == cf_string:
-                samples = [[v.decode('utf-8') for v in s] for s in samples]
+                samples = [[v.decode("utf-8") for v in s] for s in samples]
                 free_char_p_array_memory(data_buff, max_values)
         else:
             samples = None
@@ -940,6 +1201,7 @@ class StreamInlet:
 # ===================
 # === XML Element ===
 # ===================
+
 
 class XMLElement:
     """A lightweight XML element tree modeling the .desc() field of StreamInfo.
@@ -991,8 +1253,7 @@ class XMLElement:
         if name is None:
             return XMLElement(lib.lsl_previous_sibling(self.e))
         else:
-            return XMLElement(lib.lsl_previous_sibling_n(self.e,
-                                                         str.encode(name)))
+            return XMLElement(lib.lsl_previous_sibling_n(self.e, str.encode(name)))
 
     def parent(self):
         """Get the parent node."""
@@ -1014,11 +1275,11 @@ class XMLElement:
 
     def name(self):
         """Name of the element."""
-        return lib.lsl_name(self.e).decode('utf-8')
+        return lib.lsl_name(self.e).decode("utf-8")
 
     def value(self):
         """Value of the element."""
-        return lib.lsl_value(self.e).decode('utf-8')
+        return lib.lsl_value(self.e).decode("utf-8")
 
     def child_value(self, name=None):
         """Get child value (value of the first child that is text).
@@ -1031,30 +1292,30 @@ class XMLElement:
             res = lib.lsl_child_value(self.e)
         else:
             res = lib.lsl_child_value_n(self.e, str.encode(name))
-        return res.decode('utf-8')
+        return res.decode("utf-8")
 
     # === Modification ===
 
     def append_child_value(self, name, value):
         """Append a child node with a given name, which has a (nameless)
         plain-text child with the given text value."""
-        return XMLElement(lib.lsl_append_child_value(self.e,
-                                                     str.encode(name),
-                                                     str.encode(value)))
+        return XMLElement(
+            lib.lsl_append_child_value(self.e, str.encode(name), str.encode(value))
+        )
 
     def prepend_child_value(self, name, value):
         """Prepend a child node with a given name, which has a (nameless)
         plain-text child with the given text value."""
-        return XMLElement(lib.lsl_prepend_child_value(self.e,
-                                                      str.encode(name),
-                                                      str.encode(value)))
+        return XMLElement(
+            lib.lsl_prepend_child_value(self.e, str.encode(name), str.encode(value))
+        )
 
     def set_child_value(self, name, value):
         """Set the text value of the (nameless) plain-text child of a named
         child node."""
-        return XMLElement(lib.lsl_set_child_value(self.e,
-                                                  str.encode(name),
-                                                  str.encode(value)))
+        return XMLElement(
+            lib.lsl_set_child_value(self.e, str.encode(name), str.encode(value))
+        )
 
     def set_name(self, name):
         """Set the element's name. Returns False if the node is empty."""
@@ -1092,6 +1353,7 @@ class XMLElement:
 # === ContinuousResolver ===
 # ==========================
 
+
 class ContinuousResolver:
     """A convenience class resolving streams continuously in the background.
 
@@ -1112,18 +1374,23 @@ class ContinuousResolver:
         """
         if pred is not None:
             if prop is not None or value is not None:
-                raise ValueError("you can only either pass the prop/value "
-                                 "argument or the pred argument, but not "
-                                 "both.")
-            self.obj = lib.lsl_create_continuous_resolver_bypred(str.encode(pred),
-                                                                 c_double(forget_after))
+                raise ValueError(
+                    "you can only either pass the prop/value "
+                    "argument or the pred argument, but not "
+                    "both."
+                )
+            self.obj = lib.lsl_create_continuous_resolver_bypred(
+                str.encode(pred), c_double(forget_after)
+            )
         elif prop is not None and value is not None:
-            self.obj = lib.lsl_create_continuous_resolver_byprop(str.encode(prop),
-                                                                 str.encode(value),
-                                                                 c_double(forget_after))
+            self.obj = lib.lsl_create_continuous_resolver_byprop(
+                str.encode(prop), str.encode(value), c_double(forget_after)
+            )
         elif prop is not None or value is not None:
-            raise ValueError("if prop is specified, then value must be "
-                             "specified, too, and vice versa.")
+            raise ValueError(
+                "if prop is specified, then value must be "
+                "specified, too, and vice versa."
+            )
         else:
             self.obj = lib.lsl_create_continuous_resolver(c_double(forget_after))
         self.obj = c_void_p(self.obj)
@@ -1135,7 +1402,7 @@ class ContinuousResolver:
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_continuous_resolver(self.obj)
-        except:
+        except Exception:
             pass
 
     def results(self):
@@ -1154,6 +1421,7 @@ class ContinuousResolver:
 # =========================
 # === Error Definitions ===
 # =========================
+
 
 # noinspection PyShadowingBuiltins
 class TimeoutError(RuntimeError):
@@ -1228,6 +1496,7 @@ def resolve_stream(*args):
 # === Module Initialization Code ===
 # ==================================
 
+
 def find_liblsl_libraries(verbose=False):
     """finds the binary lsl library.
 
@@ -1248,8 +1517,11 @@ def find_liblsl_libraries(verbose=False):
         if os.path.isfile(path):
             yield path
         elif verbose:
-            print('Skipping PYLSL_LIB:', path, ' because it was either not ' +
-                  'found or is not a valid file')
+            print(
+                "Skipping PYLSL_LIB:",
+                path,
+                " because it was either not " + "found or is not a valid file",
+            )
 
     os_name = platform.system()
     if os_name in ["Windows", "Microsoft"]:
@@ -1274,15 +1546,14 @@ def find_liblsl_libraries(verbose=False):
                     if scope == "package":
                         path = os.path.join(
                             libbasepath,
-                            libprefix
-                            + "lsl"
-                            + bitness
-                            + debugsuffix
-                            + libsuffix,
+                            libprefix + "lsl" + bitness + debugsuffix + libsuffix,
                         )
                         if os.path.isfile(path):
                             yield path
-                    elif (scope == "system") and os_name not in ["Windows", "Microsoft"]:
+                    elif (scope == "system") and os_name not in [
+                        "Windows",
+                        "Microsoft",
+                    ]:
                         # according to docs:
                         # On Linux, find_library tries to run external
                         # programs (/sbin/ldconfig, gcc, and objdump) to find
@@ -1300,29 +1571,38 @@ def find_liblsl_libraries(verbose=False):
                             # https://bugs.python.org/issue43964#msg394782
                             # Here we try the default homebrew folder, but you may have installed it elsewhere,
                             #  in which case you'd use the DYLD_LIBRARY_PATH (see error message below)".
-                            path = util.find_library('/opt/homebrew/lib/' + quallibname)
+                            path = util.find_library("/opt/homebrew/lib/" + quallibname)
                         if path is not None:
                             yield path
 
 
-__dload_msg = "You can install the LSL library with conda: `conda install -c conda-forge liblsl`"
+__dload_msg = (
+    "You can install the LSL library with conda: `conda install -c conda-forge liblsl`"
+)
 if platform.system() == "Darwin":
     __dload_msg += "\nor with homebrew: `brew install labstreaminglayer/tap/lsl`"
-__dload_msg += "\nor otherwise download it from the liblsl releases page assets: " \
-               "https://github.com/sccn/liblsl/releases"
+__dload_msg += (
+    "\nor otherwise download it from the liblsl releases page assets: "
+    "https://github.com/sccn/liblsl/releases"
+)
 if platform.system() == "Darwin":
     # https://bugs.python.org/issue43964#msg394782
-    __dload_msg += "\nOn modern MacOS (>= 10.15) it is further necessary to set the DYLD_LIBRARY_PATH " \
-                   "environment variable. e.g. `>DYLD_LIBRARY_PATH=/opt/homebrew/lib python path/to/my_lsl_script.py`"
+    __dload_msg += (
+        "\nOn modern MacOS (>= 10.15) it is further necessary to set the DYLD_LIBRARY_PATH "
+        "environment variable. e.g. `>DYLD_LIBRARY_PATH=/opt/homebrew/lib python path/to/my_lsl_script.py`"
+    )
 
 
 try:
     libpath = next(find_liblsl_libraries())
     lib = CDLL(libpath)
 except StopIteration:
-    err_msg = ("LSL binary library file was not found. Please make sure that the " +
-               "binary file can be found in the package lib folder\n (" +
-               os.path.join(os.path.dirname(__file__), "lib") + ")\n or ")
+    err_msg = (
+        "LSL binary library file was not found. Please make sure that the "
+        + "binary file can be found in the package lib folder\n ("
+        + os.path.join(os.path.dirname(__file__), "lib")
+        + ")\n or "
+    )
     if platform.system() not in ["Windows", "Microsoft"]:
         err_msg += "the system search path. Alternatively, "
     err_msg += "specify the PYLSL_LIB environment variable.\n "
@@ -1364,15 +1644,25 @@ lib.lsl_pull_sample_c.restype = c_double
 lib.lsl_pull_sample_str.restype = c_double
 lib.lsl_pull_sample_buf.restype = c_double
 lib.lsl_first_child.restype = c_void_p
-lib.lsl_first_child.argtypes = [c_void_p, ]
+lib.lsl_first_child.argtypes = [
+    c_void_p,
+]
 lib.lsl_last_child.restype = c_void_p
-lib.lsl_last_child.argtypes = [c_void_p, ]
+lib.lsl_last_child.argtypes = [
+    c_void_p,
+]
 lib.lsl_next_sibling.restype = c_void_p
-lib.lsl_next_sibling.argtypes = [c_void_p, ]
+lib.lsl_next_sibling.argtypes = [
+    c_void_p,
+]
 lib.lsl_previous_sibling.restype = c_void_p
-lib.lsl_previous_sibling.argtypes = [c_void_p, ]
+lib.lsl_previous_sibling.argtypes = [
+    c_void_p,
+]
 lib.lsl_parent.restype = c_void_p
-lib.lsl_parent.argtypes = [c_void_p, ]
+lib.lsl_parent.argtypes = [
+    c_void_p,
+]
 lib.lsl_child.restype = c_void_p
 lib.lsl_child.argtypes = [c_void_p, c_char_p]
 lib.lsl_next_sibling_n.restype = c_void_p
@@ -1380,11 +1670,17 @@ lib.lsl_next_sibling_n.argtypes = [c_void_p, c_char_p]
 lib.lsl_previous_sibling_n.restype = c_void_p
 lib.lsl_previous_sibling_n.argtypes = [c_void_p, c_char_p]
 lib.lsl_name.restype = c_char_p
-lib.lsl_name.argtypes = [c_void_p, ]
+lib.lsl_name.argtypes = [
+    c_void_p,
+]
 lib.lsl_value.restype = c_char_p
-lib.lsl_value.argtypes = [c_void_p, ]
+lib.lsl_value.argtypes = [
+    c_void_p,
+]
 lib.lsl_child_value.restype = c_char_p
-lib.lsl_child_value.argtypes = [c_void_p, ]
+lib.lsl_child_value.argtypes = [
+    c_void_p,
+]
 lib.lsl_child_value_n.restype = c_char_p
 lib.lsl_child_value_n.argtypes = [c_void_p, c_char_p]
 lib.lsl_append_child_value.restype = c_void_p
@@ -1416,59 +1712,108 @@ try:
     lib.lsl_pull_chunk_c.restype = c_long
     lib.lsl_pull_chunk_str.restype = c_long
     lib.lsl_pull_chunk_buf.restype = c_long
-except:
-    print("pylsl: chunk transfer functions not available in your liblsl "
-          "version.")
+except Exception:
+    print("pylsl: chunk transfer functions not available in your liblsl " "version.")
 # noinspection PyBroadException
 try:
     lib.lsl_create_continuous_resolver.restype = c_void_p
     lib.lsl_create_continuous_resolver_bypred.restype = c_void_p
     lib.lsl_create_continuous_resolver_byprop.restype = c_void_p
-except:
-    print("pylsl: ContinuousResolver not (fully) available in your liblsl "
-          "version.")
+except Exception:
+    print("pylsl: ContinuousResolver not (fully) available in your liblsl " "version.")
 
 
 # int64 support on windows and 32bit OSes isn't there yet
-if struct.calcsize("P") != 4 and platform.system() != 'Windows':
+if struct.calcsize("P") != 4 and platform.system() != "Windows":
     push_sample_int64 = lib.lsl_push_sample_ltp
     pull_sample_int64 = lib.lsl_pull_sample_l
     push_chunk_int64 = lib.lsl_push_chunk_ltp
     push_chunk_int64_n = lib.lsl_push_chunk_ltnp
     pull_chunk_int64 = lib.lsl_pull_chunk_l
 else:
+
     def push_sample_int64(*_):
-        raise NotImplementedError('int64 support isn\'t enabled on your platform')
+        raise NotImplementedError("int64 support isn't enabled on your platform")
+
     pull_sample_int64 = push_sample_int64
     push_chunk_int64 = push_sample_int64
     push_chunk_int64_n = push_sample_int64
     pull_chunk_int64 = push_sample_int64
 
 # set up some type maps
-string2fmt = {'float32': cf_float32, 'double64': cf_double64,
-              'string': cf_string, 'int32': cf_int32, 'int16': cf_int16,
-              'int8': cf_int8, 'int64': cf_int64}
-fmt2string = ['undefined', 'float32', 'double64', 'string', 'int32', 'int16',
-              'int8', 'int64']
+string2fmt = {
+    "float32": cf_float32,
+    "double64": cf_double64,
+    "string": cf_string,
+    "int32": cf_int32,
+    "int16": cf_int16,
+    "int8": cf_int8,
+    "int64": cf_int64,
+}
+fmt2string = [
+    "undefined",
+    "float32",
+    "double64",
+    "string",
+    "int32",
+    "int16",
+    "int8",
+    "int64",
+]
 fmt2type = [[], c_float, c_double, c_char_p, c_int, c_short, c_byte, c_longlong]
-fmt2push_sample = [[], lib.lsl_push_sample_ftp, lib.lsl_push_sample_dtp,
-                   lib.lsl_push_sample_strtp, lib.lsl_push_sample_itp,
-                   lib.lsl_push_sample_stp, lib.lsl_push_sample_ctp, push_sample_int64]
-fmt2pull_sample = [[], lib.lsl_pull_sample_f, lib.lsl_pull_sample_d,
-                   lib.lsl_pull_sample_str, lib.lsl_pull_sample_i,
-                   lib.lsl_pull_sample_s, lib.lsl_pull_sample_c, pull_sample_int64]
+fmt2push_sample = [
+    [],
+    lib.lsl_push_sample_ftp,
+    lib.lsl_push_sample_dtp,
+    lib.lsl_push_sample_strtp,
+    lib.lsl_push_sample_itp,
+    lib.lsl_push_sample_stp,
+    lib.lsl_push_sample_ctp,
+    push_sample_int64,
+]
+fmt2pull_sample = [
+    [],
+    lib.lsl_pull_sample_f,
+    lib.lsl_pull_sample_d,
+    lib.lsl_pull_sample_str,
+    lib.lsl_pull_sample_i,
+    lib.lsl_pull_sample_s,
+    lib.lsl_pull_sample_c,
+    pull_sample_int64,
+]
 # noinspection PyBroadException
 try:
-    fmt2push_chunk = [[], lib.lsl_push_chunk_ftp, lib.lsl_push_chunk_dtp,
-                      lib.lsl_push_chunk_strtp, lib.lsl_push_chunk_itp,
-                      lib.lsl_push_chunk_stp, lib.lsl_push_chunk_ctp, push_chunk_int64]
-    fmt2push_chunk_n = [[], lib.lsl_push_chunk_ftnp, lib.lsl_push_chunk_dtnp,
-                        lib.lsl_push_chunk_strtnp, lib.lsl_push_chunk_itnp,
-                        lib.lsl_push_chunk_stnp, lib.lsl_push_chunk_ctnp, push_chunk_int64_n]
-    fmt2pull_chunk = [[], lib.lsl_pull_chunk_f, lib.lsl_pull_chunk_d,
-                      lib.lsl_pull_chunk_str, lib.lsl_pull_chunk_i,
-                      lib.lsl_pull_chunk_s, lib.lsl_pull_chunk_c, pull_chunk_int64]
-except:
+    fmt2push_chunk = [
+        [],
+        lib.lsl_push_chunk_ftp,
+        lib.lsl_push_chunk_dtp,
+        lib.lsl_push_chunk_strtp,
+        lib.lsl_push_chunk_itp,
+        lib.lsl_push_chunk_stp,
+        lib.lsl_push_chunk_ctp,
+        push_chunk_int64,
+    ]
+    fmt2push_chunk_n = [
+        [],
+        lib.lsl_push_chunk_ftnp,
+        lib.lsl_push_chunk_dtnp,
+        lib.lsl_push_chunk_strtnp,
+        lib.lsl_push_chunk_itnp,
+        lib.lsl_push_chunk_stnp,
+        lib.lsl_push_chunk_ctnp,
+        push_chunk_int64_n,
+    ]
+    fmt2pull_chunk = [
+        [],
+        lib.lsl_pull_chunk_f,
+        lib.lsl_pull_chunk_d,
+        lib.lsl_pull_chunk_str,
+        lib.lsl_pull_chunk_i,
+        lib.lsl_pull_chunk_s,
+        lib.lsl_pull_chunk_c,
+        pull_chunk_int64,
+    ]
+except Exception:
     # if not available
     fmt2push_chunk = [None] * len(fmt2string)
     fmt2push_chunk_n = [None] * len(fmt2string)

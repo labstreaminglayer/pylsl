@@ -1,8 +1,7 @@
 """Example program to demonstrate how to send a multi-channel time series to
 LSL."""
-import sys
 import getopt
-
+import sys
 import time
 from random import random as rand
 
@@ -11,17 +10,19 @@ from pylsl import StreamInfo, StreamOutlet, local_clock
 
 def main(argv):
     srate = 100
-    name = 'BioSemi'
-    type = 'EEG'
+    name = "BioSemi"
+    type = "EEG"
     n_channels = 8
-    help_string = 'SendData.py -s <sampling_rate> -n <stream_name> -t <stream_type>'
+    help_string = "SendData.py -s <sampling_rate> -n <stream_name> -t <stream_type>"
     try:
-        opts, args = getopt.getopt(argv, "hs:c:n:t:", longopts=["srate=", "channels=", "name=", "type"])
+        opts, args = getopt.getopt(
+            argv, "hs:c:n:t:", longopts=["srate=", "channels=", "name=", "type"]
+        )
     except getopt.GetoptError:
         print(help_string)
         sys.exit(2)
     for opt, arg in opts:
-        if opt == '-h':
+        if opt == "-h":
             print(help_string)
             sys.exit()
         elif opt in ("-s", "--srate"):
@@ -38,7 +39,7 @@ def main(argv):
     # last value would be the serial number of the device or some other more or
     # less locally unique identifier for the stream as far as available (you
     # could also omit it but interrupted connections wouldn't auto-recover)
-    info = StreamInfo(name, type, n_channels, srate, 'float32', 'myuid34234')
+    info = StreamInfo(name, type, n_channels, srate, "float32", "myuid34234")
 
     # next make an outlet
     outlet = StreamOutlet(info)
@@ -60,5 +61,5 @@ def main(argv):
         time.sleep(0.01)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])

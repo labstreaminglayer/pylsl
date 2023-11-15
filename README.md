@@ -25,7 +25,7 @@ On all non-Windows platforms and for some Windows-Python combinations, you must 
 
 This should only be necessary if you need to modify or debug pylsl.
 
-* Download the pylsl source: `git clone https://github.com/labstreaminglayer/pylsl.git && cd pylsl`  
+* Download the pylsl source: `git clone https://github.com/labstreaminglayer/pylsl.git && cd pylsl`
 * From the `pylsl` working directory, run `pip install .`.
     * Note: You can use `pip install -e .` to install while keeping the files in-place. This is convenient for developing pylsl.
 
@@ -41,7 +41,7 @@ You can get a list of the examples with `python -c "import pylsl.examples; help(
 
 If the shared object is not installed onto a standard search path (or it is but can't be found for some [other bug](https://github.com/labstreaminglayer/pylsl/issues/48)), then we recommend that you copy it to the pylsl installed module path's `lib` subfolder. i.e. `{path/to/env/}site-packages/pylsl/lib`.
 
-* The `site-packages/pylsl` path will only exist _after_ you install `pylsl` in your Pyton environment.
+* The `site-packages/pylsl` path will only exist _after_ you install `pylsl` in your Python environment.
 * You may have to create the `lib` subfolder.
 * Use `python -m site` to find the "site-packages" path.
 * Use `cp -L` on platforms that use symlinks.
@@ -79,7 +79,7 @@ We recently stopped building binary wheels for Linux. In practice, the `manylinu
 # Known Issues with Multithreading on Linux
 
 * At least for some versions of pylsl, it has been reported that running on Linux one cannot call ``pylsl`` functions from a thread that is not the main thread. This has been reported to cause access violations, and can occur during pulling from an inlet, and also from accessing an inlets info structure in a thread.
-* Recent tests with mulithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/pylsl/issues/29
+* Recent tests with multithreading (especially when safeguarding library calls with locks) using Python 3.7.6. with pylsl 1.14 on Linux Mint 20 suggest that this issue is solved, or at least depends on your machine. See https://github.com/labstreaminglayer/pylsl/issues/29
 
 # Acknowledgments
 

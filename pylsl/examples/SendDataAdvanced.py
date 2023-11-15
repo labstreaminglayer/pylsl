@@ -7,20 +7,19 @@ from random import random as rand
 import pylsl
 
 
-def main(name='LSLExampleAmp', stream_type='EEG', srate=100):
-
+def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
     channel_names = ["Fp1", "Fp2", "C3", "C4", "Cz", "P3", "P4", "Pz", "O1", "O2"]
     channel_locations = [
         [-0.0307, 0.0949, -0.0047],
         [0.0307, 0.0949, -0.0047],
-        [-0.0742,  4.54343962e-18,  0.0668],
+        [-0.0742, 4.54343962e-18, 0.0668],
         [0.0743, 4.54956286e-18, 0.0669],
         [0, 6.123234e-18, 0.1],
-        [-0.0567, -0.0677,  0.0469],
-        [0.0566, -0.0677,  0.0469],
-        [8.74397815e-18, -0.0714,  0.0699],
+        [-0.0567, -0.0677, 0.0469],
+        [0.0566, -0.0677, 0.0469],
+        [8.74397815e-18, -0.0714, 0.0699],
         [-0.0307, -0.0949, -0.0047],
-        [0.0307, -0.0949, -0.0047]
+        [0.0307, -0.0949, -0.0047],
     ]
     n_channels = len(channel_names)
 
@@ -36,7 +35,9 @@ def main(name='LSLExampleAmp', stream_type='EEG', srate=100):
     #  The last value would be the serial number of the device or some other more or
     #  less locally unique identifier for the stream as far as available (you
     #  could also omit it but interrupted connections wouldn't auto-recover).
-    info = pylsl.StreamInfo(name, stream_type, n_channels, srate, 'float32', 'myuid2424')
+    info = pylsl.StreamInfo(
+        name, stream_type, n_channels, srate, "float32", "myuid2424"
+    )
 
     # append some meta-data
     # https://github.com/sccn/xdf/wiki/EEG-Meta-Data
@@ -79,8 +80,10 @@ def main(name='LSLExampleAmp', stream_type='EEG', srate=100):
         if required_samples > 0:
             # make a chunk==array of length required_samples, where each element in the array
             # is a new random n_channels sample vector
-            mychunk = [[rand() for chan_ix in range(n_channels)]
-                       for samp_ix in range(required_samples)]
+            mychunk = [
+                [rand() for chan_ix in range(n_channels)]
+                for samp_ix in range(required_samples)
+            ]
             # Get a time stamp in seconds. We pretend that our samples are actually
             # 125ms old, e.g., as if coming from some external hardware with known latency.
             stamp = pylsl.local_clock() - 0.125
@@ -92,13 +95,18 @@ def main(name='LSLExampleAmp', stream_type='EEG', srate=100):
         time.sleep(0.02)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--name', default='LSLExampleAmp',
-                        help="Name of the created stream.")
-    parser.add_argument('--type', default='EEG',
-                        help="Type of the created stream.")
-    parser.add_argument('--srate', default=100.0, help="Sampling rate of the created stream.", type=float)
+    parser.add_argument(
+        "--name", default="LSLExampleAmp", help="Name of the created stream."
+    )
+    parser.add_argument("--type", default="EEG", help="Type of the created stream.")
+    parser.add_argument(
+        "--srate",
+        default=100.0,
+        help="Sampling rate of the created stream.",
+        type=float,
+    )
     arg = parser.parse_args()
 
     main(name=arg.name, stream_type=arg.type, srate=arg.srate)
