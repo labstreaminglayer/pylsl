@@ -3,7 +3,7 @@ later on retrieve the meta-data again at the receiver side."""
 
 import time
 
-from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
+from pylsl import StreamInfo, StreamInlet, StreamOutlet, resolve_stream
 
 
 def main():
@@ -53,5 +53,5 @@ def main():
     time.sleep(3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

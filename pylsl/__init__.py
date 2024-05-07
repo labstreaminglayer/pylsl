@@ -1,13 +1,51 @@
 # (not using import * for Python 2.5 support)
-from .pylsl import IRREGULAR_RATE, DEDUCED_TIMESTAMP, FOREVER, cf_float32,\
-    cf_double64, cf_string, cf_int32, cf_int16, cf_int8, cf_int64,\
-    cf_undefined, protocol_version, library_version, library_info, local_clock,\
-    proc_ALL, proc_none, proc_clocksync, proc_dejitter, proc_monotonize, proc_threadsafe,\
-    StreamInfo, StreamOutlet, resolve_streams, resolve_byprop,\
-    resolve_bypred, StreamInlet, XMLElement, ContinuousResolver,\
-    TimeoutError, LostError, InvalidArgumentError, InternalError,\
-    stream_info, stream_outlet, stream_inlet, xml_element,\
-    timeout_error, lost_error, vectorf, vectord, vectorl,\
-    vectori, vectors, vectorc, vectorstr, resolve_stream
-
+from .pylsl import (
+    DEDUCED_TIMESTAMP,
+    FOREVER,
+    IRREGULAR_RATE,
+    ContinuousResolver,
+    InternalError,
+    InvalidArgumentError,
+    LostError,
+    StreamInfo,
+    StreamInlet,
+    StreamOutlet,
+    TimeoutError,
+    XMLElement,
+    cf_double64,
+    cf_float32,
+    cf_int8,
+    cf_int16,
+    cf_int32,
+    cf_int64,
+    cf_string,
+    cf_undefined,
+    library_info,
+    library_version,
+    local_clock,
+    lost_error,
+    proc_ALL,
+    proc_clocksync,
+    proc_dejitter,
+    proc_monotonize,
+    proc_none,
+    proc_threadsafe,
+    protocol_version,
+    resolve_bypred,
+    resolve_byprop,
+    resolve_stream,
+    resolve_streams,
+    stream_info,
+    stream_inlet,
+    stream_outlet,
+    timeout_error,
+    vectorc,
+    vectord,
+    vectorf,
+    vectori,
+    vectorl,
+    vectors,
+    vectorstr,
+    xml_element,
+)
 from .version import __version__
