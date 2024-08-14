@@ -40,7 +40,7 @@ class Inlet:
         self.inlet = StreamInlet(
             info,
             max_buflen=plot_duration,
-            processing_flags=PostProcessingFlags.PROC_CLOCKSYNC.value | PostProcessingFlags.PROC_DEJITTER.value,
+            processing_flags=PostProcessingFlags.CLOCKSYNC.value | PostProcessingFlags.DEJITTER.value,
         )
         # store the name and channel count
         self.name = info.name()
@@ -144,14 +144,14 @@ def main():
         if info.type() == "Markers":
             if (
                     info.nominal_srate() != IRREGULAR_RATE
-                    or info.channel_format() != ChannelValueFormats.CF_STRING.value
+                    or info.channel_format() != ChannelValueFormats.STRING.value
             ):
                 print("Invalid marker stream " + info.name())
             print("Adding marker inlet: " + info.name())
             inlets.append(MarkerInlet(info))
         elif (
                 info.nominal_srate() != IRREGULAR_RATE
-                and info.channel_format() != ChannelValueFormats.CF_STRING.value
+                and info.channel_format() != ChannelValueFormats.STRING.value
         ):
             print("Adding data inlet: " + info.name())
             inlets.append(DataInlet(info, plt))

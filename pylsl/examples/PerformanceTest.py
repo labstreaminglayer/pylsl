@@ -180,7 +180,7 @@ class BetaInlet(object):
         streams = resolve_byprop("type", "EEG")
 
         # create a new inlet to read from the stream
-        proc_flags = PostProcessingFlags.PROC_CLOCKSYNC.value | PostProcessingFlags.PROC_DEJITTER.value | PostProcessingFlags.PROC_MONOTONIZE.value
+        proc_flags = PostProcessingFlags.CLOCKSYNC.value | PostProcessingFlags.DEJITTER.value | PostProcessingFlags.MONOTONIZE.value
         self.inlet = StreamInlet(streams[0], processing_flags=proc_flags)
 
         # The following is an example of how to read stream info

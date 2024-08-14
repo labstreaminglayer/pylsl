@@ -8,7 +8,7 @@ from pylsl import StreamInfo, StreamInlet, StreamOutlet, ChannelValueFormats, re
 
 def main():
     # create a new StreamInfo object which shall describe our stream
-    info = StreamInfo("MetaTester", "EEG", 8, 100, ChannelValueFormats.CF_FLOAT32.value, "myuid56872")
+    info = StreamInfo("MetaTester", "EEG", 8, 100, ChannelValueFormats.FLOAT32.value, "myuid56872")
 
     # now attach some meta-data (in accordance with XDF format,
     # see also https://github.com/sccn/xdf/wiki/Meta-Data)

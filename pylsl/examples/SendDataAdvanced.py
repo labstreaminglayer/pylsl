@@ -36,7 +36,7 @@ def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
     #  less locally unique identifier for the stream as far as available (you
     #  could also omit it but interrupted connections wouldn't auto-recover).
     info = StreamInfo(
-        name, stream_type, n_channels, srate, ChannelValueFormats.CF_FLOAT32.value, "myuid2424"
+        name, stream_type, n_channels, srate, ChannelValueFormats.FLOAT32.value, "myuid2424"
     )
 
     # append some meta-data
@@ -68,7 +68,7 @@ def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
         assert check_info.name() == name
         assert check_info.type() == stream_type
         assert check_info.channel_count() == len(channel_names)
-        assert check_info.channel_format() == ChannelValueFormats.CF_FLOAT32.value
+        assert check_info.channel_format() == ChannelValueFormats.FLOAT32.value
         assert check_info.nominal_srate() == srate
 
     print("now sending data...")
