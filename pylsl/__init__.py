@@ -3,6 +3,8 @@ from .pylsl import (
     DEDUCED_TIMESTAMP,
     FOREVER,
     IRREGULAR_RATE,
+    ChannelValueFormats,
+    PostProcessingFlags,
     ContinuousResolver,
     InternalError,
     InvalidArgumentError,
