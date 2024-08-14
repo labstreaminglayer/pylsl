@@ -3,17 +3,8 @@ import time
 
 import numpy as np
 
-from pylsl import (
-    StreamInfo,
-    StreamInlet,
-    StreamOutlet,
-    local_clock,
-    proc_clocksync,
-    proc_dejitter,
-    proc_monotonize,
-    resolve_bypred,
-    resolve_byprop,
-)
+from pylsl import StreamInfo, StreamOutlet, local_clock, resolve_byprop, PostProcessingFlags, StreamInlet, \
+    resolve_bypred
 
 try:
     from pyfftw.interfaces.numpy_fft import (  # Performs much better than numpy's fftpack
@@ -102,13 +93,13 @@ class PinkNoiseGenerator(object):
 
 class BetaGeneratorOutlet(object):
     def __init__(
-        self,
-        Fs=2**14,
-        FreqBeta=20.0,
-        AmpBeta=100.0,
-        AmpNoise=20.0,
-        NCyclesPerChunk=4,
-        channels=["RAW1", "SPK1", "RAW2", "SPK2", "RAW3", "SPK3"],
+            self,
+            Fs=2 ** 14,
+            FreqBeta=20.0,
+            AmpBeta=100.0,
+            AmpNoise=20.0,
+            NCyclesPerChunk=4,
+            channels=["RAW1", "SPK1", "RAW2", "SPK2", "RAW3", "SPK3"],
     ):
         """
         :param Fs:              Sampling rate
@@ -189,7 +180,7 @@ class BetaInlet(object):
         streams = resolve_byprop("type", "EEG")
 
         # create a new inlet to read from the stream
-        proc_flags = proc_clocksync | proc_dejitter | proc_monotonize
+        proc_flags = PostProcessingFlags.PROC_CLOCKSYNC.value | PostProcessingFlags.PROC_DEJITTER.value | PostProcessingFlags.PROC_MONOTONIZE.value
         self.inlet = StreamInlet(streams[0], processing_flags=proc_flags)
 
         # The following is an example of how to read stream info
@@ -227,11 +218,11 @@ class MarkersGeneratorOutlet(object):
     }
 
     def __init__(
-        self,
-        class_list=[1, 3],
-        classes_rand=True,
-        target_list=[1, 2],
-        targets_rand=True,
+            self,
+            class_list=[1, 3],
+            classes_rand=True,
+            target_list=[1, 2],
+            targets_rand=True,
     ):
         """
 
@@ -289,7 +280,7 @@ class MarkersGeneratorOutlet(object):
                     else self.target_list[
                         (self.target_list.index(self.target_id) + 1)
                         % len(self.target_list)
-                    ]
+                        ]
                 )
                 self.class_id = (
                     random.choice(self.class_list)
@@ -297,7 +288,7 @@ class MarkersGeneratorOutlet(object):
                     else self.class_list[
                         (self.class_list.index(self.class_id) + 1)
                         % len(self.class_list)
-                    ]
+                        ]
                 )
                 # print("New class_id: {}, target_id: {}".format(self.class_id, self.target_id))
                 out_string = "NewTrial {}, Class {}, Target {}".format(

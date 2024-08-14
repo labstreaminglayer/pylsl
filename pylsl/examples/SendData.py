@@ -5,7 +5,7 @@ import sys
 import time
 from random import random as rand
 
-from pylsl import StreamInfo, StreamOutlet, local_clock
+from pylsl import StreamInfo, StreamOutlet, local_clock, ChannelValueFormats
 
 
 def main(argv):
@@ -39,7 +39,7 @@ def main(argv):
     # last value would be the serial number of the device or some other more or
     # less locally unique identifier for the stream as far as available (you
     # could also omit it but interrupted connections wouldn't auto-recover)
-    info = StreamInfo(name, type, n_channels, srate, "float32", "myuid34234")
+    info = StreamInfo(name, type, n_channels, srate, ChannelValueFormats.CF_FLOAT32.value, "myuid34234")
 
     # next make an outlet
     outlet = StreamOutlet(info)
