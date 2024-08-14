@@ -1,12 +1,12 @@
 """Example program to demonstrate how to read string-valued markers from LSL."""
 
-from pylsl import StreamInlet, resolve_stream
+from pylsl import StreamInlet, resolve_byprop
 
 
 def main():
     # first resolve a marker stream on the lab network
     print("looking for a marker stream...")
-    streams = resolve_stream("type", "Markers")
+    streams = resolve_byprop("type", "Markers")
 
     # create a new inlet to read from the stream
     inlet = StreamInlet(streams[0])

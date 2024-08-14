@@ -36,11 +36,14 @@ from ctypes import (
     cast,
     util,
 )
+from enum import IntEnum
 
 __all__ = [
     "IRREGULAR_RATE",
     "DEDUCED_TIMESTAMP",
     "FOREVER",
+    "ChannelValueFormats",
+    "PostProcessingFlags",
     "cf_float32",
     "cf_double64",
     "cf_string",
@@ -96,43 +99,93 @@ DEDUCED_TIMESTAMP = -1.0
 # A very large time value (ca. 1 year); can be used in timeouts.
 FOREVER = 32000000.0
 
-# Value formats supported by LSL. LSL data streams are sequences of samples,
-# each of which is a same-size vector of values with one of the below types.
 
-# For up to 24-bit precision measurements in the appropriate physical unit (
-# e.g., microvolts). Integers from -16777216 to 16777216 are represented
-# accurately.
-cf_float32 = 1
-# For universal numeric data as long as permitted by network and disk budget.
-#  The largest representable integer is 53-bit.
-cf_double64 = 2
-# For variable-length ASCII strings or data blobs, such as video frames,
-# complex event descriptions, etc.
-cf_string = 3
-# For high-rate digitized formats that require 32-bit precision. Depends
-# critically on meta-data to represent meaningful units. Useful for
-# application event codes or other coded data.
-cf_int32 = 4
-# For very high bandwidth signals or CD quality audio (for professional audio
-#  float is recommended).
-cf_int16 = 5
-# For binary signals or other coded data.
-cf_int8 = 6
-# For now only for future compatibility. Support for this type is not
-# available on all languages and platforms.
-cf_int64 = 7
-# Can not be transmitted.
-cf_undefined = 0
+class ChannelValueFormats(IntEnum):
+    """
+    An enum class for the value formats supported by LSL. 
+    LSL data streams are sequences of samples, each of which is a same-size vector of the below types.
+    """
 
-# Post processing flags
-proc_none = 0  # No automatic post-processing; return the ground-truth time stamps for manual post-processing.
-proc_clocksync = 1  # Perform automatic clock synchronization; equivalent to manually adding the time_correction().
-proc_dejitter = 2  # Remove jitter from time stamps using a smoothing algorithm to the received time stamps.
-proc_monotonize = 4  # Force the time-stamps to be monotonically ascending. Only makes sense if timestamps are dejittered.
-proc_threadsafe = 8  # Post-processing is thread-safe (same inlet can be read from by multiple threads).
-proc_ALL = (
-    proc_none | proc_clocksync | proc_dejitter | proc_monotonize | proc_threadsafe
-)
+    UNDEFINED = 0
+    """
+    Cannot be transmitted.
+    """
+
+    FLOAT32 = 1
+    """
+    For up to 24-bit precision measurements in the appropriate physical unit (e.g. microvolts). 
+    Integers from -16777216 to 16777216 are represented accurately.
+    """
+
+    DOUBLE64 = 2
+    """
+    For universal numeric data as long as permitted by network and disk budget.
+    The largest representable integer is 53-bit.
+    """
+
+    STRING = 3
+    """
+    For variable-length ASCII strings or data blobs, such as video frames, complex event descriptions, etc.
+    """
+
+    INT32 = 4
+    """
+    For high-rate digitized formats that require 32-bit precision. 
+    Depends critically on meta-data to represent meaningful units.
+    Useful for application event codes or other coded data.
+    """
+
+    INT16 = 5
+    """
+    For very high bandwidth signals or CD quality audio (for professional audio float is recommended).
+    """
+
+    INT8 = 6
+    """
+    For binary signals or other coded data.
+    """
+
+    INT64 = 7
+    """
+    For now only for future compatibility. 
+    Support for this type is not available on all languages and platforms.
+    """
+
+
+class PostProcessingFlags(IntEnum):
+    """
+    An enum class for the post-processing flags supported by LSL.
+    """
+
+    NONE = 0
+    """
+    No automatic post-processing; return the ground-truth time stamps for manual post-processing.
+    """
+
+    CLOCKSYNC = 1
+    """
+    Perform automatic clock synchronization; equivalent to manually adding the time_correction().
+    """
+
+    DEJITTER = 2
+    """
+    Remove jitter from time stamps using a smoothing algorithm to the received time stamps.
+    """
+
+    MONOTONIZE = 4
+    """
+    Force the time-stamps to be monotonically ascending. Only makes sense if timestamps are dejittered.
+    """
+
+    THREADSAFE = 8
+    """
+    Post-processing is thread-safe (same inlet can be read from by multiple threads).
+    """
+
+    ALL = NONE | THREADSAFE | DEJITTER | MONOTONIZE | THREADSAFE
+    """
+    All post-processing flags
+    """
 
 
 # ==========================================================
@@ -210,14 +263,14 @@ class StreamInfo:
     """
 
     def __init__(
-        self,
-        name="untitled",
-        type="",
-        channel_count=1,
-        nominal_srate=IRREGULAR_RATE,
-        channel_format=cf_float32,
-        source_id="",
-        handle=None,
+            self,
+            name="untitled",
+            type="",
+            channel_count=1,
+            nominal_srate=IRREGULAR_RATE,
+            channel_format=ChannelValueFormats.FLOAT32.value,
+            source_id="",
+            handle=None,
     ):
         """Construct a new StreamInfo object.
 
@@ -680,7 +733,7 @@ class StreamOutlet:
 
         """
         if len(x) == self.channel_count:
-            if self.channel_format == cf_string:
+            if self.channel_format == ChannelValueFormats.STRING.value:
                 x = [v.encode("utf-8") for v in x]
             handle_error(
                 self.do_push_sample(
@@ -750,7 +803,7 @@ class StreamOutlet:
             if len(x):
                 if type(x[0]) is list:
                     x = [v for sample in x for v in sample]
-                if self.channel_format == cf_string:
+                if self.channel_format == ChannelValueFormats.STRING.value:
                     x = [v.encode("utf-8") for v in x]
                 if len(x) % self.channel_count == 0:
                     # x is a flattened list of multiplexed values
@@ -914,7 +967,7 @@ class StreamInlet:
     """
 
     def __init__(
-        self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=0
+            self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=PostProcessingFlags.NONE.value
     ):
         """Construct a new stream inlet from a resolved stream description.
 
@@ -1091,7 +1144,7 @@ class StreamInlet:
         handle_error(errcode)
         if timestamp:
             sample = [v for v in self.sample]
-            if self.channel_format == cf_string:
+            if self.channel_format == ChannelValueFormats.STRING.value:
                 sample = [v.decode("utf-8") for v in sample]
             if assign_to is not None:
                 assign_to[:] = sample
@@ -1159,7 +1212,7 @@ class StreamInlet:
                 [data_buff[s * num_channels + c] for c in range(num_channels)]
                 for s in range(int(num_samples))
             ]
-            if self.channel_format == cf_string:
+            if self.channel_format == ChannelValueFormats.STRING.value:
                 samples = [[v.decode("utf-8") for v in s] for s in samples]
                 free_char_p_array_memory(data_buff, max_values)
         else:
@@ -1473,6 +1526,24 @@ xml_element = XMLElement
 timeout_error = TimeoutError
 lost_error = LostError
 vectorf = vectord = vectorl = vectori = vectors = vectorc = vectorstr = list
+
+# Recommended to use the ChannelValueFormats Enum class
+cf_float32 = 1
+cf_double64 = 2
+cf_string = 3
+cf_int32 = 4
+cf_int16 = 5
+cf_int8 = 6
+cf_int64 = 7
+cf_undefined = 0
+
+# Recommended to use the PostProcessingFlags Enum class
+proc_none = 0
+proc_clocksync = 1
+proc_dejitter = 2
+proc_monotonize = 4
+proc_threadsafe = 8
+proc_ALL = (proc_none | proc_clocksync | proc_dejitter | proc_monotonize | proc_threadsafe)
 
 
 def resolve_stream(*args):

@@ -2,13 +2,13 @@
 
 import time
 
-from pylsl import StreamInlet, resolve_stream
+from pylsl import StreamInlet, resolve_byprop
 
 
 def main():
     # first resolve an EEG stream on the lab network
     print("looking for an EEG stream...")
-    streams = resolve_stream("type", "EEG")
+    streams = resolve_byprop("type", "EEG")
     info = streams[0]
 
     # create a new inlet to read from the stream

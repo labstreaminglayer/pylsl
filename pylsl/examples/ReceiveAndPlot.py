@@ -16,7 +16,8 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
-import pylsl
+from pylsl import StreamInfo, StreamInlet, PostProcessingFlags, resolve_streams, IRREGULAR_RATE, ChannelValueFormats, \
+    local_clock
 
 # Basic parameters for the plotting window
 plot_duration = 5  # how many seconds of data to show
@@ -27,7 +28,7 @@ pull_interval = 500  # ms between each pull operation
 class Inlet:
     """Base class to represent a plottable inlet"""
 
-    def __init__(self, info: pylsl.StreamInfo):
+    def __init__(self, info: StreamInfo):
         # create an inlet and connect it to the outlet we found earlier.
         # max_buflen is set so data older the plot_duration is discarded
         # automatically and we only pull data new enough to show it
@@ -36,10 +37,10 @@ class Inlet:
         # same time domain as the local lsl_clock()
         # (see https://labstreaminglayer.readthedocs.io/projects/liblsl/ref/enums.html#_CPPv414proc_clocksync)
         # and dejitter timestamps
-        self.inlet = pylsl.StreamInlet(
+        self.inlet = StreamInlet(
             info,
             max_buflen=plot_duration,
-            processing_flags=pylsl.proc_clocksync | pylsl.proc_dejitter,
+            processing_flags=PostProcessingFlags.CLOCKSYNC.value | PostProcessingFlags.DEJITTER.value,
         )
         # store the name and channel count
         self.name = info.name()
@@ -60,7 +61,7 @@ class DataInlet(Inlet):
 
     dtypes = [[], np.float32, np.float64, None, np.int32, np.int16, np.int8, np.int64]
 
-    def __init__(self, info: pylsl.StreamInfo, plt: pg.PlotItem):
+    def __init__(self, info: StreamInfo, plt: pg.PlotItem):
         super().__init__(info)
         # calculate the size for our buffer, i.e. two times the displayed data
         bufsize = (
@@ -85,7 +86,7 @@ class DataInlet(Inlet):
         # ts will be empty if no samples were pulled, a list of timestamps otherwise
         if ts:
             ts = np.asarray(ts)
-            y = self.buffer[0 : ts.size, :]
+            y = self.buffer[0: ts.size, :]
             this_x = None
             old_offset = 0
             new_offset = 0
@@ -113,7 +114,7 @@ class DataInlet(Inlet):
 class MarkerInlet(Inlet):
     """A MarkerInlet shows events that happen sporadically as vertical lines"""
 
-    def __init__(self, info: pylsl.StreamInfo):
+    def __init__(self, info: StreamInfo):
         super().__init__(info)
 
     def pull_and_plot(self, plot_time, plt):
@@ -130,7 +131,7 @@ def main():
     # firstly resolve all streams that could be shown
     inlets: List[Inlet] = []
     print("looking for streams")
-    streams = pylsl.resolve_streams()
+    streams = resolve_streams()
 
     # Create the pyqtgraph window
     pw = pg.plot(title="LSL Plot")
@@ -142,15 +143,15 @@ def main():
     for info in streams:
         if info.type() == "Markers":
             if (
-                info.nominal_srate() != pylsl.IRREGULAR_RATE
-                or info.channel_format() != pylsl.cf_string
+                    info.nominal_srate() != IRREGULAR_RATE
+                    or info.channel_format() != ChannelValueFormats.STRING.value
             ):
                 print("Invalid marker stream " + info.name())
             print("Adding marker inlet: " + info.name())
             inlets.append(MarkerInlet(info))
         elif (
-            info.nominal_srate() != pylsl.IRREGULAR_RATE
-            and info.channel_format() != pylsl.cf_string
+                info.nominal_srate() != IRREGULAR_RATE
+                and info.channel_format() != ChannelValueFormats.STRING.value
         ):
             print("Adding data inlet: " + info.name())
             inlets.append(DataInlet(info, plt))
@@ -162,12 +163,12 @@ def main():
         # We show data only up to a timepoint shortly before the current time
         # so new data doesn't suddenly appear in the middle of the plot
         fudge_factor = pull_interval * 0.002
-        plot_time = pylsl.local_clock()
+        plot_time = local_clock()
         pw.setXRange(plot_time - plot_duration + fudge_factor, plot_time - fudge_factor)
 
     def update():
         # Read data from the inlet. Use a timeout of 0.0 so we don't block GUI interaction.
-        mintime = pylsl.local_clock() - plot_duration
+        mintime = local_clock() - plot_duration
         # call pull_and_plot for each inlet.
         # Special handling of inlet types (markers, continuous data) is done in
         # the different inlet classes.

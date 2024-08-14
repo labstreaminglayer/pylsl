@@ -3,12 +3,12 @@ later on retrieve the meta-data again at the receiver side."""
 
 import time
 
-from pylsl import StreamInfo, StreamInlet, StreamOutlet, resolve_stream
+from pylsl import StreamInfo, StreamInlet, StreamOutlet, ChannelValueFormats, resolve_byprop
 
 
 def main():
     # create a new StreamInfo object which shall describe our stream
-    info = StreamInfo("MetaTester", "EEG", 8, 100, "float32", "myuid56872")
+    info = StreamInfo("MetaTester", "EEG", 8, 100, ChannelValueFormats.FLOAT32.value, "myuid56872")
 
     # now attach some meta-data (in accordance with XDF format,
     # see also https://github.com/sccn/xdf/wiki/Meta-Data)
@@ -33,7 +33,7 @@ def main():
 
     # first we resolve a stream whose name is MetaTester (note that there are
     # other ways to query a stream, too - for instance by content-type)
-    results = resolve_stream("name", "MetaTester")
+    results = resolve_byprop("name", "MetaTester")
 
     # open an inlet so we can read the stream's data (and meta-data)
     inlet = StreamInlet(results[0])

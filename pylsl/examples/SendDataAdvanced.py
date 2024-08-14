@@ -4,7 +4,7 @@ import argparse
 import time
 from random import random as rand
 
-import pylsl
+from pylsl import ChannelValueFormats, StreamInfo, StreamOutlet, local_clock
 
 
 def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
@@ -35,8 +35,8 @@ def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
     #  The last value would be the serial number of the device or some other more or
     #  less locally unique identifier for the stream as far as available (you
     #  could also omit it but interrupted connections wouldn't auto-recover).
-    info = pylsl.StreamInfo(
-        name, stream_type, n_channels, srate, "float32", "myuid2424"
+    info = StreamInfo(
+        name, stream_type, n_channels, srate, ChannelValueFormats.FLOAT32.value, "myuid2424"
     )
 
     # append some meta-data
@@ -59,7 +59,7 @@ def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
 
     # next make an outlet; we set the transmission chunk size to 32 samples
     # and the outgoing buffer size to 360 seconds (max.)
-    outlet = pylsl.StreamOutlet(info, 32, 360)
+    outlet = StreamOutlet(info, 32, 360)
 
     if False:
         # It's unnecessary to check the info when the stream was created in the same scope; just use info.
@@ -68,14 +68,14 @@ def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
         assert check_info.name() == name
         assert check_info.type() == stream_type
         assert check_info.channel_count() == len(channel_names)
-        assert check_info.channel_format() == pylsl.cf_float32
+        assert check_info.channel_format() == ChannelValueFormats.FLOAT32.value
         assert check_info.nominal_srate() == srate
 
     print("now sending data...")
-    start_time = pylsl.local_clock()
+    start_time = local_clock()
     sent_samples = 0
     while True:
-        elapsed_time = pylsl.local_clock() - start_time
+        elapsed_time = local_clock() - start_time
         required_samples = int(srate * elapsed_time) - sent_samples
         if required_samples > 0:
             # make a chunk==array of length required_samples, where each element in the array
@@ -86,7 +86,7 @@ def main(name="LSLExampleAmp", stream_type="EEG", srate=100):
             ]
             # Get a time stamp in seconds. We pretend that our samples are actually
             # 125ms old, e.g., as if coming from some external hardware with known latency.
-            stamp = pylsl.local_clock() - 0.125
+            stamp = local_clock() - 0.125
             # now send it and wait for a bit
             # Note that even though `rand()` returns a 64-bit value, the `push_chunk` method
             #  will convert it to c_float before passing the data to liblsl.
