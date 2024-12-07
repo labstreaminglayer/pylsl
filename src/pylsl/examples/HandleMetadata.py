@@ -3,7 +3,7 @@ later on retrieve the meta-data again at the receiver side."""
 
 import time
 
-from pylsl import StreamInfo, StreamInlet, StreamOutlet, resolve_stream
+from pylsl import StreamInfo, StreamInlet, StreamOutlet, resolve_byprop
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
 
     # first we resolve a stream whose name is MetaTester (note that there are
     # other ways to query a stream, too - for instance by content-type)
-    results = resolve_stream("name", "MetaTester")
+    results = resolve_byprop("name", "MetaTester")
 
     # open an inlet so we can read the stream's data (and meta-data)
     inlet = StreamInlet(results[0])
