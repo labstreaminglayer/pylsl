@@ -89,8 +89,8 @@ class StreamInfo:
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_streaminfo(self.obj)
-        except:
-            pass
+        except Exception as e:
+            print(f"StreamInfo deletion triggered error: {e}")
 
     # === Core Information (assigned at construction) ===
 

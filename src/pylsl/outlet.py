@@ -60,8 +60,8 @@ class StreamOutlet:
         # noinspection PyBroadException
         try:
             lib.lsl_destroy_outlet(self.obj)
-        except:
-            pass
+        except Exception as e:
+            print(f"StreamOutlet deletion triggered error: {e}")
 
     def push_sample(self, x, timestamp=0.0, pushthrough=True):
         """Push a sample into the outlet.
