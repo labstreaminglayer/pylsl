@@ -5,7 +5,9 @@ import pytest
 import pylsl
 
 
-@pytest.mark.parametrize("channel_format", [pylsl.cf_int32, pylsl.cf_float32, pylsl.cf_double64])
+@pytest.mark.parametrize(
+    "channel_format", [pylsl.cf_int32, pylsl.cf_float32, pylsl.cf_double64]
+)
 def test_format(channel_format: int):
     expected_type = {
         pylsl.cf_int32: ctypes.c_int,
