@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.16.2"
   LSL_RELEASE: "1.16.2"
 
 jobs:
@@ -32,8 +32,14 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macOS-latest"]
 
     name: Run tests (${{ matrix.os }} Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.config.os }}
+    runs-on: ${{ matrix.os }}
     steps:
+    - uses: actions/checkout@v4
+    - name: Download liblsl (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        curl -L https://github.com/sccn/liblsl/releases/download/v1.16.2/liblsl-1.16.2-Win_amd64.zip -o liblsl.zip
+        unzip -oj liblsl.zip bin/lsl* -d src/pylsl/lib/
     - name: Install liblsl (MacOS)
       if: matrix.os == 'macos-latest'
       run: brew install labstreaminglayer/tap/lsl
@@ -41,13 +47,12 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
         sudo apt install -y libpugixml-dev
-        curl -L ${LSL_RELEASE_URL}/v${LSL_RELEASE}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
+        curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
         sudo apt install ./liblsl.deb
-    - uses: actions/checkout@v4
     - name: Install uv
       uses: astral-sh/setup-uv@v4
       with:
-        python-version: ${{ matrix.python-version }})
+        python-version: ${{ matrix.python-version }}
     - name: Build
       run: uv sync --all-extras
     - name: Run tests
