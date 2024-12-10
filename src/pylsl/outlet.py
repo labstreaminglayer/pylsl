@@ -20,7 +20,7 @@ class StreamOutlet:
 
     """
 
-    def __init__(self, info, chunk_size=0, max_buffered=360):
+    def __init__(self, info: StreamInfo, chunk_size: int = 0, max_buffered: int = 360):
         """Establish a new stream outlet. This makes the stream discoverable.
 
         Keyword arguments:
@@ -63,7 +63,7 @@ class StreamOutlet:
         except Exception as e:
             print(f"StreamOutlet deletion triggered error: {e}")
 
-    def push_sample(self, x, timestamp=0.0, pushthrough=True):
+    def push_sample(self, x, timestamp: float = 0.0, pushthrough: bool = True):
         """Push a sample into the outlet.
 
         Each entry in the list corresponds to one channel.
@@ -71,7 +71,7 @@ class StreamOutlet:
         Keyword arguments:
         x -- A list of values to push (one per channel).
         timestamp -- Optionally the capture time of the sample, in agreement
-                     with local_clock(); if omitted, the current
+                     with local_clock(); if 0.0, the current
                      time is used. (default 0.0)
         pushthrough -- Whether to push the sample through to the receivers
                        instead of buffering it with subsequent samples.
@@ -99,15 +99,15 @@ class StreamOutlet:
                 + ")."
             )
 
-    def push_chunk(self, x, timestamp=0.0, pushthrough=True):
+    def push_chunk(self, x, timestamp: float = 0.0, pushthrough: bool = True):
         """Push a list of samples into the outlet.
 
         samples -- A list of samples, preferably as a 2-D numpy array.
                    `samples` can also be a list of lists, or a list of
                    multiplexed values.
         timestamp -- Optional, float or 1-D list of floats.
-                     If float: the capture time of the most recent sample, in
-                     agreement with local_clock(); if omitted/default (0.0), the current
+                     If float and != 0.0: the capture time of the most recent sample, in
+                     agreement with local_clock(); if default (0.0), the current
                      time is used. The time stamps of other samples are
                      automatically derived according to the sampling rate of
                      the stream.
@@ -173,7 +173,7 @@ class StreamOutlet:
                         + ")."
                     )
 
-    def have_consumers(self):
+    def have_consumers(self) -> bool:
         """Check whether consumers are currently registered.
 
         While it does not hurt, there is technically no reason to push samples
@@ -182,7 +182,7 @@ class StreamOutlet:
         """
         return bool(lib.lsl_have_consumers(self.obj))
 
-    def wait_for_consumers(self, timeout):
+    def wait_for_consumers(self, timeout: float) -> bool:
         """Wait until some consumer shows up (without wasting resources).
 
         Returns True if the wait was successful, False if the timeout expired.
@@ -190,6 +190,6 @@ class StreamOutlet:
         """
         return bool(lib.lsl_wait_for_consumers(self.obj, ctypes.c_double(timeout)))
 
-    def get_info(self):
+    def get_info(self) -> StreamInfo:
         outlet_info = lib.lsl_get_info(self.obj)
         return StreamInfo(handle=outlet_info)
