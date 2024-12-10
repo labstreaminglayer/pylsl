@@ -335,7 +335,7 @@ class StreamInfo:
         """
         self._set_channel_info(labels, "label")
 
-    def set_channel_types(self, types: str | list[str]):
+    def set_channel_types(self, types: typing.Union[str, list[str]]):
         """Set the channel types in the description. Existing types are overwritten.
 
         The types are given as human-readable strings, e.g. ``'eeg'``.
