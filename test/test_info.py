@@ -5,7 +5,7 @@ def test_info_src_id():
     name = "TestName"
     strm_type = "TestType"
     chans = 32
-    srate = 1000.
+    srate = 1000.0
     fmt = pylsl.cf_float32
 
     info = pylsl.StreamInfo(
@@ -22,7 +22,7 @@ def test_info_src_id():
     # Augment info with desc
     info.desc().append_child_value("manufacturer", "pytest")
     chns = info.desc().append_child("channels")
-    for chan_ix in range(1, chans+1):
+    for chan_ix in range(1, chans + 1):
         ch = chns.append_child("channel")
         ch.append_child_value("label", f"Ch{chan_ix}")
 
@@ -39,4 +39,6 @@ def test_info_src_id():
     assert outlet_info.source_id() == outlet_expected_source_id
     out_desc = outlet_info.desc()
     assert out_desc.child_value("manufacturer") == "pytest"
-    assert outlet_info.get_channel_labels() == [f"Ch{chan_ix}" for chan_ix in range(1, chans+1)]
+    assert outlet_info.get_channel_labels() == [
+        f"Ch{chan_ix}" for chan_ix in range(1, chans + 1)
+    ]

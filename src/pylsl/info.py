@@ -74,7 +74,9 @@ class StreamInfo:
             if isinstance(channel_format, str):
                 channel_format = string2fmt[channel_format]
             if source_id is None:
-                source_id = str(hash((name, type, channel_count, nominal_srate, channel_format)))
+                source_id = str(
+                    hash((name, type, channel_count, nominal_srate, channel_format))
+                )
             self.obj = lib.lsl_create_streaminfo(
                 ctypes.c_char_p(str.encode(name)),
                 ctypes.c_char_p(str.encode(type)),
@@ -347,7 +349,9 @@ class StreamInfo:
         types = [types] * self.channel_count() if isinstance(types, str) else types
         self._set_channel_info(types, "type")
 
-    def set_channel_units(self, units: typing.Union[str, int, list[typing.Union[str, int]]]) -> None:
+    def set_channel_units(
+        self, units: typing.Union[str, int, list[typing.Union[str, int]]]
+    ) -> None:
         """Set the channel units in the description. Existing units are overwritten.
 
         The units are given as human-readable strings, e.g. ``'microvolts'``, or as
@@ -529,7 +533,7 @@ class XMLElement:
             lib.lsl_prepend_child_value(self.e, str.encode(name), str.encode(value))
         )
 
-    def set_child_value(self, name :str, value: str) -> "XMLElement":
+    def set_child_value(self, name: str, value: str) -> "XMLElement":
         """Set the text value of the (nameless) plain-text child of a named
         child node."""
         return XMLElement(
