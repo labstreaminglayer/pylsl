@@ -1,4 +1,5 @@
 import ctypes
+import typing
 
 from .lib import lib, string2fmt, cf_float32
 from .util import IRREGULAR_RATE
@@ -24,12 +25,12 @@ class StreamInfo:
 
     def __init__(
         self,
-        name="untitled",
-        type="",
-        channel_count=1,
-        nominal_srate=IRREGULAR_RATE,
-        channel_format=cf_float32,
-        source_id="",
+        name: str = "untitled",
+        type: str = "",
+        channel_count: int = 1,
+        nominal_srate: float = IRREGULAR_RATE,
+        channel_format: int = cf_float32,
+        source_id: typing.Optional[str] = None,
         handle=None,
     ):
         """Construct a new StreamInfo object.
@@ -94,7 +95,7 @@ class StreamInfo:
 
     # === Core Information (assigned at construction) ===
 
-    def name(self):
+    def name(self) -> str:
         """Name of the stream.
 
         This is a human-readable name. For streams offered by device modules,
@@ -107,7 +108,7 @@ class StreamInfo:
         """
         return lib.lsl_get_name(self.obj).decode("utf-8")
 
-    def type(self):
+    def type(self) -> str:
         """Content type of the stream.
 
         The content type is a short string such as "EEG", "Gaze" which
@@ -120,7 +121,7 @@ class StreamInfo:
         """
         return lib.lsl_get_type(self.obj).decode("utf-8")
 
-    def channel_count(self):
+    def channel_count(self) -> int:
         """Number of channels of the stream.
 
         A stream has at least one channel; the channel count stays constant for
@@ -129,7 +130,7 @@ class StreamInfo:
         """
         return lib.lsl_get_channel_count(self.obj)
 
-    def nominal_srate(self):
+    def nominal_srate(self) -> float:
         """Sampling rate of the stream, according to the source (in Hz).
 
         If a stream is irregularly sampled, this should be set to
@@ -145,7 +146,7 @@ class StreamInfo:
         """
         return lib.lsl_get_nominal_srate(self.obj)
 
-    def channel_format(self):
+    def channel_format(self) -> int:
         """Channel format of the stream.
 
         All channels in a stream have the same format. However, a device might
@@ -154,7 +155,7 @@ class StreamInfo:
         """
         return lib.lsl_get_channel_format(self.obj)
 
-    def source_id(self):
+    def source_id(self) -> str:
         """Unique identifier of the stream's source, if available.
 
         The unique source (or device) identifier is an optional piece of
@@ -180,7 +181,7 @@ class StreamInfo:
         """
         return lib.lsl_get_created_at(self.obj)
 
-    def uid(self):
+    def uid(self) -> str:
         """Unique ID of the stream outlet instance (once assigned).
 
         This is a unique identifier of the stream outlet, and is guaranteed to
@@ -190,7 +191,7 @@ class StreamInfo:
         """
         return lib.lsl_get_uid(self.obj).decode("utf-8")
 
-    def session_id(self):
+    def session_id(self) -> str:
         """Session ID for the given stream.
 
         The session id is an optional human-assigned identifier of the
@@ -203,12 +204,12 @@ class StreamInfo:
         """
         return lib.lsl_get_session_id(self.obj).decode("utf-8")
 
-    def hostname(self):
+    def hostname(self) -> str:
         """Hostname of the providing machine."""
         return lib.lsl_get_hostname(self.obj).decode("utf-8")
 
     # === Data Description (can be modified) ===
-    def desc(self):
+    def desc(self) -> "XMLElement":
         """Extended description of the stream.
 
         It is highly recommended that at least the channel labels are described
@@ -226,7 +227,7 @@ class StreamInfo:
         """
         return XMLElement(lib.lsl_get_desc(self.obj))
 
-    def as_xml(self):
+    def as_xml(self) -> str:
         """Retrieve the entire stream_info in XML format.
 
         This yields an XML document (in string form) whose top-level element is
@@ -243,7 +244,7 @@ class StreamInfo:
         """
         return lib.lsl_get_xml(self.obj).decode("utf-8")
 
-    def get_channel_labels(self):
+    def get_channel_labels(self) -> typing.Optional[list[typing.Optional[str]]]:
         """Get the channel names in the description.
 
         Returns
@@ -261,7 +262,7 @@ class StreamInfo:
         """
         return self._get_channel_info("label")
 
-    def get_channel_types(self):
+    def get_channel_types(self) -> typing.Optional[list[typing.Optional[str]]]:
         """Get the channel types in the description.
 
         Returns
@@ -279,7 +280,7 @@ class StreamInfo:
         """
         return self._get_channel_info("type")
 
-    def get_channel_units(self):
+    def get_channel_units(self) -> typing.Optional[list[typing.Optional[str]]]:
         """Get the channel units in the description.
 
         Returns
@@ -297,7 +298,7 @@ class StreamInfo:
         """
         return self._get_channel_info("unit")
 
-    def _get_channel_info(self, name):
+    def _get_channel_info(self, name) -> typing.Optional[list[typing.Optional[str]]]:
         """Get the 'channel/name' element in the XML tree."""
         if self.desc().child("channels").empty():
             return None
@@ -320,7 +321,7 @@ class StreamInfo:
             )
         return ch_infos
 
-    def set_channel_labels(self, labels):
+    def set_channel_labels(self, labels: list[str]):
         """Set the channel names in the description. Existing labels are overwritten.
 
         Parameters
@@ -330,10 +331,10 @@ class StreamInfo:
         """
         self._set_channel_info(labels, "label")
 
-    def set_channel_types(self, types):
+    def set_channel_types(self, types: str | list[str]):
         """Set the channel types in the description. Existing types are overwritten.
 
-        The types are given as human readable strings, e.g. ``'eeg'``.
+        The types are given as human-readable strings, e.g. ``'eeg'``.
 
         Parameters
         ----------
@@ -344,10 +345,10 @@ class StreamInfo:
         types = [types] * self.channel_count() if isinstance(types, str) else types
         self._set_channel_info(types, "type")
 
-    def set_channel_units(self, units):
+    def set_channel_units(self, units: typing.Union[str, int, list[typing.Union[str, int]]]) -> None:
         """Set the channel units in the description. Existing units are overwritten.
 
-        The units are given as human readable strings, e.g. ``'microvolts'``, or as
+        The units are given as human-readable strings, e.g. ``'microvolts'``, or as
         multiplication factor, e.g. ``-6`` for ``1e-6`` thus converting e.g. Volts to
         microvolts.
 
@@ -371,7 +372,7 @@ class StreamInfo:
             ]
         self._set_channel_info(units, "unit")
 
-    def _set_channel_info(self, ch_infos, name) -> None:
+    def _set_channel_info(self, ch_infos, name: str) -> None:
         """Set the 'channel/name' element in the XML tree."""
         if len(ch_infos) != self.channel_count():
             raise ValueError(
@@ -390,7 +391,7 @@ class StreamInfo:
 
     # -- Helper methods to interact with the XMLElement tree ---------------------------
     @staticmethod
-    def _add_first_node(desc, name):
+    def _add_first_node(desc, name: str) -> "XMLElement":
         """Add the first node in the description and return it."""
         if desc().child(name).empty():
             node = desc().append_child(name)
@@ -436,19 +437,19 @@ class XMLElement:
 
     # === Tree Navigation ===
 
-    def first_child(self):
+    def first_child(self) -> "XMLElement":
         """Get the first child of the element."""
         return XMLElement(lib.lsl_first_child(self.e))
 
-    def last_child(self):
+    def last_child(self) -> "XMLElement":
         """Get the last child of the element."""
         return XMLElement(lib.lsl_last_child(self.e))
 
-    def child(self, name):
+    def child(self, name: str) -> "XMLElement":
         """Get a child with a specified name."""
         return XMLElement(lib.lsl_child(self.e, str.encode(name)))
 
-    def next_sibling(self, name=None):
+    def next_sibling(self, name: typing.Optional[str] = None) -> "XMLElement":
         """Get the next sibling in the children list of the parent node.
 
         If a name is provided, the next sibling with the given name is returned.
@@ -459,7 +460,7 @@ class XMLElement:
         else:
             return XMLElement(lib.lsl_next_sibling_n(self.e, str.encode(name)))
 
-    def previous_sibling(self, name=None):
+    def previous_sibling(self, name: typing.Optional[str] = None) -> "XMLElement":
         """Get the previous sibling in the children list of the parent node.
 
         If a name is provided, the previous sibling with the given name is
@@ -471,17 +472,17 @@ class XMLElement:
         else:
             return XMLElement(lib.lsl_previous_sibling_n(self.e, str.encode(name)))
 
-    def parent(self):
+    def parent(self) -> "XMLElement":
         """Get the parent node."""
         return XMLElement(lib.lsl_parent(self.e))
 
     # === Content Queries ===
 
-    def empty(self):
+    def empty(self) -> bool:
         """Whether this node is empty."""
         return bool(lib.lsl_empty(self.e))
 
-    def is_text(self):
+    def is_text(self) -> bool:
         """Whether this is a text body (instead of an XML element).
 
         True both for plain char data and CData.
@@ -489,15 +490,15 @@ class XMLElement:
         """
         return bool(lib.lsl_is_text(self.e))
 
-    def name(self):
+    def name(self) -> str:
         """Name of the element."""
         return lib.lsl_name(self.e).decode("utf-8")
 
-    def value(self):
+    def value(self) -> str:
         """Value of the element."""
         return lib.lsl_value(self.e).decode("utf-8")
 
-    def child_value(self, name=None):
+    def child_value(self, name: typing.Optional[str] = None) -> str:
         """Get child value (value of the first child that is text).
 
         If a name is provided, then the value of the first child with the
@@ -512,52 +513,52 @@ class XMLElement:
 
     # === Modification ===
 
-    def append_child_value(self, name, value):
+    def append_child_value(self, name: str, value: str) -> "XMLElement":
         """Append a child node with a given name, which has a (nameless)
         plain-text child with the given text value."""
         return XMLElement(
             lib.lsl_append_child_value(self.e, str.encode(name), str.encode(value))
         )
 
-    def prepend_child_value(self, name, value):
+    def prepend_child_value(self, name: str, value: str) -> "XMLElement":
         """Prepend a child node with a given name, which has a (nameless)
         plain-text child with the given text value."""
         return XMLElement(
             lib.lsl_prepend_child_value(self.e, str.encode(name), str.encode(value))
         )
 
-    def set_child_value(self, name, value):
+    def set_child_value(self, name :str, value: str) -> "XMLElement":
         """Set the text value of the (nameless) plain-text child of a named
         child node."""
         return XMLElement(
             lib.lsl_set_child_value(self.e, str.encode(name), str.encode(value))
         )
 
-    def set_name(self, name):
+    def set_name(self, name: str) -> bool:
         """Set the element's name. Returns False if the node is empty."""
         return bool(lib.lsl_set_name(self.e, str.encode(name)))
 
-    def set_value(self, value):
+    def set_value(self, value: str) -> bool:
         """Set the element's value. Returns False if the node is empty."""
         return bool(lib.lsl_set_value(self.e, str.encode(value)))
 
-    def append_child(self, name):
+    def append_child(self, name: str) -> "XMLElement":
         """Append a child element with the specified name."""
         return XMLElement(lib.lsl_append_child(self.e, str.encode(name)))
 
-    def prepend_child(self, name):
+    def prepend_child(self, name: str) -> "XMLElement":
         """Prepend a child element with the specified name."""
         return XMLElement(lib.lsl_prepend_child(self.e, str.encode(name)))
 
-    def append_copy(self, elem):
+    def append_copy(self, elem: "XMLElement") -> "XMLElement":
         """Append a copy of the specified element as a child."""
         return XMLElement(lib.lsl_append_copy(self.e, elem.e))
 
-    def prepend_copy(self, elem):
+    def prepend_copy(self, elem: "XMLElement") -> "XMLElement":
         """Prepend a copy of the specified element as a child."""
         return XMLElement(lib.lsl_prepend_copy(self.e, elem.e))
 
-    def remove_child(self, rhs):
+    def remove_child(self, rhs: "XMLElement") -> None:
         """Remove a given child element, specified by name or as element."""
         if type(rhs) is XMLElement:
             lib.lsl_remove_child(self.e, rhs.e)
