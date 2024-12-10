@@ -73,6 +73,8 @@ class StreamInfo:
         else:
             if isinstance(channel_format, str):
                 channel_format = string2fmt[channel_format]
+            if source_id is None:
+                source_id = str(hash((name, type, channel_count, nominal_srate, channel_format)))
             self.obj = lib.lsl_create_streaminfo(
                 ctypes.c_char_p(str.encode(name)),
                 ctypes.c_char_p(str.encode(type)),
