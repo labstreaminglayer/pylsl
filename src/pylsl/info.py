@@ -77,6 +77,11 @@ class StreamInfo:
                 source_id = str(
                     hash((name, type, channel_count, nominal_srate, channel_format))
                 )
+                print(
+                    f"Generated source_id: '{source_id}' for StreamInfo with name '{name}', type '{type}', "
+                    f"channel_count {channel_count}, nominal_srate {nominal_srate}, "
+                    f"and channel_format {channel_format}."
+                )
             self.obj = lib.lsl_create_streaminfo(
                 ctypes.c_char_p(str.encode(name)),
                 ctypes.c_char_p(str.encode(type)),
