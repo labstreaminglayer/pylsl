@@ -62,11 +62,11 @@ class StreamInfo:
                      for system robustness since it allows recipients to
                      recover from failure even after the serving app, device or
                      computer crashes (just by finding a stream with the same
-                     source id on the network again). Therefore, it is highly
-                     recommended to always try to provide whatever information
-                     can uniquely identify the data source itself.
-                     (default '')
-
+                     source id on the network again). If the provided value is None
+                     then a source id will be generated automatically from a hash of
+                     the other arguments. If recovery is not desired, for example
+                     when a disconnection should raise an error, set the source_id
+                     to "" (empty string) . (default None)
         """
         if handle is not None:
             self.obj = ctypes.c_void_p(handle)
