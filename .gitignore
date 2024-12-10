@@ -11,7 +11,9 @@ __pycache__
 *.cprof
 *.png
 /wheelhouse/
-/pylsl/include
-/pylsl/lib
-/pylsl/share
+/src/pylsl/include
+/src/pylsl/share
 .DS_Store
+
+uv.lock
+/src/pylsl/__version__.py

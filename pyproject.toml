@@ -1,0 +1,73 @@
+[project]
+name = "pylsl"
+description = "Python library for importing XDF (Extensible Data Format)"
+authors = [
+  { name = "Christian Kothe", email = "christian.kothe@intheon.io" },
+  { name = "Chadwick Boulay", email = "chadwick.boulay@gmail.com" }
+]
+license = {file = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.9"
+dynamic = ["version"]
+keywords = [
+  "networking",
+  "LSL",
+  "Lab Streaming Layer",
+  "labstreaminglayer",
+  "data",
+  "acquisition",
+  "stream"
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Topic :: System :: Networking",
+  "Topic :: Scientific/Engineering",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "numpy>=2.0.2",
+]
+
+[project.urls]
+Repository = "https://github.com/labstreaminglayer/pylsl"
+Issues = "https://github.com/labstreaminglayer/pylsl/issues"
+
+[project.optional-dependencies]
+examples = [
+    "pyqtgraph>=0.13.7",
+]
+#Changelog = "https://github.com/labstreaminglayer/pylsl/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "ruff>=0.8.2",
+]
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/pylsl/__version__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pylsl"]
+artifacts = ["*.dll"]
+
+#package_data={
+#        "pylsl": ["lib/*.dll"],
+#    }

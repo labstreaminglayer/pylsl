@@ -1,5 +1,6 @@
 """Example program to demonstrate how to send a multi-channel time-series
 with proper meta-data to LSL."""
+
 import argparse
 import time
 from random import random as rand

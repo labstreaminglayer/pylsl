@@ -3,7 +3,8 @@ later on retrieve the meta-data again at the receiver side."""
 
 import time
 
-from pylsl import StreamInfo, StreamInlet, StreamOutlet, resolve_stream
+import numpy as np
+from pylsl import StreamInfo, StreamInlet, StreamOutlet, resolve_byprop
 
 
 def main():
@@ -13,7 +14,8 @@ def main():
     # now attach some meta-data (in accordance with XDF format,
     # see also https://github.com/sccn/xdf/wiki/Meta-Data)
     chns = info.desc().append_child("channels")
-    for label in ["C3", "C4", "Cz", "FPz", "POz", "CPz", "O1", "O2"]:
+    ch_labels = ["C3", "C4", "Cz", "FPz", "POz", "CPz", "O1", "O2"]
+    for label in ch_labels:
         ch = chns.append_child("channel")
         ch.append_child_value("label", label)
         ch.append_child_value("unit", "microvolts")
@@ -27,13 +29,15 @@ def main():
     # create outlet for the stream
     outlet = StreamOutlet(info)
 
-    # (...normally here one might start sending data into the outlet...)
+    # Send a sample into the outlet...
+    dummy_sample = np.arange(len(ch_labels), dtype=np.float32)
+    outlet.push_sample(dummy_sample)
 
     # === the following could run on another computer ===
 
     # first we resolve a stream whose name is MetaTester (note that there are
     # other ways to query a stream, too - for instance by content-type)
-    results = resolve_stream("name", "MetaTester")
+    results = resolve_byprop("name", "MetaTester")
 
     # open an inlet so we can read the stream's data (and meta-data)
     inlet = StreamInlet(results[0])

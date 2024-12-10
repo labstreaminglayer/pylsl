@@ -1,12 +1,12 @@
-name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+name: Build and publish Python 🐍 distributions 📦 to PyPI
 
 on:
   release:
     types: [published]
 
 env:
-  LSL_RELEASE_URL: 'https://github.com/sccn/liblsl/releases/download/v1.16.2/'
-  LSL_RELEASE: '1.16.2'
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/"
+  LSL_RELEASE: "1.16.2"
 
 defaults:
   run:
@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "ubuntu-22.04"
+          - name: "ubuntu-24.04"
             os: "ubuntu-latest"
             pyarch: "x64"
           - name: "windows-x64"
@@ -32,44 +32,20 @@ jobs:
             arch: "i386"
             pyarch: "x86"
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       - name: Download liblsl (Windows)
         if: matrix.config.os == 'windows-latest'
         run: |
-          curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-Win_${{ matrix.config.arch}}.zip -o liblsl.zip
+          curl -L ${LSL_RELEASE_URL}/v${LSL_RELEASE}/liblsl-${LSL_RELEASE}-Win_${{ matrix.config.arch}}.zip -o liblsl.zip
           unzip -oj liblsl.zip bin/lsl* -d pylsl/lib
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
           architecture: ${{ matrix.config.pyarch }}
-      - name: Install pypa/build
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-      - name: Build package
-        run: |
-          python -m build --wheel --outdir dist/
-
-      - name: Publish using Twine (Windows)
-        if: matrix.config.os == 'windows-latest'
-        run: |
-          python -m twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-
-# This fails because I don't have access to `pylsl` project there.
-#      - name: Publish distribution 📦 to Test PyPI
-#        if: (github.event.release.prerelease && (matrix.config.os != 'windows-latest'))
-#        uses: pypa/gh-action-pypi-publish@unstable/v1
-#        with:
-#          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-#          repository_url: https://test.pypi.org/legacy/
-#          skip_existing: true
-#
-      - name: Publish distribution 📦 to PyPI
-        if: ((matrix.config.os != 'windows-latest') && !github.event.release.prerelease)
-        uses: pypa/gh-action-pypi-publish@unstable/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      - name: Build Package
+        run: uv build
+      - name: Publish package distributions to PyPI
+        run: uv publish

@@ -16,12 +16,10 @@ from pylsl import (
 )
 
 try:
-    from pyfftw.interfaces.numpy_fft import (  # Performs much better than numpy's fftpack
-        irfft,
-        rfft,
-    )
+    from pyfftw.interfaces.numpy_fft import irfft
+    # Performs much better than numpy's fftpack
 except ImportError:
-    from numpy.fft import irfft, rfft
+    from numpy.fft import irfft
 try:
     import sys
 
@@ -339,7 +337,7 @@ class MarkerInlet(object):
         self.inlet = StreamInlet(streams[0], processing_flags=proc_flags)
         # The following is an example of how to read stream info
         stream_info = self.inlet.info()
-        stream_Fs = stream_info.nominal_srate()
+        # stream_Fs = stream_info.nominal_srate()
         stream_xml = stream_info.desc()
         chans_xml = stream_xml.child("channels")
         chan_xml_list = []

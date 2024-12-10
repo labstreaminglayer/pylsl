@@ -1,5 +1,6 @@
 """Example program to demonstrate how to send a multi-channel time series to
 LSL."""
+
 import getopt
 import sys
 import time

@@ -1,0 +1,59 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.16.2"
+  LSL_RELEASE: "1.16.2"
+
+jobs:
+
+  style:
+    name: Check style
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: astral-sh/ruff-action@v1
+    - uses: astral-sh/ruff-action@v1
+      with:
+        args: "format --check"
+
+  test:
+    needs: style
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os: ["ubuntu-latest", "windows-latest", "macOS-latest"]
+
+    name: Run tests (${{ matrix.os }} Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download liblsl (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        curl -L https://github.com/sccn/liblsl/releases/download/v1.16.2/liblsl-1.16.2-Win_amd64.zip -o liblsl.zip
+        unzip -oj liblsl.zip bin/lsl* -d src/pylsl/lib/
+    - name: Install liblsl (MacOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install labstreaminglayer/tap/lsl
+    - name: Install liblsl (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu-')
+      run: |
+        sudo apt install -y libpugixml-dev
+        curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
+        sudo apt install ./liblsl.deb
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Build
+      run: uv sync --all-extras
+    - name: Run tests
+      run: uv run pytest
