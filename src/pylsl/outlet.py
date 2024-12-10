@@ -38,6 +38,39 @@ class StreamOutlet:
                         (default 360)
 
         """
+
+        """
+        # If the source_id matches the default then we can assume it was created automatically.
+        # It may be desirable to include the host name in the source_id hash to avoid collisions.
+        # However, there are likely implications to re-creating the info so this is commented out
+        #  until a need arises.
+        expected_src_id = str(hash((
+            info.name(), info.type(), info.channel_count(), info.nominal_srate(), info.channel_format()
+        )))
+        if info.source_id() == expected_src_id:
+            old_desc = info.desc()  # save the old metadata
+            import socket
+            new_source_id = str(hash((
+                info.name(),
+                info.type(),
+                info.channel_count(),
+                info.nominal_srate(),
+                info.channel_format(),
+                socket.gethostname()
+            )))
+            info = StreamInfo(
+                name=info.name(),
+                type=info.type(),
+                channel_count=info.channel_count(),
+                nominal_srate=info.nominal_srate(),
+                channel_format=info.channel_format(),
+                source_id=new_source_id,
+            )
+            # Add the old metadata to the new info object
+            new_desc_parent = info.desc().parent()
+            new_desc_parent.remove_child(info.desc())
+            new_desc_parent.append_copy(old_desc)
+        """
         self.obj = lib.lsl_create_outlet(info.obj, chunk_size, max_buffered)
         self.obj = ctypes.c_void_p(self.obj)
         if not self.obj:
