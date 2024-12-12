@@ -1,6 +1,6 @@
 /dist/
 /.idea/
-/pylsl.egg-info/
+/src/pylsl.egg-info/
 /build/
 __pycache__
 *.so
@@ -17,3 +17,5 @@ __pycache__
 
 uv.lock
 /src/pylsl/__version__.py
+/src/pylsl/lib/lslver.exe
+liblsl.zip
