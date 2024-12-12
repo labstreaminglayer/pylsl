@@ -16,6 +16,8 @@ jobs:
   deploy:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
