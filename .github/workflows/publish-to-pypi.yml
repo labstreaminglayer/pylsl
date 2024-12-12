@@ -39,7 +39,7 @@ jobs:
         if: matrix.config.os == 'windows-latest'
         run: |
           curl -L ${LSL_RELEASE_URL}/v${LSL_RELEASE}/liblsl-${LSL_RELEASE}-Win_${{ matrix.config.arch}}.zip -o liblsl.zip
-          unzip -oj liblsl.zip bin/lsl* -d pylsl/lib
+          unzip -oj liblsl.zip bin/lsl* -d src/pylsl/lib
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
