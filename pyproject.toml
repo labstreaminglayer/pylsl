@@ -5,7 +5,8 @@ authors = [
   { name = "Christian Kothe", email = "christian.kothe@intheon.io" },
   { name = "Chadwick Boulay", email = "chadwick.boulay@gmail.com" }
 ]
-license = {file = "LICENSE"}
+#license = {file = "LICENSE"}
+license-files = []  # Bug in setuptools. https://github.com/astral-sh/uv/issues/9513
 readme = "README.md"
 requires-python = ">=3.9"
 dynamic = ["version"]
