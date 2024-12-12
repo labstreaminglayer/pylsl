@@ -55,19 +55,11 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
 
-[tool.hatch.version]
-source = "vcs"
+[tool.setuptools_scm]
+version_file = "src/pylsl/__version__.py"
 
-[tool.hatch.build.hooks.vcs]
-version-file = "src/pylsl/__version__.py"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/pylsl"]
-artifacts = ["*.dll"]
-
-#package_data={
-#        "pylsl": ["lib/*.dll"],
-#    }
+[tool.setuptools.package-data]
+pylsl = ["lib/*.dll"]
