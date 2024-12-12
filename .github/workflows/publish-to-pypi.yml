@@ -3,6 +3,7 @@ name: Build and publish Python 🐍 distributions 📦 to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/"
