@@ -5,8 +5,7 @@ authors = [
   { name = "Christian Kothe", email = "christian.kothe@intheon.io" },
   { name = "Chadwick Boulay", email = "chadwick.boulay@gmail.com" }
 ]
-#license = {file = "LICENSE"}
-license-files = []  # Bug in setuptools. https://github.com/astral-sh/uv/issues/9513
+#license = {file = "LICENSE"}  # Bug in setuptools. https://github.com/astral-sh/uv/issues/9513
 readme = "README.md"
 requires-python = ">=3.9"
 dynamic = ["version"]
@@ -58,6 +57,9 @@ dev = [
 [build-system]
 requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+license-files = []
 
 [tool.setuptools_scm]
 version_file = "src/pylsl/__version__.py"
