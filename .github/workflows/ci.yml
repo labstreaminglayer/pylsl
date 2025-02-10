@@ -49,6 +49,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
         sudo apt install -y libpugixml-dev
+        echo $(lsb_release -sc)
         curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
         sudo apt install ./liblsl.deb
     - name: Install uv
