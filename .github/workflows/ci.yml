@@ -16,7 +16,7 @@ jobs:
 
   style:
     name: Check style
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
     - uses: astral-sh/ruff-action@v3
@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-        os: ["ubuntu-latest", "windows-latest", "macOS-latest"]
+        os: ["ubuntu-20.04", "windows-latest", "macOS-latest"]
 
     name: Run tests (${{ matrix.os }} Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
@@ -49,7 +49,6 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
         sudo apt install -y libpugixml-dev
-        echo $(lsb_release -sc)
         curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
         sudo apt install ./liblsl.deb
     - name: Install uv
