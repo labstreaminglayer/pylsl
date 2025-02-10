@@ -20,8 +20,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.8.2"
     - run: ruff check --output-format=github src
-    - run: ruff format --verbose --check src
+    - run: ruff format --check src
+
 
   test:
     needs: style
