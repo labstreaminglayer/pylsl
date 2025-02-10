@@ -19,10 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v1
-    - uses: astral-sh/ruff-action@v1
-      with:
-        args: "format --check"
+    - uses: astral-sh/ruff-action@v3
+    - run: ruff check --output-format=github src
+    - run: ruff format --check src
 
   test:
     needs: style
