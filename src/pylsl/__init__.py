@@ -41,3 +41,4 @@ from .lib import cf_int64 as cf_int64
 from .lib import cf_float32 as cf_float32
 from .lib import cf_double64 as cf_double64
 from .lib import cf_string as cf_string
+from .lib import cf_undefined as cf_undefined

@@ -16,20 +16,22 @@ jobs:
 
   style:
     name: Check style
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v1
-    - uses: astral-sh/ruff-action@v1
+    - uses: astral-sh/ruff-action@v3
       with:
-        args: "format --check"
+        version: "0.8.2"
+    - run: ruff check --output-format=github src
+    - run: ruff format --check src
+
 
   test:
     needs: style
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-        os: ["ubuntu-latest", "windows-latest", "macOS-latest"]
+        os: ["ubuntu-20.04", "windows-latest", "macOS-latest"]
 
     name: Run tests (${{ matrix.os }} Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
