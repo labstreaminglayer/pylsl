@@ -31,7 +31,7 @@ This should only be necessary if you need to modify or debug pylsl.
 
 # Usage
 
-See the examples in pylsl/examples. Note that these can be run directly from the commandline with (e.g.) `python -m pylsl.examples.{name-of-example}`.
+See the examples in src/pylsl/examples. Note that these can be run directly from the commandline with (e.g.) `python -m pylsl.examples.{name-of-example}`.
 
 You can get a list of the examples with `python -c "import pylsl.examples; help(pylsl.examples)"`
 
