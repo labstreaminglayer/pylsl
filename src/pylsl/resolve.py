@@ -2,7 +2,7 @@ import ctypes
 
 from .lib import lib
 from .info import StreamInfo
-from .util import FOREVER
+from .util import deprecated, FOREVER
 
 
 def resolve_streams(wait_time=1.0):
@@ -166,7 +166,12 @@ class ContinuousResolver:
         return [StreamInfo(handle=buffer[k]) for k in range(num_found)]
 
 
+@deprecated("Use `resolve_streams` instead.")
 def resolve_stream(*args):
+    """Resolve a stream.
+
+    This function is deprecated. Use `resolve_streams` instead.
+    """
     if len(args) == 0:
         return resolve_streams()
     elif type(args[0]) in [int, float]:

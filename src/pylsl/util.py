@@ -1,4 +1,6 @@
 import ctypes
+import functools
+import warnings
 
 from .lib import lib
 
@@ -108,3 +110,34 @@ def handle_error(errcode):
         raise InternalError("an internal error has occurred.")
     elif errcode < 0:
         raise RuntimeError("an unknown error has occurred.")
+
+
+def deprecated(reason: str = None):
+    """Mark functions as deprecated.
+
+    It will result in a warning being emitted when the function is used.
+
+    Example:
+        @deprecated("use new_function instead")
+        def old_function():
+            pass
+    """
+    def decorator(func):
+        message = f"Function '{func.__name__}' is deprecated."
+        if reason:
+            message += f" {reason}"
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            warnings.simplefilter("always", DeprecationWarning)  # ensure it shows up
+            warnings.warn(
+                message,
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            warnings.simplefilter("default", DeprecationWarning)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
