@@ -102,6 +102,16 @@ class StreamInfo:
         except Exception as e:
             print(f"StreamInfo deletion triggered error: {e}")
 
+    def __str__(self):
+        return (
+            f"<StreamInfo name='{self.name()}', type='{self.type()}', "
+            f"channels={self.channel_count()}, srate={self.nominal_srate()}, "
+            f"format={self.channel_format()}, source_id='{self.source_id()}'>"
+        )
+
+    def __repr__(self):
+        return self.__str__()
+
     # === Core Information (assigned at construction) ===
 
     def name(self) -> str:
