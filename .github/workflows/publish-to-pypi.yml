@@ -65,10 +65,10 @@ jobs:
               cp lsl.xcframework/macos-arm64_x86_64/lsl.framework/Versions/A/lsl src/pylsl/lib/liblsl.dylib
               codesign -s - -f src/pylsl/lib/liblsl.dylib
           - name: "Linux x86_64"
-            os: ubuntu-latest
+            os: ubuntu-22.04
             arch: x86_64
             pyarch: x64
-            asset: "liblsl-${LSL_RELEASE}-noble_amd64.deb"
+            asset: "liblsl-${LSL_RELEASE}-jammy_amd64.deb"
             extract: |
               sudo apt-get update && sudo apt-get install -y libpugixml1v5
               ar x liblsl.deb
