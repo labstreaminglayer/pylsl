@@ -19,10 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v1
-    - uses: astral-sh/ruff-action@v1
-      with:
-        args: "format --check"
+    - uses: astral-sh/setup-uv@v4
+    - run: uv run ruff check
+    - run: uv run ruff format --check
 
   test:
     needs: style
