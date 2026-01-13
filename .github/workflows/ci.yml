@@ -42,7 +42,9 @@ jobs:
         unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib/
     - name: Install liblsl (MacOS)
       if: matrix.os == 'macos-latest'
-      run: brew install labstreaminglayer/tap/lsl
+      run: |
+        brew install labstreaminglayer/tap/lsl
+        echo "PYLSL_LIB=$(brew --prefix lsl)/Frameworks/lsl.framework/Versions/A/lsl" >> $GITHUB_ENV
     - name: Install liblsl (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
