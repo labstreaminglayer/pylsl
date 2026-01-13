@@ -68,10 +68,13 @@ jobs:
             os: ubuntu-latest
             arch: x86_64
             pyarch: x64
-            asset: "liblsl-${LSL_RELEASE}-noble_amd64.tar.gz"
+            asset: "liblsl-${LSL_RELEASE}-noble_amd64.deb"
             extract: |
-              tar -xzf liblsl.tar.gz
-              cp liblsl-${LSL_RELEASE}-noble_amd64/lib/liblsl.so* src/pylsl/lib/
+              sudo apt-get update && sudo apt-get install -y libpugixml1v5
+              ar x liblsl.deb
+              tar -xf data.tar.* --wildcards '*/liblsl.so*'
+              cp ./usr/lib/liblsl.so* src/pylsl/lib/
+            repair: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,6 +88,8 @@ jobs:
             curl -L "${LSL_RELEASE_URL}/${ASSET}" -o xcframework.zip
           elif [[ "$ASSET" == *.zip ]]; then
             curl -L "${LSL_RELEASE_URL}/${ASSET}" -o liblsl.zip
+          elif [[ "$ASSET" == *.deb ]]; then
+            curl -L "${LSL_RELEASE_URL}/${ASSET}" -o liblsl.deb
           else
             curl -L "${LSL_RELEASE_URL}/${ASSET}" -o liblsl.tar.gz
           fi
@@ -108,6 +113,13 @@ jobs:
 
       - name: Build wheel
         run: uv build --wheel
+
+      - name: Repair wheel (Linux)
+        if: matrix.config.repair
+        run: |
+          pip install auditwheel patchelf
+          auditwheel repair dist/*.whl -w dist/
+          rm dist/*-none-any.whl
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
