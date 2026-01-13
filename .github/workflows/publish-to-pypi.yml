@@ -3,56 +3,138 @@ name: Build and publish Python 🐍 distributions 📦 to PyPI
 on:
   release:
     types: [published]
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/"
-  LSL_RELEASE: "1.16.2"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.17.4"
+  LSL_RELEASE: "1.17.4"
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  deploy:
-    name: ${{ matrix.config.name }}
+  # Build pure Python wheel (no bundled library) as fallback
+  build-pure:
+    name: Build pure Python wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for setuptools-scm
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      - name: Build pure Python wheel
+        run: uv build
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-pure
+          path: dist/*
+
+  # Build platform-specific wheels with bundled liblsl
+  build-platform:
+    name: Build ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
-    permissions:
-      id-token: write
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: "ubuntu-24.04"
-            os: "ubuntu-latest"
-            pyarch: "x64"
-          - name: "windows-x64"
-            os: "windows-latest"
-            arch: "amd64"
-            pyarch: "x64"
-          - name: "windows-x86"
-            os: "windows-latest"
-            arch: "i386"
-            pyarch: "x86"
+          - name: "Windows x64"
+            os: windows-latest
+            arch: amd64
+            pyarch: x64
+            asset: "liblsl-${LSL_RELEASE}-Win_amd64.zip"
+            extract: "unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib"
+          - name: "Windows x86"
+            os: windows-latest
+            arch: i386
+            pyarch: x86
+            asset: "liblsl-${LSL_RELEASE}-Win_i386.zip"
+            extract: "unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib"
+          - name: "macOS universal"
+            os: macos-latest
+            arch: universal
+            pyarch: x64
+            asset: "lsl.xcframework.1.17.zip"
+            extract: |
+              unzip xcframework.zip
+              cp lsl.xcframework/macos-arm64_x86_64/lsl.framework/Versions/A/lsl src/pylsl/lib/liblsl.dylib
+          - name: "Linux x86_64"
+            os: ubuntu-latest
+            arch: x86_64
+            pyarch: x64
+            asset: "liblsl-${LSL_RELEASE}-noble_amd64.tar.gz"
+            extract: |
+              tar -xzf liblsl.tar.gz
+              cp liblsl-${LSL_RELEASE}-noble_amd64/lib/liblsl.so* src/pylsl/lib/
     steps:
       - uses: actions/checkout@v4
-      - name: Download liblsl (Windows)
-        if: matrix.config.os == 'windows-latest'
+        with:
+          fetch-depth: 0  # Needed for setuptools-scm
+
+      - name: Download liblsl
         run: |
-          curl -L ${LSL_RELEASE_URL}/v${LSL_RELEASE}/liblsl-${LSL_RELEASE}-Win_${{ matrix.config.arch}}.zip -o liblsl.zip
-          unzip -oj liblsl.zip bin/lsl* -d src/pylsl/lib
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+          ASSET="${{ matrix.config.asset }}"
+          ASSET="${ASSET//\$\{LSL_RELEASE\}/$LSL_RELEASE}"
+          if [[ "$ASSET" == *xcframework* ]]; then
+            curl -L "${LSL_RELEASE_URL}/${ASSET}" -o xcframework.zip
+          elif [[ "$ASSET" == *.zip ]]; then
+            curl -L "${LSL_RELEASE_URL}/${ASSET}" -o liblsl.zip
+          else
+            curl -L "${LSL_RELEASE_URL}/${ASSET}" -o liblsl.tar.gz
+          fi
+
+      - name: Extract liblsl
+        run: |
+          mkdir -p src/pylsl/lib
+          ${{ matrix.config.extract }}
+
+      - name: List bundled library
+        run: ls -la src/pylsl/lib/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
           architecture: ${{ matrix.config.pyarch }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
-      - name: Build Package (Linux)
-        if: matrix.config.os != 'windows-latest'
-        run: uv build
-      - name: Build Package (Windows)
-        if: matrix.config.os == 'windows-latest'
+
+      - name: Build wheel
         run: uv build --wheel
-      - name: Publish package distributions to PyPI
-        run: uv publish
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.config.os }}-${{ matrix.config.arch }}
+          path: dist/*.whl
+
+  # Publish all wheels to PyPI
+  publish:
+    name: Publish to PyPI
+    needs: [build-pure, build-platform]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: wheels-*
+          merge-multiple: true
+
+      - name: List wheels
+        run: ls -la dist/
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Publish to PyPI
+        if: github.event_name == 'release'
+        run: uv publish dist/*

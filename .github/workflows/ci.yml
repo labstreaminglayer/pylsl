@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.16.2"
-  LSL_RELEASE: "1.16.2"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.17.4"
+  LSL_RELEASE: "1.17.4"
 
 jobs:
 
@@ -38,7 +38,7 @@ jobs:
     - name: Download liblsl (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        curl -L https://github.com/sccn/liblsl/releases/download/v1.16.2/liblsl-1.16.2-Win_amd64.zip -o liblsl.zip
+        curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-Win_amd64.zip -o liblsl.zip
         unzip -oj liblsl.zip bin/lsl* -d src/pylsl/lib/
     - name: Install liblsl (MacOS)
       if: matrix.os == 'macos-latest'
@@ -46,7 +46,6 @@ jobs:
     - name: Install liblsl (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
-        sudo apt install -y libpugixml-dev
         curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
         sudo apt install ./liblsl.deb
     - name: Install uv
