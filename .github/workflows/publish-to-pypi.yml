@@ -63,6 +63,7 @@ jobs:
             extract: |
               unzip xcframework.zip
               cp lsl.xcframework/macos-arm64_x86_64/lsl.framework/Versions/A/lsl src/pylsl/lib/liblsl.dylib
+              codesign -s - -f src/pylsl/lib/liblsl.dylib
           - name: "Linux x86_64"
             os: ubuntu-latest
             arch: x86_64
