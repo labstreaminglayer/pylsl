@@ -92,7 +92,7 @@ class StreamInfo:
             )
             self.obj = ctypes.c_void_p(self.obj)
             if not self.obj:
-                raise RuntimeError("could not create stream description " "object.")
+                raise RuntimeError("could not create stream description object.")
 
     def __del__(self):
         """Destroy a previously created StreamInfo object."""

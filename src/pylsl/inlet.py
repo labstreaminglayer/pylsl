@@ -58,9 +58,7 @@ class StreamInlet:
                    flags. Use `proc_ALL` for all flags. (default proc_none).
         """
         if type(info) is list:
-            raise TypeError(
-                "description needs to be of type StreamInfo, " "got a list."
-            )
+            raise TypeError("description needs to be of type StreamInfo, got a list.")
         self.obj = lib.lsl_create_inlet(info.obj, max_buflen, max_chunklen, recover)
         self.obj = ctypes.c_void_p(self.obj)
         if not self.obj:

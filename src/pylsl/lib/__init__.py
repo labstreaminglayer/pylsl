@@ -257,14 +257,14 @@ try:
     lib.lsl_pull_chunk_str.restype = ctypes.c_long
     lib.lsl_pull_chunk_buf.restype = ctypes.c_long
 except Exception:
-    print("pylsl: chunk transfer functions not available in your liblsl " "version.")
+    print("pylsl: chunk transfer functions not available in your liblsl version.")
 # noinspection PyBroadException
 try:
     lib.lsl_create_continuous_resolver.restype = ctypes.c_void_p
     lib.lsl_create_continuous_resolver_bypred.restype = ctypes.c_void_p
     lib.lsl_create_continuous_resolver_byprop.restype = ctypes.c_void_p
 except Exception:
-    print("pylsl: ContinuousResolver not (fully) available in your liblsl " "version.")
+    print("pylsl: ContinuousResolver not (fully) available in your liblsl version.")
 
 
 # int64 support on windows and 32bit OSes isn't there yet
