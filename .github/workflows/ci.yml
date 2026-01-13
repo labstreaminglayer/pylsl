@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.16.2"
-  LSL_RELEASE: "1.16.2"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.17.4"
+  LSL_RELEASE: "1.17.4"
 
 jobs:
 
@@ -19,10 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v1
-    - uses: astral-sh/ruff-action@v1
-      with:
-        args: "format --check"
+    - uses: astral-sh/setup-uv@v4
+    - run: uv run ruff check
+    - run: uv run ruff format --check
 
   test:
     needs: style
@@ -37,16 +36,18 @@ jobs:
     - uses: actions/checkout@v4
     - name: Download liblsl (Windows)
       if: matrix.os == 'windows-latest'
+      shell: bash
       run: |
-        curl -L https://github.com/sccn/liblsl/releases/download/v1.16.2/liblsl-1.16.2-Win_amd64.zip -o liblsl.zip
-        unzip -oj liblsl.zip bin/lsl* -d src/pylsl/lib/
+        curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-Win_amd64.zip -o liblsl.zip
+        unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib/
     - name: Install liblsl (MacOS)
       if: matrix.os == 'macos-latest'
-      run: brew install labstreaminglayer/tap/lsl
+      run: |
+        brew install labstreaminglayer/tap/lsl
+        echo "PYLSL_LIB=$(brew --prefix lsl)/Frameworks/lsl.framework/Versions/A/lsl" >> $GITHUB_ENV
     - name: Install liblsl (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
-        sudo apt install -y libpugixml-dev
         curl -L ${LSL_RELEASE_URL}/liblsl-${LSL_RELEASE}-$(lsb_release -sc)_amd64.deb -o liblsl.deb
         sudo apt install ./liblsl.deb
     - name: Install uv

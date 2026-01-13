@@ -51,7 +51,7 @@ examples = [
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
-    "ruff>=0.8.2",
+    "ruff>=0.14",
 ]
 
 [build-system]
@@ -65,4 +65,4 @@ license-files = []
 version_file = "src/pylsl/__version__.py"
 
 [tool.setuptools.package-data]
-pylsl = ["lib/*.dll"]
+pylsl = ["lib/*.dll", "lib/*.so*", "lib/*.dylib"]

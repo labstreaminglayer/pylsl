@@ -122,6 +122,7 @@ def deprecated(reason: str = None):
         def old_function():
             pass
     """
+
     def decorator(func):
         message = f"Function '{func.__name__}' is deprecated."
         if reason:
@@ -130,11 +131,7 @@ def deprecated(reason: str = None):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             warnings.simplefilter("always", DeprecationWarning)  # ensure it shows up
-            warnings.warn(
-                message,
-                category=DeprecationWarning,
-                stacklevel=2
-            )
+            warnings.warn(message, category=DeprecationWarning, stacklevel=2)
             warnings.simplefilter("default", DeprecationWarning)
             return func(*args, **kwargs)
 
