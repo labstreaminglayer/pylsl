@@ -1,6 +1,6 @@
 [project]
 name = "pylsl"
-description = "Python library for importing XDF (Extensible Data Format)"
+description = "Python library for LSL (lab streaming layer)"
 authors = [
   { name = "Christian Kothe", email = "christian.kothe@intheon.io" },
   { name = "Chadwick Boulay", email = "chadwick.boulay@gmail.com" }
