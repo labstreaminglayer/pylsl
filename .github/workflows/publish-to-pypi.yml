@@ -49,12 +49,14 @@ jobs:
             pyarch: x64
             asset: "liblsl-${LSL_RELEASE}-Win_amd64.zip"
             extract: "unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib"
+            platform_tag: "win_amd64"
           - name: "Windows x86"
             os: windows-latest
             arch: i386
             pyarch: x86
             asset: "liblsl-${LSL_RELEASE}-Win_i386.zip"
             extract: "unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib"
+            platform_tag: "win32"
           - name: "macOS universal"
             os: macos-latest
             arch: universal
@@ -64,6 +66,7 @@ jobs:
               unzip xcframework.zip
               cp lsl.xcframework/macos-arm64_x86_64/lsl.framework/Versions/A/lsl src/pylsl/lib/liblsl.dylib
               codesign -s - -f src/pylsl/lib/liblsl.dylib
+            platform_tag: "macosx_11_0_universal2"
           - name: "Linux x86_64"
             os: ubuntu-22.04
             arch: x86_64
@@ -114,12 +117,29 @@ jobs:
       - name: Build wheel
         run: uv build --wheel
 
+      - name: Tag wheel with platform
+        if: matrix.config.platform_tag
+        run: |
+          pip install wheel
+          wheel tags --platform-tag ${{ matrix.config.platform_tag }} dist/*.whl
+          rm -f dist/*-none-any.whl
+          ls -la dist/
+
+      - name: Inspect wheel contents
+        run: |
+          python -m zipfile -l dist/*.whl | grep -E '\.(dll|so|dylib)' || echo "No native libraries found in wheel!"
+
       - name: Repair wheel (Linux)
         if: matrix.config.repair
         run: |
           pip install auditwheel patchelf
           auditwheel repair dist/*.whl -w dist/
           rm dist/*-none-any.whl
+
+      - name: Test wheel
+        run: |
+          pip install dist/*.whl
+          python -c "import pylsl; print(pylsl.library_info())"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -149,5 +169,4 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Publish to PyPI
-        if: github.event_name == 'release'
-        run: uv publish dist/*
+        run: uv publish dist/* ${{ github.event_name != 'release' && '--dry-run -v' || '' }}
