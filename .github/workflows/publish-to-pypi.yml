@@ -114,12 +114,21 @@ jobs:
       - name: Build wheel
         run: uv build --wheel
 
+      - name: Inspect wheel contents
+        run: |
+          python -m zipfile -l dist/*.whl | grep -E '\.(dll|so|dylib)' || echo "No native libraries found in wheel!"
+
       - name: Repair wheel (Linux)
         if: matrix.config.repair
         run: |
           pip install auditwheel patchelf
           auditwheel repair dist/*.whl -w dist/
           rm dist/*-none-any.whl
+
+      - name: Test wheel
+        run: |
+          pip install dist/*.whl
+          python -c "import pylsl; print(pylsl.library_info())"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
