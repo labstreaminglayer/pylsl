@@ -34,6 +34,8 @@ from .util import protocol_version as protocol_version
 from .util import library_version as library_version
 from .util import library_info as library_info
 from .util import local_clock as local_clock
+from .util import set_config_filename as set_config_filename
+from .util import set_config_content as set_config_content
 from .lib import cf_int8 as cf_int8
 from .lib import cf_int16 as cf_int16
 from .lib import cf_int32 as cf_int32

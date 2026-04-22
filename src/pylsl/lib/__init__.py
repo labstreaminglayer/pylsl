@@ -314,6 +314,15 @@ try:
     lib.lsl_create_continuous_resolver_byprop.restype = ctypes.c_void_p
 except Exception:
     print("pylsl: ContinuousResolver not (fully) available in your liblsl version.")
+# noinspection PyBroadException
+try:
+    lib.lsl_set_config_filename.argtypes = [ctypes.c_char_p]
+    lib.lsl_set_config_filename.restype = None
+    lib.lsl_set_config_content.argtypes = [ctypes.c_char_p]
+    lib.lsl_set_config_content.restype = None
+except Exception:
+    # Available in liblsl >= 1.17.7; older versions don't expose these.
+    pass
 
 
 # int64 support on windows and 32bit OSes isn't there yet

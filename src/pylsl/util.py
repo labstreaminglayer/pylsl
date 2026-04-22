@@ -60,6 +60,36 @@ def library_info():
     return lib.lsl_library_info().decode("utf-8")
 
 
+def set_config_filename(filename: str) -> None:
+    """Set the path of the configuration file to be used by liblsl.
+
+    Must be called before any other LSL function; the configuration is loaded
+    lazily on first use, so calling this afterwards has no effect.
+    """
+    if not hasattr(lib, "lsl_set_config_filename"):
+        raise NotImplementedError(
+            "lsl_set_config_filename is not available in your liblsl version "
+            "(requires liblsl >= 1.17.7)."
+        )
+    lib.lsl_set_config_filename(filename.encode("utf-8"))
+
+
+def set_config_content(content: str) -> None:
+    """Set the configuration content (as an INI string) to be used by liblsl.
+
+    Must be called before any other LSL function; the configuration is loaded
+    lazily on first use, so calling this afterwards has no effect. When set,
+    this content takes precedence over any configuration file. The content is
+    discarded after liblsl has initialized.
+    """
+    if not hasattr(lib, "lsl_set_config_content"):
+        raise NotImplementedError(
+            "lsl_set_config_content is not available in your liblsl version "
+            "(requires liblsl >= 1.17.7)."
+        )
+    lib.lsl_set_config_content(content.encode("utf-8"))
+
+
 def local_clock():
     """Obtain a local system time stamp in seconds.
 
