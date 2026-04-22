@@ -117,9 +117,7 @@ def find_liblsl_libraries(verbose=False):
     env_libdir = os.path.join(sys.prefix, "lib")
     for libprefix in ["", "lib"]:
         for debugsuffix in ["", "-debug"]:
-            path = os.path.join(
-                env_libdir, libprefix + "lsl" + debugsuffix + libsuffix
-            )
+            path = os.path.join(env_libdir, libprefix + "lsl" + debugsuffix + libsuffix)
             if os.path.isfile(path):
                 yield path
 
