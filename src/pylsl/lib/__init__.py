@@ -136,6 +136,32 @@ def find_liblsl_libraries(verbose=False):
             if os.path.isfile(path):
                 yield path
 
+    # The active Python env's lib directory (e.g. `conda install -c conda-forge
+    # liblsl` lands here). ctypes.util.find_library doesn't search here.
+    env_libdir = os.path.join(sys.prefix, "lib")
+    for libprefix in ["", "lib"]:
+        for debugsuffix in ["", "-debug"]:
+            path = os.path.join(
+                env_libdir, libprefix + "lsl" + debugsuffix + libsuffix
+            )
+            if os.path.isfile(path):
+                yield path
+
+    # macOS Frameworks (e.g. installed via `brew install labstreaminglayer/tap/lsl`)
+    # aren't found by ctypes.util.find_library, but the framework binary is a
+    # regular dylib that ctypes.CDLL can load directly.
+    if os_name == "Darwin":
+        framework_roots = [
+            "/opt/homebrew/Frameworks",  # Apple Silicon homebrew
+            "/usr/local/Frameworks",  # Intel homebrew
+            os.path.expanduser("~/Library/Frameworks"),
+            "/Library/Frameworks",
+        ]
+        for root in framework_roots:
+            path = os.path.join(root, "lsl.framework", "lsl")
+            if os.path.isfile(path):
+                yield path
+
 
 __dload_msg = (
     "You can install the LSL library with conda: `conda install -c conda-forge liblsl`"
