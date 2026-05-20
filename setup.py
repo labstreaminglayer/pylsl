@@ -15,8 +15,7 @@ try:
     class bdist_wheel(_bdist_wheel):
         def finalize_options(self):
             super().finalize_options()
-            # Platform-specific wheel since we bundle native libraries
-            self.root_is_pure = False
+            self.root_is_pure = not sys.platform.startswith("win")
 
         def get_tag(self):
             python, abi, plat = _bdist_wheel.get_tag(self)
