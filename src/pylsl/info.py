@@ -319,10 +319,10 @@ class StreamInfo:
 
     def _get_channel_info(self, name) -> typing.Optional[list[typing.Optional[str]]]:
         """Get the 'channel/name' element in the XML tree."""
-        if self.desc().child("channels").empty():
+        channels = self.desc().child("channels")
+        if channels.empty():
             return None
         ch_infos = list()
-        channels = self.desc().child("channels")
         ch = channels.child("channel")
         while not ch.empty():
             ch_info = ch.child(name).first_child().value()
