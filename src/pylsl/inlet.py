@@ -199,9 +199,10 @@ class StreamInlet:
         )
         handle_error(errcode)
         if timestamp:
-            sample = [v for v in self.sample]
             if self.channel_format == cf_string:
-                sample = [v.decode("utf-8") for v in sample]
+                sample = [v.decode("utf-8") for v in self.sample]
+            else:
+                sample = list(self.sample)
             if assign_to is not None:
                 assign_to[:] = sample
             return sample, timestamp
