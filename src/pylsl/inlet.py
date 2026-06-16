@@ -265,9 +265,6 @@ class StreamInlet:
         # future, e.g., a numpy array)
         num_samples = num_elements // num_channels
         if dest_obj is None:
-            # Convert the whole ctypes buffer to a Python list in a single
-            # bulk slice (far faster than indexing the array element by
-            # element), then split it into one list per sample.
             flat = data_buff[:num_elements]
             samples = [
                 flat[s * num_channels : (s + 1) * num_channels]
