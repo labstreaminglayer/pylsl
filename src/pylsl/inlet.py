@@ -263,18 +263,19 @@ class StreamInlet:
         handle_error(errcode)
         # return results (note: could offer a more efficient format in the
         # future, e.g., a numpy array)
-        num_samples = num_elements / num_channels
+        num_samples = num_elements // num_channels
         if dest_obj is None:
+            flat = data_buff[:num_elements]
             samples = [
-                [data_buff[s * num_channels + c] for c in range(num_channels)]
-                for s in range(int(num_samples))
+                flat[s * num_channels : (s + 1) * num_channels]
+                for s in range(num_samples)
             ]
             if self.channel_format == cf_string:
                 samples = [[v.decode("utf-8") for v in s] for s in samples]
                 free_char_p_array_memory(data_buff, max_values)
         else:
             samples = None
-        timestamps = [ts_buff[s] for s in range(int(num_samples))]
+        timestamps = ts_buff[:num_samples]
         return samples, timestamps
 
     def samples_available(self):
