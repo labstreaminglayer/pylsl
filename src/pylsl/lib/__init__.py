@@ -191,6 +191,13 @@ lib.lsl_get_hostname.restype = ctypes.c_char_p
 lib.lsl_get_desc.restype = ctypes.c_void_p
 lib.lsl_get_xml.restype = ctypes.c_char_p
 lib.lsl_create_outlet.restype = ctypes.c_void_p
+lib.lsl_create_outlet_ex.restype = ctypes.c_void_p
+lib.lsl_create_outlet_ex.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+]
 lib.lsl_create_inlet.restype = ctypes.c_void_p
 lib.lsl_get_fullinfo.restype = ctypes.c_void_p
 lib.lsl_get_info.restype = ctypes.c_void_p
@@ -298,6 +305,13 @@ try:
     lib.lsl_set_config_content.restype = None
 except Exception:
     # Available in liblsl >= 1.17.7; older versions don't expose these.
+    pass
+# noinspection PyBroadException
+try:
+    lib.lsl_reset_uid.restype = ctypes.c_char_p
+    lib.lsl_reset_uid.argtypes = [ctypes.c_void_p]
+except Exception:
+    # Available in liblsl >= 1.18.0; older versions don't expose this.
     pass
 
 
