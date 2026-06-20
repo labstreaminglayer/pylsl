@@ -20,7 +20,13 @@ class StreamOutlet:
 
     """
 
-    def __init__(self, info: StreamInfo, chunk_size: int = 0, max_buffered: int = 360):
+    def __init__(
+        self,
+        info: StreamInfo,
+        chunk_size: int = 0,
+        max_buffered: int = 360,
+        transport_flags: int = 0,
+    ):
         """Establish a new stream outlet. This makes the stream discoverable.
 
         Keyword arguments:
@@ -36,6 +42,12 @@ class StreamOutlet:
                         Note that, for high-bandwidth data, you will want to
                         use a lower value here to avoid running out of RAM.
                         (default 360)
+        transport_flags -- Optional bitwise-OR combination of transport option
+                        flags (the transp_* constants). For example,
+                        transp_sync_blocking enables synchronous (zero-copy)
+                        pushes for high-bandwidth streams. The default, 0
+                        (transp_default), uses the standard asynchronous
+                        transport. (default 0)
 
         """
 
@@ -71,7 +83,12 @@ class StreamOutlet:
             new_desc_parent.remove_child(info.desc())
             new_desc_parent.append_copy(old_desc)
         """
-        self.obj = lib.lsl_create_outlet(info.obj, chunk_size, max_buffered)
+        if transport_flags:
+            self.obj = lib.lsl_create_outlet_ex(
+                info.obj, chunk_size, max_buffered, transport_flags
+            )
+        else:
+            self.obj = lib.lsl_create_outlet(info.obj, chunk_size, max_buffered)
         self.obj = ctypes.c_void_p(self.obj)
         if not self.obj:
             raise RuntimeError("could not create stream outlet.")

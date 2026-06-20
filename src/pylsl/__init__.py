@@ -30,6 +30,10 @@ from .util import proc_dejitter as proc_dejitter
 from .util import proc_monotonize as proc_monotonize
 from .util import proc_threadsafe as proc_threadsafe
 from .util import proc_ALL as proc_ALL
+from .util import transp_default as transp_default
+from .util import transp_bufsize_samples as transp_bufsize_samples
+from .util import transp_bufsize_thousandths as transp_bufsize_thousandths
+from .util import transp_sync_blocking as transp_sync_blocking
 from .util import protocol_version as protocol_version
 from .util import library_version as library_version
 from .util import library_info as library_info
