@@ -37,12 +37,23 @@ _destroy_string_array = getattr(lib, "lsl_destroy_string_array", None)
 
 
 def _bytes_from_char_p_array(char_p_array, lengths, num_elements):
-    """Copy num_elements length-delimited C strings out as bytes objects."""
+    """Copy num_elements length-delimited C strings out as bytes objects.
+
+    Slicing the c_char_p array is a single C-level loop but stops each value
+    at its first NUL. Compare against the lengths liblsl reported and re-read
+    only the values that were cut short; for ordinary strings that is none.
+    """
     if num_elements == 0:
         return []
-    ptrs = np.frombuffer(char_p_array, dtype=np.uintp, count=num_elements).tolist()
-    lens = np.frombuffer(lengths, dtype=np.uint32, count=num_elements).tolist()
-    return [ctypes.string_at(p, n) if p else b"" for p, n in zip(ptrs, lens)]
+    out = char_p_array[:num_elements]
+    lens = np.frombuffer(lengths, dtype=np.uint32, count=num_elements)
+    got = np.fromiter(map(len, out), dtype=np.uint32, count=num_elements)
+    short = np.flatnonzero(got != lens)
+    if len(short):
+        ptrs = np.frombuffer(char_p_array, dtype=np.uintp, count=num_elements)
+        for i in short.tolist():
+            out[i] = ctypes.string_at(int(ptrs[i]), int(lens[i]))
+    return out
 
 
 class StreamInlet:
