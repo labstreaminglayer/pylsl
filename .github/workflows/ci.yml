@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.18.0.b3"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.18.0.b4"
   LSL_RELEASE: "1.18.0"
 
 jobs:
