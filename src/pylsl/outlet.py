@@ -15,6 +15,11 @@ from .util import handle_error
 from .info import StreamInfo
 
 
+def _as_bytes(v):
+    """str -> UTF-8 bytes; bytes-like -> bytes (no copy for bytes)."""
+    return v.encode("utf-8") if isinstance(v, str) else bytes(v)
+
+
 class StreamOutlet:
     """A stream outlet.
 
@@ -102,6 +107,13 @@ class StreamOutlet:
         self.do_push_chunk_n = fmt2push_chunk_n[self.channel_format]
         self.value_type = fmt2type[self.channel_format]
         self.np_dtype = fmt2npdtype[self.channel_format]
+        if self.channel_format == cf_string:
+            # Always push strings length-delimited: values may then be str
+            # or raw bytes, and NUL bytes survive. LSL's cf_string is a
+            # variable-length blob format; "string" is historical.
+            self.do_push_sample = lib.lsl_push_sample_buftp
+            self.do_push_chunk = lib.lsl_push_chunk_buftp
+            self.do_push_chunk_n = lib.lsl_push_chunk_buftnp
         self.sample_type = self.value_type * self.channel_count
 
     def __del__(self):
@@ -136,7 +148,21 @@ class StreamOutlet:
         """
         if len(x) == self.channel_count:
             if self.channel_format == cf_string:
-                x = [v.encode("utf-8") for v in x]
+                # str is UTF-8 encoded; bytes-like is sent as is. The bytes
+                # objects own the memory the char* array points to, so keep
+                # them alive until the call returns.
+                x = [_as_bytes(v) for v in x]
+                lengths = (ctypes.c_uint32 * len(x))(*map(len, x))
+                handle_error(
+                    self.do_push_sample(
+                        self.obj,
+                        self.sample_type(*x),
+                        lengths,
+                        ctypes.c_double(timestamp),
+                        ctypes.c_int(pushthrough),
+                    )
+                )
+                return
             handle_error(
                 self.do_push_sample(
                     self.obj,
@@ -225,21 +251,23 @@ class StreamOutlet:
                     + str(self.channel_count)
                     + ")."
                 )
-            # One NUL-separated buffer plus a vectorised pointer table is far
-            # cheaper than constructing a ctypes c_char_p array element by
-            # element. `buf` and `ptrs` must outlive the call.
-            encoded = [v.encode("utf-8") for v in x]
+            # One NUL-separated buffer plus a vectorised pointer/length table
+            # is far cheaper than constructing a ctypes c_char_p array element
+            # by element. `buf`, `ptrs` and `lengths` must outlive the call.
+            encoded = [_as_bytes(v) for v in x]
             buf = ctypes.create_string_buffer(b"\0".join(encoded) + b"\0")
             lengths = np.fromiter(map(len, encoded), dtype=np.uintp, count=n_values)
             ptrs = np.empty(n_values, dtype=np.uintp)
             ptrs[0] = 0
             np.cumsum(lengths[:-1] + 1, out=ptrs[1:])
             ptrs += ctypes.addressof(buf)
+            lengths = lengths.astype(np.uint32)
             handle_error(
                 liblsl_push_chunk_func(
                     self.obj,
                     ctypes.c_void_p(ptrs.ctypes.data),
-                    ctypes.c_long(n_values),
+                    ctypes.c_void_p(lengths.ctypes.data),
+                    ctypes.c_ulong(n_values),
                     timestamp_c,
                     ctypes.c_int(pushthrough),
                 )

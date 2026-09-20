@@ -36,6 +36,15 @@ def free_char_p_array_memory(char_p_array, num_elements):
 _destroy_string_array = getattr(lib, "lsl_destroy_string_array", None)
 
 
+def _bytes_from_char_p_array(char_p_array, lengths, num_elements):
+    """Copy num_elements length-delimited C strings out as bytes objects."""
+    if num_elements == 0:
+        return []
+    ptrs = np.frombuffer(char_p_array, dtype=np.uintp, count=num_elements).tolist()
+    lens = np.frombuffer(lengths, dtype=np.uint32, count=num_elements).tolist()
+    return [ctypes.string_at(p, n) if p else b"" for p, n in zip(ptrs, lens)]
+
+
 class StreamInlet:
     """A stream inlet.
 
@@ -86,6 +95,12 @@ class StreamInlet:
                    flags `proc_none`, `proc_clocksync`, `proc_dejitter`, `proc_monotonize`,
                    or `proc_threadsafe`. Can also be a logical OR combination of multiple
                    flags. Use `proc_ALL` for all flags. (default proc_none).
+        as_numpy -- Default for how pull_sample and pull_chunk return data.
+                    False: Python-native lists (str for string streams).
+                    True: numpy arrays with no Python-level conversion; for
+                    string streams that is a dtype=object array of the raw
+                    bytes of each value. pull_chunk can override per call.
+                    (default False)
         """
         if type(info) is list:
             raise TypeError("description needs to be of type StreamInfo, got a list.")
@@ -105,6 +120,11 @@ class StreamInlet:
         self.sample_type = self.value_type * self.channel_count
         self.sample = self.sample_type()
         self.buffers = {}
+        if self.channel_format == cf_string:
+            # Always pull strings length-delimited so NUL bytes survive.
+            self.do_pull_sample = lib.lsl_pull_sample_buf
+            self.do_pull_chunk = lib.lsl_pull_chunk_buf
+            self.sample_lengths = (ctypes.c_uint32 * self.channel_count)()
 
     def __del__(self):
         """Destructor. The inlet will automatically disconnect if destroyed."""
@@ -208,6 +228,10 @@ class StreamInlet:
         time stamp to the local clock, add the value returned by
         .time_correction() to it.
 
+        If the inlet was created with as_numpy=True, sample is instead a 1-D
+        numpy array: the stream's dtype for numeric streams, or dtype=object
+        holding the raw, undecoded bytes of each channel for string streams.
+
         Throws a LostError if the stream source has been lost. Note that, if
         the timeout expires, no TimeoutError is thrown (because this case is
         not considered an error).
@@ -222,17 +246,39 @@ class StreamInlet:
             assign_to = None
 
         errcode = ctypes.c_int()
-        timestamp = self.do_pull_sample(
-            self.obj,
-            ctypes.byref(self.sample),
-            self.channel_count,
-            ctypes.c_double(timeout),
-            ctypes.byref(errcode),
-        )
+        if self.channel_format == cf_string:
+            timestamp = self.do_pull_sample(
+                self.obj,
+                ctypes.byref(self.sample),
+                ctypes.byref(self.sample_lengths),
+                self.channel_count,
+                ctypes.c_double(timeout),
+                ctypes.byref(errcode),
+            )
+        else:
+            timestamp = self.do_pull_sample(
+                self.obj,
+                ctypes.byref(self.sample),
+                self.channel_count,
+                ctypes.c_double(timeout),
+                ctypes.byref(errcode),
+            )
         handle_error(errcode)
         if timestamp:
             if self.channel_format == cf_string:
-                sample = [v.decode("utf-8") for v in self.sample]
+                raw = _bytes_from_char_p_array(
+                    self.sample, self.sample_lengths, self.channel_count
+                )
+                # liblsl mallocs each string; it is ours to free.
+                free_char_p_array_memory(self.sample, self.channel_count)
+                ctypes.memset(self.sample, 0, ctypes.sizeof(self.sample))
+                if self.as_numpy:
+                    sample = np.empty(self.channel_count, dtype=object)
+                    sample[:] = raw
+                else:
+                    sample = [v.decode("utf-8") for v in raw]
+            elif self.as_numpy:
+                sample = np.frombuffer(self.sample, dtype=self.np_dtype).copy()
             else:
                 sample = list(self.sample)
             if assign_to is not None:
@@ -273,14 +319,16 @@ class StreamInlet:
                        preserves the original behavior, which waits until
                        max_samples is reached or the timeout expires.
 
-        as_numpy -- What comes back. If True, numeric streams return
-                    `samples` as a 2-D numpy array of shape
-                    (n_samples, n_channels) in the stream's dtype and
-                    `timestamps` as a 1-D float64 array, skipping the
-                    conversion to Python lists (much faster for wide
-                    streams). If False, both are lists. String streams
-                    always return lists. None (default) uses the inlet's
-                    `as_numpy` setting, which defaults to False.
+        as_numpy -- What comes back. If False, Python-native values:
+                    numeric streams give lists of numbers, string streams
+                    give lists of decoded str. If True, no Python-level
+                    conversion: numeric streams give a 2-D array of shape
+                    (n_samples, n_channels) in the stream's dtype (much
+                    faster for wide streams); string streams give a 2-D
+                    dtype=object array whose elements are the raw bytes of
+                    each value, exactly as sent, undecoded. `timestamps` is
+                    a 1-D float64 array either way. None (default) uses the
+                    inlet's `as_numpy` setting, which defaults to False.
 
         The two keywords are independent: dest_obj chooses whose memory the
         data is written to, as_numpy chooses the type of the return values.
@@ -288,8 +336,9 @@ class StreamInlet:
         Returns a tuple (samples, timestamps):
           - default: samples is a list of samples (each a list of values),
             timestamps is a list of floats.
-          - as_numpy=True: samples is an (n_samples, n_channels) array,
-            timestamps a float64 array.
+          - as_numpy=True: samples is an (n_samples, n_channels) array
+            (dtype=object of bytes for string streams), timestamps a float64
+            array.
           - dest_obj given: samples is None, or with as_numpy=True a view of
             dest_obj covering the first n_samples samples.
 
@@ -298,7 +347,7 @@ class StreamInlet:
         """
         if as_numpy is None:
             as_numpy = self.as_numpy
-        as_numpy = bool(as_numpy) and self.np_dtype is not None
+        as_numpy = bool(as_numpy)
         if min_samples is None:
             return self._pull_chunk_once(timeout, max_samples, dest_obj, as_numpy)
 
@@ -350,17 +399,19 @@ class StreamInlet:
         errcode = ctypes.c_int()
 
         if self.np_dtype is None:
-            # String streams: liblsl fills an array of char* which we decode
-            # and then free. Reuse a buffer per max_samples.
+            # String streams: liblsl fills an array of char* (plus lengths)
+            # which we copy out and then free. Reuse a buffer per max_samples.
             if max_samples not in self.buffers:
                 self.buffers[max_samples] = (
                     (self.value_type * max_values)(),
+                    (ctypes.c_uint32 * max_values)(),
                     (ctypes.c_double * max_samples)(),
                 )
-            data_buff, ts_buff = self.buffers[max_samples]
+            data_buff, len_buff, ts_buff = self.buffers[max_samples]
             num_elements = self.do_pull_chunk(
                 self.obj,
                 ctypes.byref(data_buff),
+                ctypes.byref(len_buff),
                 ctypes.byref(ts_buff),
                 ctypes.c_size_t(max_values),
                 ctypes.c_size_t(max_samples),
@@ -369,13 +420,19 @@ class StreamInlet:
             )
             handle_error(errcode)
             num_samples = num_elements // num_channels
-            flat = [v.decode("utf-8") for v in data_buff[:num_elements]]
+            raw = _bytes_from_char_p_array(data_buff, len_buff, num_elements)
             # liblsl < 1.18.0.b4 mallocs a string into *every* slot of the
             # buffer, not just the num_elements it filled; newer versions
             # NULL the rest. Free all slots (NULLs are skipped) and then clear
             # them so a stale pointer can never be freed twice.
             free_char_p_array_memory(data_buff, max_values)
             ctypes.memset(data_buff, 0, ctypes.sizeof(data_buff))
+            if as_numpy:
+                samples = np.empty(num_elements, dtype=object)
+                samples[:] = raw
+                samples = samples.reshape(num_samples, num_channels)
+                return samples, np.frombuffer(ts_buff, np.float64, num_samples).copy()
+            flat = [v.decode("utf-8") for v in raw]
             samples = [
                 flat[s * num_channels : (s + 1) * num_channels]
                 for s in range(num_samples)
