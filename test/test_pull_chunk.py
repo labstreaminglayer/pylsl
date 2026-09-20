@@ -28,6 +28,16 @@ CASES = {
 }
 
 
+def _bare_inlet(channel_count=1):
+    """A StreamInlet with no liblsl object, for exercising pure-Python logic."""
+    inlet = object.__new__(pylsl.StreamInlet)
+    inlet.as_numpy = False
+    inlet.np_dtype = np.float32
+    inlet.value_type = ctypes.c_float
+    inlet.channel_count = channel_count
+    return inlet
+
+
 @pytest.mark.parametrize("channel_format,samples", CASES.values(), ids=CASES.keys())
 def test_pull_chunk_roundtrip(channel_format: int, samples: list):
     n_samples = len(samples)
@@ -105,14 +115,14 @@ def test_pull_chunk_min_samples_returns_available_data_without_waiting_for_max()
 
 
 def test_pull_chunk_min_samples_drains_without_blocking(monkeypatch):
-    inlet = object.__new__(pylsl.StreamInlet)
+    inlet = _bare_inlet()
     calls = []
     responses = [
         ([[1.0], [2.0]], [1.0, 2.0]),
         ([[3.0], [4.0]], [3.0, 4.0]),
     ]
 
-    def pull_once(timeout, max_samples, dest_obj):
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
         calls.append((timeout, max_samples, dest_obj))
         return responses.pop(0)
 
@@ -126,10 +136,10 @@ def test_pull_chunk_min_samples_drains_without_blocking(monkeypatch):
 
 
 def test_pull_chunk_min_samples_timeout_does_not_drain(monkeypatch):
-    inlet = object.__new__(pylsl.StreamInlet)
+    inlet = _bare_inlet()
     calls = []
 
-    def pull_once(timeout, max_samples, dest_obj):
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
         calls.append((timeout, max_samples, dest_obj))
         return [], []
 
@@ -143,12 +153,12 @@ def test_pull_chunk_min_samples_timeout_does_not_drain(monkeypatch):
 
 
 def test_pull_chunk_min_samples_appends_into_dest_obj(monkeypatch):
-    inlet = object.__new__(pylsl.StreamInlet)
+    inlet = _bare_inlet()
     inlet.value_type = ctypes.c_float
     inlet.channel_count = 2
     calls = []
 
-    def pull_once(timeout, max_samples, dest_obj):
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
         calls.append((timeout, max_samples, dest_obj))
         view = np.frombuffer(dest_obj, dtype=np.float32).reshape(-1, 2)
         if timeout:
@@ -180,17 +190,17 @@ def test_pull_chunk_min_samples_appends_into_dest_obj(monkeypatch):
 
 @pytest.mark.parametrize("min_samples", [0, 5])
 def test_pull_chunk_rejects_invalid_min_samples(min_samples):
-    inlet = object.__new__(pylsl.StreamInlet)
+    inlet = _bare_inlet()
 
     with pytest.raises(ValueError, match="between 1 and max_samples"):
         inlet.pull_chunk(max_samples=4, min_samples=min_samples)
 
 
 def test_pull_chunk_default_retains_single_call(monkeypatch):
-    inlet = object.__new__(pylsl.StreamInlet)
+    inlet = _bare_inlet()
     calls = []
 
-    def pull_once(timeout, max_samples, dest_obj):
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
         calls.append((timeout, max_samples, dest_obj))
         return [[1.0]], [1.0]
 
@@ -200,3 +210,241 @@ def test_pull_chunk_default_retains_single_call(monkeypatch):
 
     assert result == ([[1.0]], [1.0])
     assert calls == [(0.25, 7, None)]
+
+
+def _open_pair(source_id, channel_count, channel_format, **inlet_kw):
+    info = pylsl.StreamInfo(
+        name=source_id,
+        type="test",
+        channel_count=channel_count,
+        nominal_srate=0,
+        channel_format=channel_format,
+        source_id=source_id,
+    )
+    outlet = pylsl.StreamOutlet(info)
+    streams = pylsl.resolve_byprop("source_id", source_id, timeout=2)
+    assert streams, "outlet was not discovered"
+    inlet = pylsl.StreamInlet(streams[0], **inlet_kw)
+    inlet.open_stream(timeout=2)
+    time.sleep(0.5)
+    return outlet, inlet
+
+
+def _collect(inlet, n_samples, **pull_kw):
+    chunks, stamps = [], []
+    got = 0
+    deadline = time.time() + 5
+    while got < n_samples and time.time() < deadline:
+        c, t = inlet.pull_chunk(timeout=1.0, **pull_kw)
+        if len(t):
+            chunks.append(c)
+            stamps.append(t)
+            got += len(t)
+    return chunks, stamps
+
+
+def test_pull_chunk_as_numpy_returns_arrays_in_stream_dtype():
+    data = np.arange(12, dtype=np.float64).reshape(4, 3) * 0.5
+    outlet, inlet = _open_pair("test_as_numpy_id", 3, pylsl.cf_float32)
+    outlet.push_chunk(data)
+    chunks, stamps = _collect(inlet, 4, as_numpy=True)
+
+    assert all(isinstance(c, np.ndarray) for c in chunks)
+    assert all(isinstance(t, np.ndarray) for t in stamps)
+    got = np.concatenate(chunks)
+    assert got.dtype == np.float32
+    assert got.shape == (4, 3)
+    np.testing.assert_array_equal(got, data.astype(np.float32))
+    ts = np.concatenate(stamps)
+    assert ts.dtype == np.float64 and ts.shape == (4,)
+    assert np.all(np.diff(ts) >= 0)
+
+
+def test_inlet_as_numpy_default_applies_and_can_be_overridden():
+    data = [[1.0, 2.0], [3.0, 4.0]]
+    outlet, inlet = _open_pair(
+        "test_as_numpy_default_id", 2, pylsl.cf_double64, as_numpy=True
+    )
+    outlet.push_chunk(data)
+    chunks, stamps = _collect(inlet, 2)
+    assert all(isinstance(c, np.ndarray) for c in chunks)
+    np.testing.assert_array_equal(np.concatenate(chunks), np.array(data))
+
+    outlet.push_chunk(data)
+    chunks, stamps = _collect(inlet, 2, as_numpy=False)
+    assert all(isinstance(c, list) for c in chunks)
+    assert all(isinstance(t, list) for t in stamps)
+    assert [row for c in chunks for row in c] == data
+
+
+def test_pull_chunk_as_numpy_ignored_for_string_streams():
+    data = [["a", "b"], ["c", "d"]]
+    outlet, inlet = _open_pair("test_as_numpy_string_id", 2, pylsl.cf_string)
+    outlet.push_chunk(data)
+    chunks, stamps = _collect(inlet, 2, as_numpy=True)
+    assert all(isinstance(c, list) for c in chunks)
+    assert [row for c in chunks for row in c] == data
+
+
+def test_pull_chunk_as_numpy_result_survives_next_pull():
+    outlet, inlet = _open_pair("test_as_numpy_alias_id", 1, pylsl.cf_float32)
+    outlet.push_chunk([[1.0], [2.0]])
+    first, _ = _collect(inlet, 2, as_numpy=True)
+    first = np.concatenate(first)
+    snapshot = first.copy()
+    outlet.push_chunk([[9.0], [9.0]])
+    _collect(inlet, 2, as_numpy=True)
+    np.testing.assert_array_equal(first, snapshot)
+
+
+def test_pull_chunk_min_samples_concatenates_numpy_results():
+    inlet = _bare_inlet()
+    responses = [
+        (np.array([[1.0], [2.0]], np.float32), np.array([1.0, 2.0])),
+        (np.array([[3.0]], np.float32), np.array([3.0])),
+    ]
+
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
+        assert as_numpy is True
+        return responses.pop(0)
+
+    inlet._pull_chunk_once = pull_once
+    samples, ts = inlet.pull_chunk(
+        timeout=0.5, max_samples=5, min_samples=2, as_numpy=True
+    )
+    np.testing.assert_array_equal(samples, [[1.0], [2.0], [3.0]])
+    np.testing.assert_array_equal(ts, [1.0, 2.0, 3.0])
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float64),  # wrong dtype
+        np.asfortranarray(np.array([[1.0, 2.0], [3.0, 4.0]], np.float32)),  # F order
+        [[1.0, 2.0], [3.0, 4.0]],  # nested list
+        [1.0, 2.0, 3.0, 4.0],  # flat multiplexed list
+        np.array([[1.0, 2.0], [3.0, 4.0]], np.float32)[:, ::1],  # fine view
+    ],
+    ids=["float64", "fortran", "nested", "flat", "view"],
+)
+def test_push_chunk_numeric_inputs_are_converted(payload):
+    source_id = "test_push_conv_" + str(abs(hash(str(payload))) % 10**6)
+    outlet, inlet = _open_pair(source_id, 2, pylsl.cf_float32)
+    outlet.push_chunk(payload)
+    chunks, _ = _collect(inlet, 2, as_numpy=True)
+    np.testing.assert_array_equal(
+        np.concatenate(chunks), np.array([[1.0, 2.0], [3.0, 4.0]], np.float32)
+    )
+
+
+def test_push_chunk_rejects_wrong_channel_count():
+    outlet = pylsl.StreamOutlet(
+        pylsl.StreamInfo("test_push_bad", "test", 2, 0, pylsl.cf_float32, "tpb")
+    )
+    with pytest.raises(ValueError):
+        outlet.push_chunk([[1.0, 2.0, 3.0]])
+    with pytest.raises(ValueError):
+        outlet.push_chunk([1.0, 2.0, 3.0])
+    outlet.push_chunk([])  # empty is a no-op, not an error
+
+
+def test_pull_chunk_dest_obj_with_as_numpy_returns_trimmed_view():
+    data = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], np.float32)
+    outlet, inlet = _open_pair("test_dest_view_id", 2, pylsl.cf_float32)
+    buf = np.zeros((10, 2), np.float32)
+    outlet.push_chunk(data)
+    got = []
+    deadline = time.time() + 5
+    while sum(len(g) for g in got) < 3 and time.time() < deadline:
+        samples, ts = inlet.pull_chunk(
+            timeout=1.0, max_samples=10, dest_obj=buf, as_numpy=True
+        )
+        assert isinstance(ts, np.ndarray)
+        assert isinstance(samples, np.ndarray)
+        assert samples.shape == (len(ts), 2)
+        assert np.shares_memory(samples, buf)
+        if len(ts):
+            got.append(samples.copy())
+    np.testing.assert_array_equal(np.concatenate(got), data)
+
+    # Without as_numpy the legacy contract holds: None and a list.
+    outlet.push_chunk(data[:1])
+    deadline = time.time() + 5
+    while time.time() < deadline:
+        samples, ts = inlet.pull_chunk(timeout=1.0, max_samples=10, dest_obj=buf)
+        assert samples is None and isinstance(ts, list)
+        if ts:
+            break
+    np.testing.assert_array_equal(buf[:1], data[:1])
+
+
+def test_pull_chunk_min_samples_dest_obj_as_numpy_returns_single_view():
+    inlet = _bare_inlet(channel_count=1)
+    buf = np.zeros(5, np.float32)
+
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
+        # Emulate liblsl writing 2 then 1 samples into the supplied memory.
+        n = 2 if timeout else 1
+        view = np.frombuffer(dest_obj, dtype=np.float32, count=n)
+        view[:] = [10.0, 20.0][:n] if timeout else [30.0]
+        return inlet._dest_view(dest_obj, n), np.arange(n, dtype=np.float64)
+
+    inlet._pull_chunk_once = pull_once
+    samples, ts = inlet.pull_chunk(
+        timeout=0.5, max_samples=5, min_samples=2, dest_obj=buf, as_numpy=True
+    )
+    assert np.shares_memory(samples, buf)
+    np.testing.assert_array_equal(samples.ravel(), [10.0, 20.0, 30.0])
+    assert len(ts) == 3
+
+
+def test_push_chunk_string_edge_cases_roundtrip():
+    # Empty strings, multi-byte UTF-8, long values, and a flat (multiplexed)
+    # input all have to survive the joined-buffer pointer table.
+    rows = [["", "é"], ["x" * 5000, ""], ["日本語", "b"]]
+    flat = [v for row in rows for v in row]
+    outlet, inlet = _open_pair("test_string_edges_id", 2, pylsl.cf_string)
+    outlet.push_chunk(rows)
+    chunks, _ = _collect(inlet, 3)
+    assert [row for c in chunks for row in c] == rows
+    outlet.push_chunk(flat)
+    chunks, _ = _collect(inlet, 3)
+    assert [row for c in chunks for row in c] == rows
+    with pytest.raises(ValueError):
+        outlet.push_chunk(["a", "b", "c"])
+
+
+def test_string_pull_frees_every_buffer_slot(monkeypatch):
+    # Older liblsl allocates a string into every slot of the buffer it is
+    # handed, newer liblsl NULLs the unfilled ones. pylsl must always hand
+    # the whole buffer (max_samples*channels entries) to the free routine
+    # and must never re-free a stale pointer on the next pull.
+    freed = []
+    monkeypatch.setattr(pylsl.inlet, "_destroy_string_array", None)
+    monkeypatch.setattr(pylsl.inlet.lib, "lsl_destroy_string", freed.append)
+    outlet, inlet = _open_pair("test_string_free_id", 2, pylsl.cf_string)
+    outlet.push_chunk([["a", "b"]])
+    _collect(inlet, 1, max_samples=8)
+    assert len(freed) >= 2
+    assert all(p != 0 for p in freed)
+    # Every slot is inspected: with a liblsl that NULLs unfilled slots the
+    # count per pull is the filled count; with an older one it is 16.
+    assert len(freed) % 2 == 0
+    freed.clear()
+    # An empty pull must not free anything from the previous pull again.
+    inlet.pull_chunk(timeout=0.0, max_samples=8)
+    assert len(freed) in (0, 16)
+
+
+def test_string_pull_uses_bulk_free_when_available(monkeypatch):
+    calls = []
+
+    def fake_bulk(ptr_ref, count):
+        calls.append(count)
+
+    monkeypatch.setattr(pylsl.inlet, "_destroy_string_array", fake_bulk)
+    outlet, inlet = _open_pair("test_string_bulk_free_id", 2, pylsl.cf_string)
+    outlet.push_chunk([["a", "b"]])
+    chunks, _ = _collect(inlet, 1, max_samples=8)
+    assert [row for c in chunks for row in c] == [["a", "b"]]
+    assert calls and all(c == 16 for c in calls)

@@ -280,6 +280,13 @@ lib.lsl_remove_child.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 lib.lsl_destroy_string.argtypes = [ctypes.c_void_p]
 # noinspection PyBroadException
 try:
+    lib.lsl_destroy_string_array.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+    lib.lsl_destroy_string_array.restype = None
+except Exception:
+    # Available in liblsl >= 1.18.0 (b4); older versions don't expose this.
+    pass
+# noinspection PyBroadException
+try:
     lib.lsl_pull_chunk_f.restype = ctypes.c_long
     lib.lsl_pull_chunk_d.restype = ctypes.c_long
     lib.lsl_pull_chunk_l.restype = ctypes.c_long
@@ -362,6 +369,22 @@ fmt2type = [
     ctypes.c_byte,
     ctypes.c_longlong,
 ]
+# numpy dtypes matching fmt2type; None for string (no fixed-width dtype).
+try:
+    import numpy as _np
+
+    fmt2npdtype = [
+        None,
+        _np.float32,
+        _np.float64,
+        None,
+        _np.int32,
+        _np.int16,
+        _np.int8,
+        _np.int64,
+    ]
+except ImportError:  # pragma: no cover - numpy is a hard dependency
+    fmt2npdtype = [None] * len(fmt2string)
 fmt2push_sample = [
     [],
     lib.lsl_push_sample_ftp,

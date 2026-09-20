@@ -1,11 +1,14 @@
 import ctypes
 
+import numpy as np
+
 from .lib import (
     lib,
     fmt2push_sample,
     fmt2push_chunk,
     fmt2push_chunk_n,
     fmt2type,
+    fmt2npdtype,
     cf_string,
 )
 from .util import handle_error
@@ -98,6 +101,7 @@ class StreamOutlet:
         self.do_push_chunk = fmt2push_chunk[self.channel_format]
         self.do_push_chunk_n = fmt2push_chunk_n[self.channel_format]
         self.value_type = fmt2type[self.channel_format]
+        self.np_dtype = fmt2npdtype[self.channel_format]
         self.sample_type = self.value_type * self.channel_count
 
     def __del__(self):
@@ -184,44 +188,62 @@ class StreamOutlet:
             except TypeError:
                 raise TypeError("timestamp must be a float or an iterable of floats")
 
-        try:
-            n_values = self.channel_count * len(x)
-            data_buff = (self.value_type * n_values).from_buffer(x)
+        if self.np_dtype is not None:
+            # Numeric: go through numpy so lists, nested lists and arrays of
+            # any dtype/layout all end up as one contiguous buffer in the
+            # stream's dtype. A C-contiguous array of the right dtype is a
+            # no-op view. `arr` must stay alive until the call returns.
+            arr = np.ascontiguousarray(x, dtype=self.np_dtype)
+            n_values = arr.size
+            if n_values == 0:
+                return  # don't send empty chunks
+            bad_shape = arr.ndim == 2 and arr.shape[1] != self.channel_count
+            if bad_shape or n_values % self.channel_count != 0:
+                raise ValueError(
+                    "Each sample must have the same number of channels ("
+                    + str(self.channel_count)
+                    + ")."
+                )
             handle_error(
                 liblsl_push_chunk_func(
                     self.obj,
-                    data_buff,
+                    ctypes.c_void_p(arr.ctypes.data),
                     ctypes.c_long(n_values),
                     timestamp_c,
                     ctypes.c_int(pushthrough),
                 )
             )
-        except TypeError:
-            # don't send empty chunks
-            if len(x):
-                if type(x[0]) is list:
-                    x = [v for sample in x for v in sample]
-                if self.channel_format == cf_string:
-                    x = [v.encode("utf-8") for v in x]
-                if len(x) % self.channel_count == 0:
-                    # x is a flattened list of multiplexed values
-                    constructor = self.value_type * len(x)
-                    # noinspection PyCallingNonCallable
-                    handle_error(
-                        liblsl_push_chunk_func(
-                            self.obj,
-                            constructor(*x),
-                            ctypes.c_long(len(x)),
-                            timestamp_c,
-                            ctypes.c_int(pushthrough),
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        "Each sample must have the same number of channels ("
-                        + str(self.channel_count)
-                        + ")."
-                    )
+            return
+        # String streams: flatten, encode, and hand liblsl an array of char*.
+        if len(x):
+            if type(x[0]) is list:
+                x = [v for sample in x for v in sample]
+            n_values = len(x)
+            if n_values % self.channel_count != 0:
+                raise ValueError(
+                    "Each sample must have the same number of channels ("
+                    + str(self.channel_count)
+                    + ")."
+                )
+            # One NUL-separated buffer plus a vectorised pointer table is far
+            # cheaper than constructing a ctypes c_char_p array element by
+            # element. `buf` and `ptrs` must outlive the call.
+            encoded = [v.encode("utf-8") for v in x]
+            buf = ctypes.create_string_buffer(b"\0".join(encoded) + b"\0")
+            lengths = np.fromiter(map(len, encoded), dtype=np.uintp, count=n_values)
+            ptrs = np.empty(n_values, dtype=np.uintp)
+            ptrs[0] = 0
+            np.cumsum(lengths[:-1] + 1, out=ptrs[1:])
+            ptrs += ctypes.addressof(buf)
+            handle_error(
+                liblsl_push_chunk_func(
+                    self.obj,
+                    ctypes.c_void_p(ptrs.ctypes.data),
+                    ctypes.c_long(n_values),
+                    timestamp_c,
+                    ctypes.c_int(pushthrough),
+                )
+            )
 
     def have_consumers(self) -> bool:
         """Check whether consumers are currently registered.
