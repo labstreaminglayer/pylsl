@@ -280,6 +280,13 @@ lib.lsl_remove_child.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 lib.lsl_destroy_string.argtypes = [ctypes.c_void_p]
 # noinspection PyBroadException
 try:
+    lib.lsl_destroy_string_array.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+    lib.lsl_destroy_string_array.restype = None
+except Exception:
+    # Available in liblsl >= 1.18.0 (b4); older versions don't expose this.
+    pass
+# noinspection PyBroadException
+try:
     lib.lsl_pull_chunk_f.restype = ctypes.c_long
     lib.lsl_pull_chunk_d.restype = ctypes.c_long
     lib.lsl_pull_chunk_l.restype = ctypes.c_long

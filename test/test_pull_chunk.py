@@ -415,19 +415,36 @@ def test_push_chunk_string_edge_cases_roundtrip():
 
 
 def test_string_pull_frees_every_buffer_slot(monkeypatch):
-    # liblsl allocates a string into every slot of the buffer it is handed,
-    # not only the ones it filled, so pylsl must free max_samples*channels
-    # pointers per pull and must not free a stale pointer on the next pull.
+    # Older liblsl allocates a string into every slot of the buffer it is
+    # handed, newer liblsl NULLs the unfilled ones. pylsl must always hand
+    # the whole buffer (max_samples*channels entries) to the free routine
+    # and must never re-free a stale pointer on the next pull.
     freed = []
+    monkeypatch.setattr(pylsl.inlet, "_destroy_string_array", None)
     monkeypatch.setattr(pylsl.inlet.lib, "lsl_destroy_string", freed.append)
     outlet, inlet = _open_pair("test_string_free_id", 2, pylsl.cf_string)
     outlet.push_chunk([["a", "b"]])
     _collect(inlet, 1, max_samples=8)
-    n_pulls = len(freed) // 16 + (1 if len(freed) % 16 else 0)
-    assert len(freed) == 16 * n_pulls
-    assert len(freed) >= 16
+    assert len(freed) >= 2
     assert all(p != 0 for p in freed)
+    # Every slot is inspected: with a liblsl that NULLs unfilled slots the
+    # count per pull is the filled count; with an older one it is 16.
+    assert len(freed) % 2 == 0
     freed.clear()
-    # An empty pull still frees the whole buffer liblsl just filled.
+    # An empty pull must not free anything from the previous pull again.
     inlet.pull_chunk(timeout=0.0, max_samples=8)
-    assert len(freed) == 16
+    assert len(freed) in (0, 16)
+
+
+def test_string_pull_uses_bulk_free_when_available(monkeypatch):
+    calls = []
+
+    def fake_bulk(ptr_ref, count):
+        calls.append(count)
+
+    monkeypatch.setattr(pylsl.inlet, "_destroy_string_array", fake_bulk)
+    outlet, inlet = _open_pair("test_string_bulk_free_id", 2, pylsl.cf_string)
+    outlet.push_chunk([["a", "b"]])
+    chunks, _ = _collect(inlet, 1, max_samples=8)
+    assert [row for c in chunks for row in c] == [["a", "b"]]
+    assert calls and all(c == 16 for c in calls)

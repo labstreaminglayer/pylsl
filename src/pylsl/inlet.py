@@ -18,16 +18,22 @@ from .info import StreamInfo
 def free_char_p_array_memory(char_p_array, num_elements):
     """Free the first num_elements strings liblsl allocated into char_p_array.
 
-    liblsl has no bulk-free call, so this is one lsl_destroy_string call per
-    string. Reading the pointers through numpy avoids creating a ctypes
-    object per element on top of that.
+    NULL entries are skipped. Uses lsl_destroy_string_array (one call) when
+    the loaded liblsl provides it (>= 1.18.0), otherwise falls back to one
+    lsl_destroy_string call per string.
     """
     if num_elements == 0:
+        return
+    if _destroy_string_array is not None:
+        _destroy_string_array(ctypes.byref(char_p_array), num_elements)
         return
     pointers = np.frombuffer(char_p_array, dtype=np.uintp, count=num_elements)
     destroy = lib.lsl_destroy_string
     for p in pointers[pointers != 0].tolist():  # only free initialized pointers
         destroy(p)
+
+
+_destroy_string_array = getattr(lib, "lsl_destroy_string_array", None)
 
 
 class StreamInlet:
@@ -364,9 +370,10 @@ class StreamInlet:
             handle_error(errcode)
             num_samples = num_elements // num_channels
             flat = [v.decode("utf-8") for v in data_buff[:num_elements]]
-            # liblsl (<= 1.18) mallocs a string into *every* slot of the
-            # buffer, not just the num_elements it filled, so free them all.
-            # Then clear the slots so a stale pointer can never be freed twice.
+            # liblsl < 1.18.0.b4 mallocs a string into *every* slot of the
+            # buffer, not just the num_elements it filled; newer versions
+            # NULL the rest. Free all slots (NULLs are skipped) and then clear
+            # them so a stale pointer can never be freed twice.
             free_char_p_array_memory(data_buff, max_values)
             ctypes.memset(data_buff, 0, ctypes.sizeof(data_buff))
             samples = [
