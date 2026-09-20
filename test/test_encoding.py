@@ -52,3 +52,9 @@ def test_child_value_with_non_utf8_bytes(monkeypatch):
         pylsl.info.lib, "lsl_child_value_n", lambda elem, name: NON_UTF8_BYTES
     )
     assert info.desc().child_value("manufacturer") == NON_UTF8_TEXT
+
+
+def test_reset_uid_with_non_utf8_bytes(monkeypatch):
+    info = new_info()
+    monkeypatch.setattr(pylsl.info.lib, "lsl_reset_uid", lambda obj: NON_UTF8_BYTES)
+    assert info.reset_uid() == NON_UTF8_TEXT

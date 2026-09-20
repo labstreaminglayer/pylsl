@@ -223,7 +223,7 @@ class StreamInfo:
                 "lsl_reset_uid is not available in your liblsl version "
                 "(requires liblsl >= 1.18.0)."
             )
-        return lib.lsl_reset_uid(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_reset_uid(self.obj))
 
     def session_id(self) -> str:
         """Session ID for the given stream.
