@@ -21,6 +21,14 @@ class StreamInfo:
     written to disk when recording the stream (playing a similar role as a file
     header).
 
+    Note: StreamInfo objects returned by the resolver functions
+    (resolve_streams, resolve_byprop, resolve_bypred, ContinuousResolver)
+    are partial. They carry the core information (name, type, channel count,
+    sampling rate, channel format, source_id, hosting details) but their
+    desc() element is empty. To obtain the full stream description, including
+    channel labels, open a StreamInlet with the partial StreamInfo and call
+    StreamInlet.info().
+
     """
 
     def __init__(
@@ -257,6 +265,11 @@ class StreamInfo:
         recommendations exist, please try to lay out your meta-data in
         agreement with these recommendations for compatibility with other
         applications.
+
+        Note: for StreamInfo objects returned by the resolver functions this
+        element is empty; the resolver only transmits the core stream
+        information. Use StreamInlet.info() to retrieve the complete
+        description, including the desc() contents.
 
         """
         return XMLElement(lib.lsl_get_desc(self.obj))
