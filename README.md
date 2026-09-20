@@ -74,6 +74,7 @@ explanatory message if it is absent:
 | `transp_sync_blocking` (synchronous zero-copy pushes) | liblsl >= 1.18.0 |
 | `pylsl.set_config_filename()` / `pylsl.set_config_content()` | liblsl >= 1.17.7 |
 | `StreamInfo.reset_uid()` | liblsl >= 1.18.0 |
+| Bulk string free after string-stream pulls (`lsl_destroy_string_array`) | liblsl >= 1.18.0.b4; older liblsl falls back to one `lsl_destroy_string` call per string (slower, same result) |
 | `ContinuousResolver`, chunk transfer (`push_chunk`/`pull_chunk`) | present in every supported liblsl; pylsl degrades gracefully if absent |
 | `StreamInlet.pull_chunk(min_samples=...)` | no extra liblsl requirement (implemented in Python on top of the regular chunk pull) |
 
