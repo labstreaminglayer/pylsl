@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.17.7"
-  LSL_RELEASE: "1.17.7"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.18.0.b3"
+  LSL_RELEASE: "1.18.0"
 
 jobs:
 
@@ -44,7 +44,9 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         brew install labstreaminglayer/tap/lsl
-        echo "PYLSL_LIB=$(brew --prefix lsl)/Frameworks/lsl.framework/Versions/A/lsl" >> $GITHUB_ENV
+        # The tap ships either lsl.framework (<= 1.17.x) or a plain dylib (>= 1.18).
+        # Don't set PYLSL_LIB: pylsl's own discovery should find both layouts.
+        ls "$(brew --prefix)"/lib/liblsl* "$(brew --prefix)"/Frameworks/lsl.framework/lsl 2>/dev/null || true
     - name: Install liblsl (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu-')
       run: |
@@ -56,5 +58,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build
       run: uv sync --all-extras
+    - name: Check liblsl is found
+      run: uv run python -c "import pylsl; print(pylsl.library_info(), pylsl.library_version())"
     - name: Run tests
       run: uv run pytest

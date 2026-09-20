@@ -1,4 +1,5 @@
 import ctypes
+import operator
 
 from .lib import lib, fmt2type, fmt2pull_sample, fmt2pull_chunk, cf_string
 from .util import handle_error, FOREVER
@@ -209,7 +210,9 @@ class StreamInlet:
         else:
             return None, None
 
-    def pull_chunk(self, timeout=0.0, max_samples=1024, dest_obj=None):
+    def pull_chunk(
+        self, timeout=0.0, max_samples=1024, dest_obj=None, min_samples=None
+    ):
         """Pull a chunk of samples from the inlet.
 
         Keyword arguments:
@@ -225,6 +228,14 @@ class StreamInlet:
                     number of samples.
                     A numpy buffer must be order='C'
                     (default None)
+        min_samples -- Minimum number of samples to wait for before returning
+                       the samples that are immediately available, up to
+                       max_samples. Set this to 1 to wait up to timeout for the
+                       first sample and then return without waiting for the
+                       remainder of the chunk. If the timeout expires first,
+                       fewer samples may be returned. The default of None
+                       preserves the original behavior, which waits until
+                       max_samples is reached or the timeout expires.
 
         Returns a tuple (samples,timestamps) where samples is a list of samples
         (each itself a list of values), and timestamps is a list of time-stamps.
@@ -232,6 +243,46 @@ class StreamInlet:
         Throws a LostError if the stream source has been lost.
 
         """
+        if min_samples is None:
+            return self._pull_chunk_once(timeout, max_samples, dest_obj)
+
+        try:
+            min_samples = operator.index(min_samples)
+        except TypeError:
+            raise TypeError("min_samples must be an integer or None") from None
+        if not 1 <= min_samples <= max_samples:
+            raise ValueError("min_samples must be between 1 and max_samples")
+
+        # liblsl's fixed-buffer pull waits for max_samples or timeout. First
+        # make that target min_samples, then drain whatever else is already
+        # available without blocking. This retains the existing behavior when
+        # min_samples is omitted while providing a low-latency mode when it is 1.
+        samples, timestamps = self._pull_chunk_once(
+            timeout, min_samples, dest_obj
+        )
+        num_samples = len(timestamps)
+        remaining = max_samples - num_samples
+        if num_samples == 0 or remaining == 0:
+            return samples, timestamps
+
+        if dest_obj is not None:
+            bytes_per_sample = ctypes.sizeof(self.value_type) * self.channel_count
+            dest_view = memoryview(dest_obj).cast("B")[
+                num_samples * bytes_per_sample :
+            ]
+        else:
+            dest_view = None
+
+        more_samples, more_timestamps = self._pull_chunk_once(
+            0.0, remaining, dest_view
+        )
+        if samples is not None:
+            samples.extend(more_samples)
+        timestamps.extend(more_timestamps)
+        return samples, timestamps
+
+    def _pull_chunk_once(self, timeout, max_samples, dest_obj):
+        """Perform one fixed-buffer liblsl chunk pull."""
         # look up a pre-allocated buffer of appropriate length
         num_channels = self.channel_count
         max_values = max_samples * num_channels
