@@ -58,6 +58,11 @@ dev = [
 requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff.lint]
+# Pin the rule set explicitly. Newer ruff releases (>= 0.16) expanded the
+# default selection, which broke CI without any code change.
+select = ["E4", "E7", "E9", "F"]
+
 [tool.setuptools]
 license-files = []
 

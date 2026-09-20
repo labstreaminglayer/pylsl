@@ -257,9 +257,7 @@ class StreamInlet:
         # make that target min_samples, then drain whatever else is already
         # available without blocking. This retains the existing behavior when
         # min_samples is omitted while providing a low-latency mode when it is 1.
-        samples, timestamps = self._pull_chunk_once(
-            timeout, min_samples, dest_obj
-        )
+        samples, timestamps = self._pull_chunk_once(timeout, min_samples, dest_obj)
         num_samples = len(timestamps)
         remaining = max_samples - num_samples
         if num_samples == 0 or remaining == 0:
@@ -267,15 +265,11 @@ class StreamInlet:
 
         if dest_obj is not None:
             bytes_per_sample = ctypes.sizeof(self.value_type) * self.channel_count
-            dest_view = memoryview(dest_obj).cast("B")[
-                num_samples * bytes_per_sample :
-            ]
+            dest_view = memoryview(dest_obj).cast("B")[num_samples * bytes_per_sample :]
         else:
             dest_view = None
 
-        more_samples, more_timestamps = self._pull_chunk_once(
-            0.0, remaining, dest_view
-        )
+        more_samples, more_timestamps = self._pull_chunk_once(0.0, remaining, dest_view)
         if samples is not None:
             samples.extend(more_samples)
         timestamps.extend(more_timestamps)
