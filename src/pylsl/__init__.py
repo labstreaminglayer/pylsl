@@ -34,6 +34,7 @@ from .util import transp_default as transp_default
 from .util import transp_bufsize_samples as transp_bufsize_samples
 from .util import transp_bufsize_thousandths as transp_bufsize_thousandths
 from .util import transp_sync_blocking as transp_sync_blocking
+from .util import MIN_LIBLSL_VERSION as MIN_LIBLSL_VERSION
 from .util import protocol_version as protocol_version
 from .util import library_version as library_version
 from .util import library_info as library_info
