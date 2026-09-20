@@ -118,9 +118,7 @@ def test_pull_chunk_min_samples_drains_without_blocking(monkeypatch):
 
     monkeypatch.setattr(inlet, "_pull_chunk_once", pull_once)
 
-    samples, timestamps = inlet.pull_chunk(
-        timeout=0.5, max_samples=5, min_samples=2
-    )
+    samples, timestamps = inlet.pull_chunk(timeout=0.5, max_samples=5, min_samples=2)
 
     assert samples == [[1.0], [2.0], [3.0], [4.0]]
     assert timestamps == [1.0, 2.0, 3.0, 4.0]
@@ -137,9 +135,7 @@ def test_pull_chunk_min_samples_timeout_does_not_drain(monkeypatch):
 
     monkeypatch.setattr(inlet, "_pull_chunk_once", pull_once)
 
-    samples, timestamps = inlet.pull_chunk(
-        timeout=0.5, max_samples=5, min_samples=1
-    )
+    samples, timestamps = inlet.pull_chunk(timeout=0.5, max_samples=5, min_samples=1)
 
     assert samples == []
     assert timestamps == []
