@@ -364,7 +364,11 @@ class StreamInlet:
             handle_error(errcode)
             num_samples = num_elements // num_channels
             flat = [v.decode("utf-8") for v in data_buff[:num_elements]]
-            free_char_p_array_memory(data_buff, num_elements)
+            # liblsl (<= 1.18) mallocs a string into *every* slot of the
+            # buffer, not just the num_elements it filled, so free them all.
+            # Then clear the slots so a stale pointer can never be freed twice.
+            free_char_p_array_memory(data_buff, max_values)
+            ctypes.memset(data_buff, 0, ctypes.sizeof(data_buff))
             samples = [
                 flat[s * num_channels : (s + 1) * num_channels]
                 for s in range(num_samples)

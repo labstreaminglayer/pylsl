@@ -412,3 +412,22 @@ def test_push_chunk_string_edge_cases_roundtrip():
     assert [row for c in chunks for row in c] == rows
     with pytest.raises(ValueError):
         outlet.push_chunk(["a", "b", "c"])
+
+
+def test_string_pull_frees_every_buffer_slot(monkeypatch):
+    # liblsl allocates a string into every slot of the buffer it is handed,
+    # not only the ones it filled, so pylsl must free max_samples*channels
+    # pointers per pull and must not free a stale pointer on the next pull.
+    freed = []
+    monkeypatch.setattr(pylsl.inlet.lib, "lsl_destroy_string", freed.append)
+    outlet, inlet = _open_pair("test_string_free_id", 2, pylsl.cf_string)
+    outlet.push_chunk([["a", "b"]])
+    _collect(inlet, 1, max_samples=8)
+    n_pulls = len(freed) // 16 + (1 if len(freed) % 16 else 0)
+    assert len(freed) == 16 * n_pulls
+    assert len(freed) >= 16
+    assert all(p != 0 for p in freed)
+    freed.clear()
+    # An empty pull still frees the whole buffer liblsl just filled.
+    inlet.pull_chunk(timeout=0.0, max_samples=8)
+    assert len(freed) == 16
