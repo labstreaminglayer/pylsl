@@ -51,13 +51,67 @@ Alternatively, you can use an environment variable. Set the `PYLSL_LIB` environm
 1. `PYLSL_LIB=/usr/local/lib/liblsl.so python -m pylsl.examples.{name-of-example}`, or
 2. `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
 
+## liblsl compatibility
+
+`pylsl` and `liblsl` are versioned independently. Historically they shared version
+numbers, but that convention ended after the pylsl 1.17.x series: a pylsl version
+number says nothing about which liblsl release it was built against, and in general
+you can use the latest pylsl with the latest liblsl.
+
+**Minimum supported liblsl: 1.16.0** (i.e. `pylsl.library_version() >= 116`). pylsl
+binds `lsl_create_outlet_ex` unconditionally when it loads the library, and that
+function was introduced in liblsl 1.16.0. If an older liblsl is loaded, pylsl emits a
+`RuntimeWarning` at import time (it does not raise, in case the subset of the API you
+use still works).
+
+Some features require a newer liblsl than the minimum. Where noted, pylsl detects
+the capability by looking for the symbol and raises `NotImplementedError` with an
+explanatory message if it is absent:
+
+| Feature | Requires |
+| --- | --- |
+| `StreamOutlet(..., transport_flags=...)` (`lsl_create_outlet_ex`) | liblsl >= 1.16.0 (the pylsl minimum) |
+| `transp_sync_blocking` (synchronous zero-copy pushes) | liblsl >= 1.18.0 |
+| `pylsl.set_config_filename()` / `pylsl.set_config_content()` | liblsl >= 1.17.7 |
+| `StreamInfo.reset_uid()` | liblsl >= 1.18.0 |
+| `ContinuousResolver`, chunk transfer (`push_chunk`/`pull_chunk`) | present in every supported liblsl; pylsl degrades gracefully if absent |
+| `StreamInlet.pull_chunk(min_samples=...)` | no extra liblsl requirement (implemented in Python on top of the regular chunk pull) |
+
+Note that `transp_sync_blocking` is a flag value, not a symbol, so pylsl cannot
+detect its absence: passing it to an older liblsl will simply be ignored or
+misinterpreted by that library.
+
+### Which liblsl do the PyPI wheels bundle?
+
+The platform-specific wheels (`win32`, `win_amd64`, `macosx_11_0_universal2`,
+`manylinux` x86_64) bundle the liblsl release named by the `LSL_RELEASE` /
+`LSL_RELEASE_URL` variables at the top of `.github/workflows/publish-to-pypi.yml`
+(currently `v1.18.0.b3`). The pure-Python `none-any` wheel bundles no library at all;
+it relies on a liblsl you install yourself (see "liblsl loading" above).
+
+### Checking at runtime
+
+```python
+import pylsl
+
+pylsl.library_version()      # e.g. 118 -> liblsl 1.18.x
+pylsl.library_info()         # build/branch details of the loaded library
+pylsl.MIN_LIBLSL_VERSION     # 116 -> the oldest liblsl this pylsl supports
+```
+
 # For maintainers
 
 ## Continuous Integration
 
 pylsl uses continuous integration and distribution. GitHub Actions will upload a new release to pypi whenever a Release is created in GitHub.
-Before creating the GitHub release, be sure to bump the version number in `pylsl/version.py` and consider updating the liblsl dependency
-in `.github/workflows/publish-to-pypi.yml`.
+
+The version number is not stored in the source tree; it is derived from the git tag by
+setuptools-scm (see `[tool.setuptools_scm]` in `pyproject.toml`). Creating a GitHub
+Release with a tag like `v1.18.4` is what sets the published version. Before creating
+the release, review the `LSL_RELEASE` / `LSL_RELEASE_URL` variables in **both**
+`.github/workflows/publish-to-pypi.yml` (the liblsl bundled into the platform wheels)
+and `.github/workflows/ci.yml` (the liblsl tested against), and update the "liblsl
+compatibility" section above if the minimum supported liblsl changed.
 
 ### Linux Binaries Deprecated
 
@@ -67,11 +121,10 @@ We recently stopped building binary wheels for Linux. In practice, the `manylinu
 
 1. Manual way:
     1. `rm -Rf build dist *.egg-info`
-    1. `python setup.py sdist bdist_wheel`
-    1. Additional steps on Linux:
-        * `auditwheel repair dist/*.whl -w dist`
-        * `rm dist/*-linux_x86_64.whl`
+    1. `uv build` (produces the sdist and the pure-Python wheel in `dist/`)
     1. `twine upload dist/*`
+    * Note: the platform-specific wheels with a bundled liblsl are produced by the
+      `publish-to-pypi` GitHub Actions workflow, not by this manual path.
 1. For conda
     1. build liblsl: `conda build ../liblsl/`
     1. `conda build .`

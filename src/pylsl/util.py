@@ -84,6 +84,31 @@ def library_version():
     return lib.lsl_library_version()
 
 
+# Oldest liblsl this version of pylsl supports, in liblsl's lsl_library_version()
+# encoding (major * 100 + minor). 116 == liblsl 1.16.0, which is when
+# lsl_create_outlet_ex (bound unconditionally at import) was introduced.
+MIN_LIBLSL_VERSION = 116
+
+
+def _check_liblsl_version(warn_version: int = None) -> bool:
+    """Warn if the loaded liblsl is older than pylsl's minimum. Returns True if OK."""
+    found = lib.lsl_library_version() if warn_version is None else warn_version
+    if found < MIN_LIBLSL_VERSION:
+        warnings.warn(
+            f"The loaded liblsl reports version {found // 100}.{found % 100}, but "
+            f"pylsl requires at least {MIN_LIBLSL_VERSION // 100}.{MIN_LIBLSL_VERSION % 100}. "
+            "Some functions may be missing or misbehave. See the 'liblsl compatibility' "
+            "section of the pylsl README.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return False
+    return True
+
+
+_check_liblsl_version()
+
+
 def library_info():
     """Get a string containing library information. The format of the string shouldn't be used
     for anything important except giving a a debugging person a good idea which exact library
