@@ -41,6 +41,25 @@ transp_bufsize_thousandths = 2  # Scale max_buffered by 0.001 (finer-grained buf
 transp_sync_blocking = 4
 
 
+def _to_str(value: bytes) -> str:
+    """Decode a string that liblsl returned into a Python ``str``.
+
+    Stream metadata is not guaranteed to be valid UTF-8. The usual offender is
+    the hostname, which liblsl reads straight from the operating system: on
+    Windows it comes back in the active ANSI code page, so a machine whose name
+    contains accented characters produces bytes that a strict UTF-8 decode
+    rejects. The same applies to any metadata written by a non-Python LSL
+    application on such a machine.
+
+    Falling back to latin-1 cannot fail, preserves every original byte, and
+    renders the common Windows case (accented Latin characters) correctly.
+    """
+    try:
+        return value.decode("utf-8")
+    except UnicodeDecodeError:
+        return value.decode("latin-1")
+
+
 def protocol_version():
     """Protocol version.
 

@@ -2,7 +2,7 @@ import ctypes
 import typing
 
 from .lib import lib, string2fmt, cf_float32
-from .util import IRREGULAR_RATE
+from .util import IRREGULAR_RATE, _to_str
 
 
 class StreamInfo:
@@ -125,7 +125,7 @@ class StreamInfo:
         the recording app or experimenter).
 
         """
-        return lib.lsl_get_name(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_name(self.obj))
 
     def type(self) -> str:
         """Content type of the stream.
@@ -138,7 +138,7 @@ class StreamInfo:
         content types is preferred.
 
         """
-        return lib.lsl_get_type(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_type(self.obj))
 
     def channel_count(self) -> int:
         """Number of channels of the stream.
@@ -183,7 +183,7 @@ class StreamInfo:
         back online.
 
         """
-        return lib.lsl_get_source_id(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_source_id(self.obj))
 
     # === Hosting Information (assigned when bound to an outlet/inlet) ===
 
@@ -208,7 +208,7 @@ class StreamInfo:
         after a re-start).
 
         """
-        return lib.lsl_get_uid(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_uid(self.obj))
 
     def reset_uid(self) -> str:
         """Reset the stream's unique ID to a new random value and return it.
@@ -223,7 +223,7 @@ class StreamInfo:
                 "lsl_reset_uid is not available in your liblsl version "
                 "(requires liblsl >= 1.18.0)."
             )
-        return lib.lsl_reset_uid(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_reset_uid(self.obj))
 
     def session_id(self) -> str:
         """Session ID for the given stream.
@@ -236,11 +236,11 @@ class StreamInfo:
         Network Connectivity in the LSL wiki).
 
         """
-        return lib.lsl_get_session_id(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_session_id(self.obj))
 
     def hostname(self) -> str:
         """Hostname of the providing machine."""
-        return lib.lsl_get_hostname(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_hostname(self.obj))
 
     # === Data Description (can be modified) ===
     def desc(self) -> "XMLElement":
@@ -276,7 +276,7 @@ class StreamInfo:
            sub-elements.
 
         """
-        return lib.lsl_get_xml(self.obj).decode("utf-8")
+        return _to_str(lib.lsl_get_xml(self.obj))
 
     def get_channel_labels(self) -> typing.Optional[list[typing.Optional[str]]]:
         """Get the channel names in the description.
@@ -528,11 +528,11 @@ class XMLElement:
 
     def name(self) -> str:
         """Name of the element."""
-        return lib.lsl_name(self.e).decode("utf-8")
+        return _to_str(lib.lsl_name(self.e))
 
     def value(self) -> str:
         """Value of the element."""
-        return lib.lsl_value(self.e).decode("utf-8")
+        return _to_str(lib.lsl_value(self.e))
 
     def child_value(self, name: typing.Optional[str] = None) -> str:
         """Get child value (value of the first child that is text).
@@ -545,7 +545,7 @@ class XMLElement:
             res = lib.lsl_child_value(self.e)
         else:
             res = lib.lsl_child_value_n(self.e, str.encode(name))
-        return res.decode("utf-8")
+        return _to_str(res)
 
     # === Modification ===
 
