@@ -396,3 +396,19 @@ def test_pull_chunk_min_samples_dest_obj_as_numpy_returns_single_view():
     assert np.shares_memory(samples, buf)
     np.testing.assert_array_equal(samples.ravel(), [10.0, 20.0, 30.0])
     assert len(ts) == 3
+
+
+def test_push_chunk_string_edge_cases_roundtrip():
+    # Empty strings, multi-byte UTF-8, long values, and a flat (multiplexed)
+    # input all have to survive the joined-buffer pointer table.
+    rows = [["", "é"], ["x" * 5000, ""], ["日本語", "b"]]
+    flat = [v for row in rows for v in row]
+    outlet, inlet = _open_pair("test_string_edges_id", 2, pylsl.cf_string)
+    outlet.push_chunk(rows)
+    chunks, _ = _collect(inlet, 3)
+    assert [row for c in chunks for row in c] == rows
+    outlet.push_chunk(flat)
+    chunks, _ = _collect(inlet, 3)
+    assert [row for c in chunks for row in c] == rows
+    with pytest.raises(ValueError):
+        outlet.push_chunk(["a", "b", "c"])

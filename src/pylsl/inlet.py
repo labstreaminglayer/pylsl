@@ -16,10 +16,18 @@ from .info import StreamInfo
 
 
 def free_char_p_array_memory(char_p_array, num_elements):
-    pointers = ctypes.cast(char_p_array, ctypes.POINTER(ctypes.c_void_p))
-    for p in range(num_elements):
-        if pointers[p] is not None:  # only free initialized pointers
-            lib.lsl_destroy_string(pointers[p])
+    """Free the first num_elements strings liblsl allocated into char_p_array.
+
+    liblsl has no bulk-free call, so this is one lsl_destroy_string call per
+    string. Reading the pointers through numpy avoids creating a ctypes
+    object per element on top of that.
+    """
+    if num_elements == 0:
+        return
+    pointers = np.frombuffer(char_p_array, dtype=np.uintp, count=num_elements)
+    destroy = lib.lsl_destroy_string
+    for p in pointers[pointers != 0].tolist():  # only free initialized pointers
+        destroy(p)
 
 
 class StreamInlet:

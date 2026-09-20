@@ -218,25 +218,32 @@ class StreamOutlet:
         if len(x):
             if type(x[0]) is list:
                 x = [v for sample in x for v in sample]
-            x = [v.encode("utf-8") for v in x]
-            if len(x) % self.channel_count == 0:
-                constructor = self.value_type * len(x)
-                # noinspection PyCallingNonCallable
-                handle_error(
-                    liblsl_push_chunk_func(
-                        self.obj,
-                        constructor(*x),
-                        ctypes.c_long(len(x)),
-                        timestamp_c,
-                        ctypes.c_int(pushthrough),
-                    )
-                )
-            else:
+            n_values = len(x)
+            if n_values % self.channel_count != 0:
                 raise ValueError(
                     "Each sample must have the same number of channels ("
                     + str(self.channel_count)
                     + ")."
                 )
+            # One NUL-separated buffer plus a vectorised pointer table is far
+            # cheaper than constructing a ctypes c_char_p array element by
+            # element. `buf` and `ptrs` must outlive the call.
+            encoded = [v.encode("utf-8") for v in x]
+            buf = ctypes.create_string_buffer(b"\0".join(encoded) + b"\0")
+            lengths = np.fromiter(map(len, encoded), dtype=np.uintp, count=n_values)
+            ptrs = np.empty(n_values, dtype=np.uintp)
+            ptrs[0] = 0
+            np.cumsum(lengths[:-1] + 1, out=ptrs[1:])
+            ptrs += ctypes.addressof(buf)
+            handle_error(
+                liblsl_push_chunk_func(
+                    self.obj,
+                    ctypes.c_void_p(ptrs.ctypes.data),
+                    ctypes.c_long(n_values),
+                    timestamp_c,
+                    ctypes.c_int(pushthrough),
+                )
+            )
 
     def have_consumers(self) -> bool:
         """Check whether consumers are currently registered.
