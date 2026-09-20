@@ -243,13 +243,13 @@ class StreamInlet:
                    (default 0.0)
         max_samples -- Maximum number of samples to return. (default
                        1024)
-        dest_obj -- A Python object that supports the buffer interface.
-                    If this is provided then the dest_obj will be updated in place
-                    and the samples list returned by this method will be empty.
-                    It is up to the caller to trim the buffer to the appropriate
-                    number of samples.
-                    A numpy buffer must be order='C'
-                    (default None)
+        dest_obj -- Where the data lands. A writable object supporting the
+                    buffer interface (e.g. a C-contiguous numpy array) with
+                    room for max_samples * channel_count values in the
+                    stream's dtype. liblsl writes into it directly. The
+                    returned `samples` is then None (or, with as_numpy=True,
+                    a view of dest_obj trimmed to the samples received).
+                    Numeric streams only. (default None: pylsl allocates)
         min_samples -- Minimum number of samples to wait for before returning
                        the samples that are immediately available, up to
                        max_samples. Set this to 1 to wait up to timeout for the
@@ -259,17 +259,25 @@ class StreamInlet:
                        preserves the original behavior, which waits until
                        max_samples is reached or the timeout expires.
 
-        as_numpy -- If True, numeric streams return `samples` as a 2-D numpy
-                    array of shape (n_samples, n_channels) in the stream's
-                    dtype, and `timestamps` as a 1-D float64 array. This
-                    skips the conversion to Python lists and is much faster
-                    for wide streams. String streams always return lists.
-                    Ignored when dest_obj is given. None (default) uses the
-                    inlet's `as_numpy` setting, which defaults to False.
+        as_numpy -- What comes back. If True, numeric streams return
+                    `samples` as a 2-D numpy array of shape
+                    (n_samples, n_channels) in the stream's dtype and
+                    `timestamps` as a 1-D float64 array, skipping the
+                    conversion to Python lists (much faster for wide
+                    streams). If False, both are lists. String streams
+                    always return lists. None (default) uses the inlet's
+                    `as_numpy` setting, which defaults to False.
 
-        Returns a tuple (samples,timestamps) where samples is a list of samples
-        (each itself a list of values), and timestamps is a list of time-stamps.
-        With as_numpy=True, samples and timestamps are numpy arrays instead.
+        The two keywords are independent: dest_obj chooses whose memory the
+        data is written to, as_numpy chooses the type of the return values.
+
+        Returns a tuple (samples, timestamps):
+          - default: samples is a list of samples (each a list of values),
+            timestamps is a list of floats.
+          - as_numpy=True: samples is an (n_samples, n_channels) array,
+            timestamps a float64 array.
+          - dest_obj given: samples is None, or with as_numpy=True a view of
+            dest_obj covering the first n_samples samples.
 
         Throws a LostError if the stream source has been lost.
 
@@ -309,9 +317,12 @@ class StreamInlet:
             0.0, remaining, dest_view, as_numpy
         )
         if as_numpy:
-            if samples is not None:
-                samples = np.concatenate((samples, more_samples))
             timestamps = np.concatenate((timestamps, more_timestamps))
+            if dest_obj is not None:
+                # Keep the contract: a single view over dest_obj, not a copy.
+                samples = self._dest_view(dest_obj, len(timestamps))
+            elif samples is not None:
+                samples = np.concatenate((samples, more_samples))
         else:
             if samples is not None:
                 samples.extend(more_samples)
@@ -373,13 +384,20 @@ class StreamInlet:
         handle_error(errcode)
         num_samples = num_elements // num_channels
         timestamps = ts_arr[:num_samples]
-        samples = None if data_arr is None else data_arr[:num_samples]
         if as_numpy:
-            return samples, timestamps
+            if data_arr is None:
+                return self._dest_view(dest_obj, num_samples), timestamps
+            return data_arr[:num_samples], timestamps
         return (
-            None if samples is None else samples.tolist(),
+            None if data_arr is None else data_arr[:num_samples].tolist(),
             timestamps.tolist(),
         )
+
+    def _dest_view(self, dest_obj, num_samples):
+        """A (num_samples, n_channels) numpy view over the start of dest_obj."""
+        return np.frombuffer(
+            dest_obj, dtype=self.np_dtype, count=num_samples * self.channel_count
+        ).reshape(num_samples, self.channel_count)
 
     def samples_available(self):
         """Query whether samples are currently available for immediate pickup.

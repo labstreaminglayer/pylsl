@@ -346,3 +346,53 @@ def test_push_chunk_rejects_wrong_channel_count():
     with pytest.raises(ValueError):
         outlet.push_chunk([1.0, 2.0, 3.0])
     outlet.push_chunk([])  # empty is a no-op, not an error
+
+
+def test_pull_chunk_dest_obj_with_as_numpy_returns_trimmed_view():
+    data = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], np.float32)
+    outlet, inlet = _open_pair("test_dest_view_id", 2, pylsl.cf_float32)
+    buf = np.zeros((10, 2), np.float32)
+    outlet.push_chunk(data)
+    got = []
+    deadline = time.time() + 5
+    while sum(len(g) for g in got) < 3 and time.time() < deadline:
+        samples, ts = inlet.pull_chunk(
+            timeout=1.0, max_samples=10, dest_obj=buf, as_numpy=True
+        )
+        assert isinstance(ts, np.ndarray)
+        assert isinstance(samples, np.ndarray)
+        assert samples.shape == (len(ts), 2)
+        assert np.shares_memory(samples, buf)
+        if len(ts):
+            got.append(samples.copy())
+    np.testing.assert_array_equal(np.concatenate(got), data)
+
+    # Without as_numpy the legacy contract holds: None and a list.
+    outlet.push_chunk(data[:1])
+    deadline = time.time() + 5
+    while time.time() < deadline:
+        samples, ts = inlet.pull_chunk(timeout=1.0, max_samples=10, dest_obj=buf)
+        assert samples is None and isinstance(ts, list)
+        if ts:
+            break
+    np.testing.assert_array_equal(buf[:1], data[:1])
+
+
+def test_pull_chunk_min_samples_dest_obj_as_numpy_returns_single_view():
+    inlet = _bare_inlet(channel_count=1)
+    buf = np.zeros(5, np.float32)
+
+    def pull_once(timeout, max_samples, dest_obj, as_numpy=False):
+        # Emulate liblsl writing 2 then 1 samples into the supplied memory.
+        n = 2 if timeout else 1
+        view = np.frombuffer(dest_obj, dtype=np.float32, count=n)
+        view[:] = [10.0, 20.0][:n] if timeout else [30.0]
+        return inlet._dest_view(dest_obj, n), np.arange(n, dtype=np.float64)
+
+    inlet._pull_chunk_once = pull_once
+    samples, ts = inlet.pull_chunk(
+        timeout=0.5, max_samples=5, min_samples=2, dest_obj=buf, as_numpy=True
+    )
+    assert np.shares_memory(samples, buf)
+    np.testing.assert_array_equal(samples.ravel(), [10.0, 20.0, 30.0])
+    assert len(ts) == 3
