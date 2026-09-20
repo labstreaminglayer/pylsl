@@ -1,5 +1,6 @@
 import ctypes
 import functools
+import typing
 import warnings
 
 from .lib import lib
@@ -90,7 +91,7 @@ def library_version():
 MIN_LIBLSL_VERSION = 116
 
 
-def _check_liblsl_version(warn_version: int = None) -> bool:
+def _check_liblsl_version(warn_version: typing.Optional[int] = None) -> bool:
     """Warn if the loaded liblsl is older than pylsl's minimum. Returns True if OK."""
     found = lib.lsl_library_version() if warn_version is None else warn_version
     if found < MIN_LIBLSL_VERSION:

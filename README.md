@@ -94,9 +94,9 @@ it relies on a liblsl you install yourself (see "liblsl loading" above).
 ```python
 import pylsl
 
-pylsl.library_version()      # e.g. 118 -> liblsl 1.18.x
-pylsl.library_info()         # build/branch details of the loaded library
-pylsl.MIN_LIBLSL_VERSION     # 116 -> the oldest liblsl this pylsl supports
+pylsl.library_version()  # e.g. 118 -> liblsl 1.18.x
+pylsl.library_info()  # build/branch details of the loaded library
+pylsl.MIN_LIBLSL_VERSION  # 116 -> the oldest liblsl this pylsl supports
 ```
 
 # For maintainers
