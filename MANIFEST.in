@@ -5,3 +5,4 @@
 prune .github
 prune test
 exclude .gitignore
+prune bench
