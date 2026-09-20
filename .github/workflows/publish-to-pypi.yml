@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.17.7"
-  LSL_RELEASE: "1.17.7"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.18.0.b2"
+  LSL_RELEASE: "1.18.0"
 
 defaults:
   run:
@@ -61,7 +61,7 @@ jobs:
             os: macos-latest
             arch: universal
             pyarch: x64
-            asset: "lsl.xcframework.1.17.zip"
+            asset: "lsl.xcframework.1.18.zip"
             extract: |
               unzip xcframework.zip
               cp lsl.xcframework/macos-arm64_x86_64/lsl.framework/Versions/A/lsl src/pylsl/lib/liblsl.dylib

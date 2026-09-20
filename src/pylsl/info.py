@@ -210,6 +210,21 @@ class StreamInfo:
         """
         return lib.lsl_get_uid(self.obj).decode("utf-8")
 
+    def reset_uid(self) -> str:
+        """Reset the stream's unique ID to a new random value and return it.
+
+        Useful for generating a UID on a locally-constructed StreamInfo that
+        has not yet been associated with an outlet or inlet.
+
+        Requires a liblsl that exposes lsl_reset_uid (liblsl >= 1.18.0).
+        """
+        if not hasattr(lib, "lsl_reset_uid"):
+            raise NotImplementedError(
+                "lsl_reset_uid is not available in your liblsl version "
+                "(requires liblsl >= 1.18.0)."
+            )
+        return lib.lsl_reset_uid(self.obj).decode("utf-8")
+
     def session_id(self) -> str:
         """Session ID for the given stream.
 

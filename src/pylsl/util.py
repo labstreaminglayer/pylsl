@@ -28,6 +28,18 @@ proc_ALL = (
     proc_none | proc_clocksync | proc_dejitter | proc_monotonize | proc_threadsafe
 )
 
+# Transport option flags for StreamOutlet (lsl_transport_options_t). Combine with
+# bitwise OR and pass as the transport_flags argument when creating an outlet.
+transp_default = 0  # Default transport behavior.
+transp_bufsize_samples = 1  # Interpret max_buffered as a number of samples.
+transp_bufsize_thousandths = 2  # Scale max_buffered by 0.001 (finer-grained buffering).
+# Synchronous (blocking) zero-copy writes; push_sample/push_chunk write the caller's
+# buffer directly to every consumer and block until handed to the OS. Reduces CPU for
+# high-bandwidth streams at the cost of call latency. Notes: not compatible with the
+# string format; push from a single thread only; the pushthrough flag is ignored.
+# Requires liblsl >= 1.18.0.
+transp_sync_blocking = 4
+
 
 def protocol_version():
     """Protocol version.
