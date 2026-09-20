@@ -304,6 +304,15 @@ def bench_pull_chunk(pair, n_samples=1000):
                 raise RuntimeError(f"short chunk: {len(ts)}")
 
         run("dest_obj", pull_dest)
+
+        def pull_numpy():
+            samples, ts = inlet.pull_chunk(
+                timeout=0.0, max_samples=n_samples, as_numpy=True
+            )
+            if len(ts) != n_samples:
+                raise RuntimeError(f"short chunk: {len(ts)}")
+
+        run("as_numpy", pull_numpy)
     return out
 
 

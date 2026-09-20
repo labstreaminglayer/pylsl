@@ -1,7 +1,16 @@
 import ctypes
 import operator
 
-from .lib import lib, fmt2type, fmt2pull_sample, fmt2pull_chunk, cf_string
+import numpy as np
+
+from .lib import (
+    lib,
+    fmt2type,
+    fmt2npdtype,
+    fmt2pull_sample,
+    fmt2pull_chunk,
+    cf_string,
+)
 from .util import handle_error, FOREVER
 from .info import StreamInfo
 
@@ -22,7 +31,13 @@ class StreamInlet:
     """
 
     def __init__(
-        self, info, max_buflen=360, max_chunklen=0, recover=True, processing_flags=0
+        self,
+        info,
+        max_buflen=360,
+        max_chunklen=0,
+        recover=True,
+        processing_flags=0,
+        as_numpy=False,
     ):
         """Construct a new stream inlet from a resolved stream description.
 
@@ -60,6 +75,7 @@ class StreamInlet:
         """
         if type(info) is list:
             raise TypeError("description needs to be of type StreamInfo, got a list.")
+        self.as_numpy = bool(as_numpy)
         self.obj = lib.lsl_create_inlet(info.obj, max_buflen, max_chunklen, recover)
         self.obj = ctypes.c_void_p(self.obj)
         if not self.obj:
@@ -71,6 +87,7 @@ class StreamInlet:
         self.do_pull_sample = fmt2pull_sample[self.channel_format]
         self.do_pull_chunk = fmt2pull_chunk[self.channel_format]
         self.value_type = fmt2type[self.channel_format]
+        self.np_dtype = fmt2npdtype[self.channel_format]
         self.sample_type = self.value_type * self.channel_count
         self.sample = self.sample_type()
         self.buffers = {}
@@ -211,7 +228,12 @@ class StreamInlet:
             return None, None
 
     def pull_chunk(
-        self, timeout=0.0, max_samples=1024, dest_obj=None, min_samples=None
+        self,
+        timeout=0.0,
+        max_samples=1024,
+        dest_obj=None,
+        min_samples=None,
+        as_numpy=None,
     ):
         """Pull a chunk of samples from the inlet.
 
@@ -237,14 +259,26 @@ class StreamInlet:
                        preserves the original behavior, which waits until
                        max_samples is reached or the timeout expires.
 
+        as_numpy -- If True, numeric streams return `samples` as a 2-D numpy
+                    array of shape (n_samples, n_channels) in the stream's
+                    dtype, and `timestamps` as a 1-D float64 array. This
+                    skips the conversion to Python lists and is much faster
+                    for wide streams. String streams always return lists.
+                    Ignored when dest_obj is given. None (default) uses the
+                    inlet's `as_numpy` setting, which defaults to False.
+
         Returns a tuple (samples,timestamps) where samples is a list of samples
         (each itself a list of values), and timestamps is a list of time-stamps.
+        With as_numpy=True, samples and timestamps are numpy arrays instead.
 
         Throws a LostError if the stream source has been lost.
 
         """
+        if as_numpy is None:
+            as_numpy = self.as_numpy
+        as_numpy = bool(as_numpy) and self.np_dtype is not None
         if min_samples is None:
-            return self._pull_chunk_once(timeout, max_samples, dest_obj)
+            return self._pull_chunk_once(timeout, max_samples, dest_obj, as_numpy)
 
         try:
             min_samples = operator.index(min_samples)
@@ -257,7 +291,9 @@ class StreamInlet:
         # make that target min_samples, then drain whatever else is already
         # available without blocking. This retains the existing behavior when
         # min_samples is omitted while providing a low-latency mode when it is 1.
-        samples, timestamps = self._pull_chunk_once(timeout, min_samples, dest_obj)
+        samples, timestamps = self._pull_chunk_once(
+            timeout, min_samples, dest_obj, as_numpy
+        )
         num_samples = len(timestamps)
         remaining = max_samples - num_samples
         if num_samples == 0 or remaining == 0:
@@ -269,59 +305,81 @@ class StreamInlet:
         else:
             dest_view = None
 
-        more_samples, more_timestamps = self._pull_chunk_once(0.0, remaining, dest_view)
-        if samples is not None:
-            samples.extend(more_samples)
-        timestamps.extend(more_timestamps)
+        more_samples, more_timestamps = self._pull_chunk_once(
+            0.0, remaining, dest_view, as_numpy
+        )
+        if as_numpy:
+            if samples is not None:
+                samples = np.concatenate((samples, more_samples))
+            timestamps = np.concatenate((timestamps, more_timestamps))
+        else:
+            if samples is not None:
+                samples.extend(more_samples)
+            timestamps.extend(more_timestamps)
         return samples, timestamps
 
-    def _pull_chunk_once(self, timeout, max_samples, dest_obj):
-        """Perform one fixed-buffer liblsl chunk pull."""
-        # look up a pre-allocated buffer of appropriate length
+    def _pull_chunk_once(self, timeout, max_samples, dest_obj, as_numpy=False):
+        """Perform one fixed-buffer liblsl chunk pull. See pull_chunk."""
         num_channels = self.channel_count
         max_values = max_samples * num_channels
-
-        if max_samples not in self.buffers:
-            # noinspection PyCallingNonCallable
-            self.buffers[max_samples] = (
-                (self.value_type * max_values)(),
-                (ctypes.c_double * max_samples)(),
-            )
-        if dest_obj is not None:
-            data_buff = (self.value_type * max_values).from_buffer(dest_obj)
-        else:
-            data_buff = self.buffers[max_samples][0]
-        ts_buff = self.buffers[max_samples][1]
-
-        # read data into it
         errcode = ctypes.c_int()
-        # noinspection PyCallingNonCallable
+
+        if self.np_dtype is None:
+            # String streams: liblsl fills an array of char* which we decode
+            # and then free. Reuse a buffer per max_samples.
+            if max_samples not in self.buffers:
+                self.buffers[max_samples] = (
+                    (self.value_type * max_values)(),
+                    (ctypes.c_double * max_samples)(),
+                )
+            data_buff, ts_buff = self.buffers[max_samples]
+            num_elements = self.do_pull_chunk(
+                self.obj,
+                ctypes.byref(data_buff),
+                ctypes.byref(ts_buff),
+                ctypes.c_size_t(max_values),
+                ctypes.c_size_t(max_samples),
+                ctypes.c_double(timeout),
+                ctypes.byref(errcode),
+            )
+            handle_error(errcode)
+            num_samples = num_elements // num_channels
+            flat = [v.decode("utf-8") for v in data_buff[:num_elements]]
+            free_char_p_array_memory(data_buff, num_elements)
+            samples = [
+                flat[s * num_channels : (s + 1) * num_channels]
+                for s in range(num_samples)
+            ]
+            return samples, ts_buff[:num_samples]
+
+        # Numeric streams: pull straight into numpy memory. Fresh arrays are
+        # cheap, and an as_numpy result must never alias a reused buffer.
+        ts_arr = np.empty(max_samples, dtype=np.float64)
+        if dest_obj is not None:
+            data_ptr = (self.value_type * max_values).from_buffer(dest_obj)
+            data_arr = None
+        else:
+            data_arr = np.empty((max_samples, num_channels), dtype=self.np_dtype)
+            data_ptr = ctypes.c_void_p(data_arr.ctypes.data)
         num_elements = self.do_pull_chunk(
             self.obj,
-            ctypes.byref(data_buff),
-            ctypes.byref(ts_buff),
+            data_ptr,
+            ctypes.c_void_p(ts_arr.ctypes.data),
             ctypes.c_size_t(max_values),
             ctypes.c_size_t(max_samples),
             ctypes.c_double(timeout),
             ctypes.byref(errcode),
         )
         handle_error(errcode)
-        # return results (note: could offer a more efficient format in the
-        # future, e.g., a numpy array)
         num_samples = num_elements // num_channels
-        if dest_obj is None:
-            flat = data_buff[:num_elements]
-            samples = [
-                flat[s * num_channels : (s + 1) * num_channels]
-                for s in range(num_samples)
-            ]
-            if self.channel_format == cf_string:
-                samples = [[v.decode("utf-8") for v in s] for s in samples]
-                free_char_p_array_memory(data_buff, max_values)
-        else:
-            samples = None
-        timestamps = ts_buff[:num_samples]
-        return samples, timestamps
+        timestamps = ts_arr[:num_samples]
+        samples = None if data_arr is None else data_arr[:num_samples]
+        if as_numpy:
+            return samples, timestamps
+        return (
+            None if samples is None else samples.tolist(),
+            timestamps.tolist(),
+        )
 
     def samples_available(self):
         """Query whether samples are currently available for immediate pickup.

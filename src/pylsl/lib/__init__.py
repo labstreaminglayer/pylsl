@@ -362,6 +362,22 @@ fmt2type = [
     ctypes.c_byte,
     ctypes.c_longlong,
 ]
+# numpy dtypes matching fmt2type; None for string (no fixed-width dtype).
+try:
+    import numpy as _np
+
+    fmt2npdtype = [
+        None,
+        _np.float32,
+        _np.float64,
+        None,
+        _np.int32,
+        _np.int16,
+        _np.int8,
+        _np.int64,
+    ]
+except ImportError:  # pragma: no cover - numpy is a hard dependency
+    fmt2npdtype = [None] * len(fmt2string)
 fmt2push_sample = [
     [],
     lib.lsl_push_sample_ftp,
