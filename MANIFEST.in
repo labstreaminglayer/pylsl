@@ -1,7 +1,7 @@
-include README.md
-include LICENSE
-
-# If using Python 2.6 or less, then have to include package data, even though
-# it's already declared in setup.py
-include src/pylsl/lib/liblsl*.*
-include src/pylsl/lib/lsl*.*
+# setuptools-scm adds every git-tracked file to the sdist by default.
+# Prune the repo-only files that are of no use to a downstream consumer.
+# README.md / LICENSE are included automatically (via `readme =` and
+# license-file handling) and src/pylsl/lib/* via [tool.setuptools.package-data].
+prune .github
+prune test
+exclude .gitignore

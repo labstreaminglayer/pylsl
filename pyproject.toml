@@ -7,7 +7,7 @@ authors = [
 ]
 #license = {file = "LICENSE"}  # Bug in setuptools. https://github.com/astral-sh/uv/issues/9513
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dynamic = ["version"]
 keywords = [
   "networking",
@@ -68,6 +68,9 @@ license-files = []
 
 [tool.setuptools_scm]
 version_file = "src/pylsl/__version__.py"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
 pylsl = ["lib/*.dll", "lib/*.so*", "lib/*.dylib"]
