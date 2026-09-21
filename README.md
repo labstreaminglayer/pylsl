@@ -128,7 +128,7 @@ misinterpreted by that library.
 The platform-specific wheels (`win32`, `win_amd64`, `macosx_11_0_universal2`,
 `manylinux` x86_64) bundle the liblsl release named by the `LSL_RELEASE` /
 `LSL_RELEASE_URL` variables at the top of `.github/workflows/publish-to-pypi.yml`
-(currently `v1.18.0.b4`). The pure-Python `none-any` wheel bundles no library at all;
+(currently `v1.18.0.b5`). The pure-Python `none-any` wheel bundles no library at all;
 it relies on a liblsl you install yourself (see "liblsl loading" above).
 
 ### Checking at runtime
