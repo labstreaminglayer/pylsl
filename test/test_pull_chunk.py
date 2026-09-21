@@ -277,13 +277,16 @@ def test_inlet_as_numpy_default_applies_and_can_be_overridden():
     assert [row for c in chunks for row in c] == data
 
 
-def test_pull_chunk_as_numpy_ignored_for_string_streams():
+def test_pull_chunk_as_numpy_gives_object_array_of_bytes_for_strings():
     data = [["a", "b"], ["c", "d"]]
     outlet, inlet = _open_pair("test_as_numpy_string_id", 2, pylsl.cf_string)
     outlet.push_chunk(data)
     chunks, stamps = _collect(inlet, 2, as_numpy=True)
-    assert all(isinstance(c, list) for c in chunks)
-    assert [row for c in chunks for row in c] == data
+    assert all(isinstance(c, np.ndarray) and c.dtype == object for c in chunks)
+    assert all(isinstance(t, np.ndarray) for t in stamps)
+    got = np.concatenate(chunks)
+    assert got.shape == (2, 2)
+    assert got.tolist() == [[b"a", b"b"], [b"c", b"d"]]
 
 
 def test_pull_chunk_as_numpy_result_survives_next_pull():

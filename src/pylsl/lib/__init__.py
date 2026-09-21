@@ -278,6 +278,10 @@ lib.lsl_prepend_copy.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 lib.lsl_remove_child_n.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 lib.lsl_remove_child.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 lib.lsl_destroy_string.argtypes = [ctypes.c_void_p]
+# Length-delimited (NUL-safe) string push/pull; used for every cf_string stream.
+lib.lsl_push_sample_buftp.restype = ctypes.c_int
+lib.lsl_push_chunk_buftp.restype = ctypes.c_int
+lib.lsl_push_chunk_buftnp.restype = ctypes.c_int
 # noinspection PyBroadException
 try:
     lib.lsl_destroy_string_array.argtypes = [ctypes.c_void_p, ctypes.c_ulong]

@@ -51,6 +51,47 @@ Alternatively, you can use an environment variable. Set the `PYLSL_LIB` environm
 1. `PYLSL_LIB=/usr/local/lib/liblsl.so python -m pylsl.examples.{name-of-example}`, or
 2. `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python -m pylsl.examples.{name-of-example}`
 
+## Binary data in string streams
+
+LSL's `cf_string` format is really a variable-length blob format ("variable-length
+ASCII strings or data blobs, such as video frames" in liblsl's own words), and it
+is length-delimited on the network and in XDF files. pylsl treats it that way:
+
+* A `cf_string` outlet accepts `str` (UTF-8 encoded for you) or any bytes-like
+  object (`bytes`, `bytearray`, `memoryview`) per channel, sent as is. Values may
+  contain NUL bytes.
+* A `cf_string` inlet returns decoded `str` by default. With `as_numpy=True`
+  (on the inlet or per `pull_chunk` call) it returns the raw bytes of each value
+  with no decoding, as a `dtype=object` numpy array.
+
+```python
+info = pylsl.StreamInfo("frames", "Video", 1, 0, pylsl.cf_string, "cam0")
+outlet = pylsl.StreamOutlet(info)
+outlet.push_sample([frame_bytes])
+
+inlet = pylsl.StreamInlet(pylsl.resolve_byprop("name", "frames")[0], as_numpy=True)
+sample, ts = inlet.pull_sample()  # sample[0] is the bytes object, unchanged
+```
+
+With `as_numpy=True` the values come back as `bytes` inside a `dtype=object`
+numpy array, and nothing has been decoded. If a value is text, decode it
+yourself; if you want plain Python containers, use `.tolist()`:
+
+```python
+sample, ts = inlet.pull_sample()  # 1-D object array, one bytes per channel
+text = sample[0].decode("utf-8")  # or "latin-1", or whatever the sender used
+blobs = sample.tolist()  # list of bytes
+
+chunk, ts = inlet.pull_chunk()  # 2-D object array (n_samples, n_channels)
+first_channel_text = [b.decode("utf-8") for b in chunk[:, 0]]
+rows = chunk.tolist()  # list of lists of bytes
+```
+
+Decoding is the receiver's decision because only the receiver knows what the
+bytes mean. Other LSL clients that read string streams through C-string APIs
+will still stop at the first NUL; that is a limitation of those clients, not of
+the transport.
+
 ## liblsl compatibility
 
 `pylsl` and `liblsl` are versioned independently. Historically they shared version
