@@ -73,6 +73,20 @@ inlet = pylsl.StreamInlet(pylsl.resolve_byprop("name", "frames")[0], as_numpy=Tr
 sample, ts = inlet.pull_sample()  # sample[0] is the bytes object, unchanged
 ```
 
+With `as_numpy=True` the values come back as `bytes` inside a `dtype=object`
+numpy array, and nothing has been decoded. If a value is text, decode it
+yourself; if you want plain Python containers, use `.tolist()`:
+
+```python
+sample, ts = inlet.pull_sample()  # 1-D object array, one bytes per channel
+text = sample[0].decode("utf-8")  # or "latin-1", or whatever the sender used
+blobs = sample.tolist()  # list of bytes
+
+chunk, ts = inlet.pull_chunk()  # 2-D object array (n_samples, n_channels)
+first_channel_text = [b.decode("utf-8") for b in chunk[:, 0]]
+rows = chunk.tolist()  # list of lists of bytes
+```
+
 Decoding is the receiver's decision because only the receiver knows what the
 bytes mean. Other LSL clients that read string streams through C-string APIs
 will still stop at the first NUL; that is a limitation of those clients, not of
