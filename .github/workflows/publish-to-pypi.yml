@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.18.0.b5"
+  LSL_RELEASE_URL: "https://github.com/sccn/liblsl/releases/download/v1.18.0.b6"
   LSL_RELEASE: "1.18.0"
 
 defaults:
@@ -47,7 +47,7 @@ jobs:
             os: windows-latest
             arch: amd64
             pyarch: x64
-            asset: "liblsl-${LSL_RELEASE}-Win_amd64.zip"
+            asset: "liblsl-${LSL_RELEASE}-Win_x86_64.zip"
             extract: "unzip -oj liblsl.zip '*/bin/lsl.dll' -d src/pylsl/lib"
             platform_tag: "win_amd64"
           - name: "Windows x86"
@@ -71,9 +71,8 @@ jobs:
             os: ubuntu-22.04
             arch: x86_64
             pyarch: x64
-            asset: "liblsl-${LSL_RELEASE}-jammy_amd64.deb"
+            asset: "liblsl-${LSL_RELEASE}-jammy_x86_64.deb"
             extract: |
-              sudo apt-get update && sudo apt-get install -y libpugixml1v5
               ar x liblsl.deb
               tar -xf data.tar.* --wildcards '*/liblsl.so*'
               cp ./usr/lib/liblsl.so* src/pylsl/lib/
