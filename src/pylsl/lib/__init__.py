@@ -203,6 +203,14 @@ lib.lsl_get_fullinfo.restype = ctypes.c_void_p
 lib.lsl_get_info.restype = ctypes.c_void_p
 lib.lsl_open_stream.restype = ctypes.c_void_p
 lib.lsl_time_correction.restype = ctypes.c_double
+lib.lsl_time_correction_ex.restype = ctypes.c_double
+lib.lsl_time_correction_ex.argtypes = [
+    ctypes.c_void_p,
+    ctypes.POINTER(ctypes.c_double),
+    ctypes.POINTER(ctypes.c_double),
+    ctypes.c_double,
+    ctypes.POINTER(ctypes.c_int),
+]
 lib.lsl_pull_sample_f.restype = ctypes.c_double
 lib.lsl_pull_sample_d.restype = ctypes.c_double
 lib.lsl_pull_sample_l.restype = ctypes.c_double

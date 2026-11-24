@@ -214,6 +214,12 @@ class StreamInlet:
         local_clock() to map it into the local clock domain of this
         machine.
 
+        When the outlet runs on the same machine, liblsl >= 1.18.0 returns
+        exactly 0. With `[tuning] TimeDriftWindow` > 0 in the liblsl config
+        (see set_config_content()), liblsl >= 1.18.0 returns a robust line fit
+        over the recent measurements, evaluated at the time of the call, which
+        compensates for clock drift between the two machines.
+
         Throws a TimeoutError (if the timeout expires), or LostError (if the
         stream source has been lost).
 
@@ -224,6 +230,38 @@ class StreamInlet:
         )
         handle_error(errcode)
         return result
+
+    def time_correction_ex(self, timeout=FOREVER):
+        """Like time_correction(), but also return the measurement it is based on.
+
+        Keyword arguments:
+        timeout -- Timeout to acquire the first time-correction estimate
+                   (default FOREVER).
+
+        Returns a tuple (correction, remote_time, uncertainty): correction is
+        the value time_correction() returns, remote_time is the remote
+        machine's local_clock() at the most recent measurement, and
+        uncertainty is that measurement's maximum uncertainty (the round-trip
+        time of its best probe), in seconds. With `[tuning] TimeDriftWindow` > 0,
+        correction is a fit over recent measurements while remote_time and
+        uncertainty still describe the most recent one.
+
+        Throws a TimeoutError (if the timeout expires), or LostError (if the
+        stream source has been lost).
+
+        """
+        remote_time = ctypes.c_double()
+        uncertainty = ctypes.c_double()
+        errcode = ctypes.c_int()
+        result = lib.lsl_time_correction_ex(
+            self.obj,
+            ctypes.byref(remote_time),
+            ctypes.byref(uncertainty),
+            timeout,
+            ctypes.byref(errcode),
+        )
+        handle_error(errcode)
+        return result, remote_time.value, uncertainty.value
 
     def pull_sample(self, timeout=FOREVER, sample=None):
         """Pull a sample from the inlet and return it.
@@ -508,10 +546,11 @@ class StreamInlet:
     def was_clock_reset(self):
         """Query whether the clock was potentially reset since the last call.
 
-        This is rarely-used function is only needed for applications that
-        combine multiple time_correction values to estimate precise clock
-        drift if they should tolerate cases where the source machine was
-        hot-swapped or restarted.
+        This rarely-used function is only needed for applications that
+        keep their own history of time_correction values (e.g., to estimate
+        clock drift) and must tolerate the source machine being hot-swapped
+        or restarted. For drift compensation, prefer liblsl's built-in
+        `[tuning] TimeDriftWindow` (liblsl >= 1.18.0; see time_correction()).
 
         """
         return bool(lib.lsl_was_clock_reset(self.obj))
