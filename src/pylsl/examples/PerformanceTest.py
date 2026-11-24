@@ -377,10 +377,7 @@ betaIn = BetaInlet()
 markerIn = MarkerInlet()
 
 if haspyqtgraph:
-    qapp = pg.QtGui.QApplication(sys.argv)
-    qwindow = pg.plot()
-    qwindow.clear()
-    qwindow.parent().setWindowTitle("pylsl PerformanceTest")
+    qwindow = pg.plot(title="pylsl PerformanceTest")
 
 
 def update():
@@ -413,7 +410,7 @@ if __name__ == "__main__":
             timer.timeout.connect(update)
             timer.start(1)  # Delay not needed because update has time.sleep
             if (sys.flags.interactive != 1) or not hasattr(pg.QtCore, "PYQT_VERSION"):
-                sys.exit(pg.QtGui.QApplication.instance().exec_())
+                sys.exit(pg.exec())
         else:
             while True:
                 update()
