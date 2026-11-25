@@ -171,8 +171,15 @@ except StopIteration:
 except OSError:
     err_msg = "liblsl library '" + libpath + "' found but could not be loaded "
     err_msg += "- possible platform/architecture mismatch.\n "
-    if platform.system() in ["Windows", "Microsoft"]:
+    os_name = platform.system()
+    if os_name in ["Windows", "Microsoft"]:
         err_msg += "You may need to download and install the latest Microsoft Visual C++ Redistributable."
+    elif os_name == "Linux":
+        err_msg += (
+            "If liblsl is outside the system loader search path, set PYLSL_LIB to "
+            "the full library path or add its directory to LD_LIBRARY_PATH before "
+            "starting Python."
+        )
     raise RuntimeError(err_msg + "\n " + __dload_msg)
 
 
